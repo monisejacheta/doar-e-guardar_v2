@@ -2,11 +2,12 @@
 import React from 'react';
 import { TouchableOpacity, Text, View, StyleSheet } from 'react-native';
 import { useAppTheme } from '../../context/ThemeContext';
+import { AppIcon, IconName } from './AppIcon';
 
 interface ActionCardProps {
   titulo: string;
   descricao: string;
-  icone: string;
+  iconName: IconName;
   aoTocar: () => void;
   destaque?: boolean;
   corDestaque?: string;
@@ -16,7 +17,7 @@ interface ActionCardProps {
 export const ActionCard: React.FC<ActionCardProps> = ({
   titulo,
   descricao,
-  icone,
+  iconName,
   aoTocar,
   destaque = false,
   corDestaque,
@@ -40,7 +41,7 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           backgroundColor: theme.surface,
           borderColor: bordaAtiva,
           borderRadius: tokens.touchTarget.borderRadius,
-          minHeight: 80,
+          minHeight: tokens.touchTarget.minHeight, // Mínimo de 48px conforme WCAG AAA
         },
       ]}
     >
@@ -53,9 +54,11 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           },
         ]}
       >
-        <Text style={[estilos.textoIcone, { color: corDestaque || theme.primary }]}>
-          {icone}
-        </Text>
+        <AppIcon
+          name={iconName}
+          size={24}
+          color={corDestaque || (destaque ? theme.secondary : theme.primary)}
+        />
       </View>
 
       <View style={estilos.areaTexto}>
@@ -82,6 +85,8 @@ export const ActionCard: React.FC<ActionCardProps> = ({
           {descricao}
         </Text>
       </View>
+
+      <AppIcon name="chevron-right" size={18} variant="neutral" />
     </TouchableOpacity>
   );
 };
@@ -104,15 +109,13 @@ const estilos = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  textoIcone: {
-    fontSize: 22,
-  },
   areaTexto: {
     flex: 1,
+    paddingRight: 8,
   },
   titulo: {
     fontWeight: '700',
-    marginBottom: 3,
+    marginBottom: 2,
   },
   descricao: {
     lineHeight: 16,
