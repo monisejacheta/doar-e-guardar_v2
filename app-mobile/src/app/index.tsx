@@ -1,98 +1,89 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+// src/app/index.tsx
+import React from 'react';
+import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { useAppTheme } from '../context/ThemeContext';
+import { AppButton } from '../components/commom/AppButton';
 
 export default function HomeScreen() {
+  const { theme, tokens, fontScale, mode, setMode } = useAppTheme();
+
+  const handleToggleTheme = () => {
+    if (mode === 'light') setMode('dark');
+    else if (mode === 'dark') setMode('high-contrast');
+    else setMode('light');
+  };
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.content}>
+        <Text
+          style={[
+            styles.title,
+            {
+              color: theme.primary,
+              fontSize: tokens.typography.fontSize.xxl * fontScale,
+            },
+          ]}
+        >
+          Doar&Guardar 2.0
+        </Text>
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
+        <Text
+          style={[
+            styles.subtitle,
+            {
+              color: theme.subtext,
+              fontSize: tokens.typography.fontSize.md * fontScale,
+              marginBottom: tokens.spacing.xl,
+            },
+          ]}
+        >
+          Modo visual ativo: {mode.toUpperCase()}
+        </Text>
 
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
+        <View style={styles.actions}>
+          {/* Botão Primário: Alternar Tema */}
+          <AppButton
+            title="Alternar Tema (Claro / Escuro / Contraste)"
+            variant="primary"
+            onPress={handleToggleTheme}
+            accessibilityHint="Alterna entre temas para conformidade com acessibilidade visual"
           />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
 
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+          <View style={{ height: tokens.spacing.md }} />
+
+          {/* Botão Secundário: Verde Doar (#10B981) */}
+          <AppButton
+            title="Registrar Entrada (Verde Doar)"
+            variant="secondary"
+            onPress={() => alert('Botão de ação do estoque acionado!')}
+            accessibilityHint="Registrar nova entrada no estoque"
+          />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
-  safeArea: {
+  content: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
+    padding: 24,
     justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+    alignItems: 'center',
   },
   title: {
+    fontWeight: 'bold',
+    marginBottom: 8,
     textAlign: 'center',
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    textAlign: 'center',
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  actions: {
+    width: '100%',
   },
 });
