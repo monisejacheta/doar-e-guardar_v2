@@ -6,7 +6,6 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '../context/ThemeContext';
@@ -17,23 +16,15 @@ export default function HomeScreen() {
   const roteador = useRouter();
   const { theme, tokens, fontScale, mode, setMode } = useAppTheme();
 
-  // Alternador de contraste rápido mantido acessível
   const alternarContraste = () => {
     if (mode === 'light') setMode('high-contrast');
     else if (mode === 'high-contrast') setMode('dark');
     else setMode('light');
   };
 
-  const abrirAvisoEmBreve = (nomeTela: string) => {
-    Alert.alert(
-      'Estrutura em Construção',
-      `A tela de "${nomeTela}" será conectada no próximo passo.`
-    );
-  };
-
   return (
     <SafeAreaView style={[estilosHome.container, { backgroundColor: theme.background }]}>
-      {/* Barra Superior com Perfil do Usuário e Notificações (Telas 02.1 e 02.2) */}
+      {/* Barra Superior */}
       <View style={[estilosHome.barraSuperior, { borderBottomColor: theme.border }]}>
         <TouchableOpacity
           accessible={true}
@@ -56,7 +47,6 @@ export default function HomeScreen() {
         </TouchableOpacity>
 
         <View style={estilosHome.acoesTopo}>
-          {/* Botão de Notificações (Tela 02.2) */}
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
@@ -67,7 +57,6 @@ export default function HomeScreen() {
             <Text style={estilosHome.iconeTextoTopo}>🔔</Text>
           </TouchableOpacity>
 
-          {/* Botão de Contraste Rápido */}
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
@@ -86,13 +75,13 @@ export default function HomeScreen() {
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel="Conversar com a Dora, nossa assistente de estoque e receitas"
-          onPress={() => abrirAvisoEmBreve('Tela 05 - Dora')}
+          onPress={() => roteador.push('/dora')}
           activeOpacity={0.85}
           style={[
             estilosHome.blocoDestaqueDora,
             {
               backgroundColor: theme.surface,
-              borderColor: tokens.colors.accentAmber500, // Âmbar Oficial da Dora
+              borderColor: tokens.colors.accentAmber500,
             },
           ]}
         >
@@ -114,7 +103,7 @@ export default function HomeScreen() {
                 { color: theme.subtext, fontSize: tokens.typography.fontSize.xs * fontScale },
               ]}
             >
-              Pergunte sobre itens a vencer, quantidades ou peça sugestões de receitas.
+              Pergunte sobre itens a vencer, saldos ou peça sugestões de receitas.
             </Text>
           </View>
         </TouchableOpacity>
@@ -134,9 +123,8 @@ export default function HomeScreen() {
           descricao="Consultar itens, registrar entradas com câmera e dar baixa com segurança."
           icone="📦"
           destaque={true}
-          corDestaque={theme.secondary} // Verde Doar
+          corDestaque={theme.secondary}
           aoTocar={() => roteador.push('/stock')}
-          dicaAcessibilidade="Abre a tela principal de controle de mantimentos"
         />
 
         {/* Tela 04: Relatórios */}
@@ -144,8 +132,7 @@ export default function HomeScreen() {
           titulo="Relatórios de Alimentos"
           descricao="Gerar balanços de estoque, validades e descartes para exportar em PDF."
           icone="📊"
-          aoTocar={() => abrirAvisoEmBreve('Tela 04 - Relatórios')}
-          dicaAcessibilidade="Abre a central de relatórios e gráficos"
+          aoTocar={() => roteador.push('/reports')}
         />
 
         {/* Tela 07: Histórico e Auditoria */}
@@ -153,8 +140,7 @@ export default function HomeScreen() {
           titulo="Histórico de Ações"
           descricao="Conferir quem realizou cada entrada, saída ou movimentação no estoque."
           icone="📋"
-          aoTocar={() => abrirAvisoEmBreve('Tela 07 - Histórico')}
-          dicaAcessibilidade="Abre o registro de auditoria e atividades"
+          aoTocar={() => roteador.push('/audit')}
         />
 
         {/* Tela 06: Configurações Avançadas */}
@@ -162,8 +148,7 @@ export default function HomeScreen() {
           titulo="Configurações e Cadastros"
           descricao="Organizar armários, geladeiras, categorias de comida e doadores."
           icone="⚙️"
-          aoTocar={() => abrirAvisoEmBreve('Tela 06 - Configurações')}
-          dicaAcessibilidade="Abre o painel de armários e cadastros gerais"
+          aoTocar={() => roteador.push('/settings')}
         />
 
         {/* Tela 09: Diagnóstico e Disponibilidade */}
@@ -171,8 +156,7 @@ export default function HomeScreen() {
           titulo="Verificar Conexão e Central"
           descricao="Checar se a internet, o banco de dados e as centrais estão funcionando bem."
           icone="🩺"
-          aoTocar={() => abrirAvisoEmBreve('Tela 09 - Diagnóstico')}
-          dicaAcessibilidade="Abre a verificação de saúde do sistema"
+          aoTocar={() => roteador.push('/diagnostic')}
         />
       </ScrollView>
     </SafeAreaView>

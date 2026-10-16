@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAppTheme } from '../context/ThemeContext';
 import { estilosEstoque } from '../styles/stock.styles';
 
@@ -23,6 +24,7 @@ interface ProdutoEstoque {
 }
 
 export default function StockScreen() {
+  const roteador = useRouter();
   const { theme, tokens, fontScale } = useAppTheme();
   const [busca, setBusca] = useState('');
 
@@ -120,7 +122,7 @@ export default function StockScreen() {
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Entrada de produto. Ler código de barras ou cadastrar lote"
-            onPress={() => abrirAvisoOperacao('Tela 3.1 - Entrada de Produtos')}
+            onPress={() => roteador.push('/stock-add')}
             style={[
               estilosEstoque.botaoAcaoEstoque,
               { backgroundColor: theme.surface, borderColor: theme.secondary },
@@ -137,7 +139,7 @@ export default function StockScreen() {
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Saída de produto. Registrar consumo ou descarte por perda"
-            onPress={() => abrirAvisoOperacao('Tela 3.2 - Saída / Baixa com PERDA')}
+            onPress={() => roteador.push('/stock-remove')}
             style={[
               estilosEstoque.botaoAcaoEstoque,
               { backgroundColor: theme.surface, borderColor: theme.danger },
@@ -154,7 +156,7 @@ export default function StockScreen() {
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Transferir produtos de armário ou geladeira"
-            onPress={() => abrirAvisoOperacao('Tela 3.3 - Mover Produtos')}
+            onPress={() => roteador.push('/stock-move')}
             style={[
               estilosEstoque.botaoAcaoEstoque,
               { backgroundColor: theme.surface, borderColor: theme.border },
@@ -171,7 +173,7 @@ export default function StockScreen() {
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Consulta detalhada de todos os lotes e validades"
-            onPress={() => abrirAvisoOperacao('Tela 3.4 - Consulta Detalhada')}
+            onPress={() => roteador.push('/stock-details')}
             style={[
               estilosEstoque.botaoAcaoEstoque,
               { backgroundColor: theme.surface, borderColor: theme.primary },
