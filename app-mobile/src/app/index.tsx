@@ -15,7 +15,7 @@ import { useAppTheme } from '../context/ThemeContext';
 import { AppLogo } from '../components/common/AppLogo';
 import { AppButton } from '../components/common/AppButton';
 import { AppInput } from '../components/common/AppInput';
-import { estilosLogin } from './index.styles';
+import { estilosLogin } from '../styles/index.styles';
 
 export default function LoginScreen() {
   const roteador = useRouter();

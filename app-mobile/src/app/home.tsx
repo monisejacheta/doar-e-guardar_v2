@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '../context/ThemeContext';
 import { ActionCard } from '../components/common/ActionCard';
-import { estilosHome } from './home.styles';
+import { estilosHome } from '../styles/home.styles';
 
 export default function HomeScreen() {
   const roteador = useRouter();
@@ -39,7 +39,7 @@ export default function HomeScreen() {
           accessible={true}
           accessibilityRole="button"
           accessibilityLabel="Abrir meu perfil de usuário"
-          onPress={() => abrirAvisoEmBreve('Tela 02.1 - Perfil')}
+          onPress={() => roteador.push('/profile')}
           style={estilosHome.perfilResumo}
         >
           <View style={[estilosHome.avatarPequeno, { borderColor: theme.primary, backgroundColor: theme.surface }]}>
@@ -61,7 +61,7 @@ export default function HomeScreen() {
             accessible={true}
             accessibilityRole="button"
             accessibilityLabel="Ver avisos e notificações"
-            onPress={() => abrirAvisoEmBreve('Tela 02.2 - Notificações')}
+            onPress={() => roteador.push('/notifications')}
             style={[estilosHome.botaoIconeTopo, { borderColor: theme.border, backgroundColor: theme.surface }]}
           >
             <Text style={estilosHome.iconeTextoTopo}>🔔</Text>
@@ -135,7 +135,7 @@ export default function HomeScreen() {
           icone="📦"
           destaque={true}
           corDestaque={theme.secondary} // Verde Doar
-          aoTocar={() => abrirAvisoEmBreve('Tela 03 - Estoque')}
+          aoTocar={() => roteador.push('/stock')}
           dicaAcessibilidade="Abre a tela principal de controle de mantimentos"
         />
 

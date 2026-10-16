@@ -1,4 +1,5 @@
 // src/app/_layout.tsx
+// src/app/_layout.tsx
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -24,12 +25,11 @@ function RootNavigationLayout() {
           },
         }}
       >
-        <Stack.Screen
-          name="index"
-          options={{
-            title: 'Doar&Guardar 2.0',
-          }}
-        />
+        <Stack.Screen name="index" options={{ title: 'Doar & Guardar - Entrada' }} />
+        <Stack.Screen name="home" options={{ title: 'Início', headerBackVisible: false }} />
+        <Stack.Screen name="profile" options={{ title: 'Meu Perfil' }} />
+        <Stack.Screen name="notifications" options={{ title: 'Avisos e Notificações' }} />
+        <Stack.Screen name="stock" options={{ title: 'Gerenciamento de Estoque' }} />
       </Stack>
     </>
   );
