@@ -1,6 +1,6 @@
 // src/app/stock-remove.tsx
 import React, { useState } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TextInput, Alert, TouchableOpacity } from 'react-native';
+import { Text, View, SafeAreaView, ScrollView, TextInput, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '../context/ThemeContext';
 import { AppButton } from '../components/common/AppButton';
@@ -39,8 +39,8 @@ export default function StockRemoveScreen() {
           </Text>
         </View>
 
-        <View style={[estilosStockRemove.cartaoPrincipal, { backgroundColor: theme.surface, borderColor: theme.danger }]}>
-          <Text style={[estilosStockRemove.textoInformativo, { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
+        <View style={[estilosStockRemove.secaoCard, { backgroundColor: theme.surface, borderColor: theme.danger }]}>
+          <Text style={[estilosStockRemove.instrucaoPerda, { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
             Atenção: A remoção definitiva de mantimentos exige justificativa formal e trava de proteção contra baixas acidentais.
           </Text>
 
