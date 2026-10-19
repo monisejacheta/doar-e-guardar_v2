@@ -1,43 +1,34 @@
+// src/styles/reports.styles.ts
 import { StyleSheet } from 'react-native';
 
 export const estilosReports = StyleSheet.create({
-  container: {
+  container: { flex: 1 },
+  rolagem: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 },
+  cabecalho: { marginBottom: 16 },
+  titulo: { fontWeight: 'bold', marginBottom: 4 },
+  subtitulo: { lineHeight: 20 },
+  // Chaves de retrocompatibilidade
+  cartaoPrincipal: { borderWidth: 1.5, borderRadius: 14, padding: 16, marginBottom: 16 },
+  textoInformativo: { lineHeight: 22, marginBottom: 14 },
+  areaAcao: { marginTop: 8, width: '100%' },
+  campoDigitacao: { borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, minHeight: 48, marginBottom: 12 },
+  // Estilos específicos da Tela 04
+  secaoCard: { borderWidth: 1.5, borderRadius: 14, padding: 16, marginBottom: 18 },
+  tituloSecao: { fontWeight: 'bold', marginBottom: 12 },
+  linhaGraficos: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  botaoTipoGrafico: {
     flex: 1,
-  },
-  rolagem: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 40,
-  },
-  cabecalho: {
-    marginBottom: 20,
-  },
-  titulo: {
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  subtitulo: {
-    lineHeight: 20,
-  },
-  cartaoPrincipal: {
+    minWidth: '45%',
+    minHeight: 48, // Touch target WCAG AAA
     borderWidth: 1.5,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
   },
-  textoInformativo: {
-    lineHeight: 22,
-    marginBottom: 14,
-  },
-  areaAcao: {
-    marginTop: 8,
-    width: '100%',
-  },
-  campoDigitacao: {
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    minHeight: 48,
-    marginBottom: 12,
-  },
+  barraSimuladaContainer: { marginTop: 8, gap: 10 },
+  linhaBarra: { gap: 4 },
+  rotuloBarra: { flexDirection: 'row', justifyContent: 'space-between' },
+  trilhoBarra: { height: 12, borderRadius: 6, overflow: 'hidden', width: '100%' },
+  preenchimentoBarra: { height: '100%', borderRadius: 6 },
 });
