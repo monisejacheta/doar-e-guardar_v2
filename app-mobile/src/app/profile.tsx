@@ -1,153 +1,142 @@
 // src/app/profile.tsx
 import React from 'react';
-import {
-  Text,
-  View,
-  SafeAreaView,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppTheme } from '../context/ThemeContext';
-import { ActionCard } from '../components/common/ActionCard';
+import { AppIcon } from '../components/common/AppIcon';
 import { AppButton } from '../components/common/AppButton';
-import { estilosPerfil } from '../styles/profile.styles';
 
 export default function ProfileScreen() {
   const roteador = useRouter();
   const { theme, tokens, fontScale } = useAppTheme();
 
-  // Dados provisórios da sessão atual
-  const dadosUsuario = {
-    nome: 'Colaborador da Casa da Criança',
-    email: 'operador@casadacrianca.org.br',
-    funcao: 'Atendimento e Estoque',
-  };
-
-  const abrirAviso = (titulo: string, mensagem: string) => {
-    Alert.alert(titulo, mensagem);
-  };
-
-  // Tela 2.1.4 - Confirmação amigável de encerramento de sessão
-  const confirmarSaida = () => {
+  const confirmarLogout = () => {
     Alert.alert(
-      'Encerrar sessão',
-      'Você tem certeza de que deseja sair da sua conta agora?',
+      'Encerrar Sessão',
+      'Deseja realmente sair da sua conta na Casa da Criança?',
       [
-        { text: 'Continuar no app', style: 'cancel' },
-        {
-          text: 'Sim, quero sair',
-          style: 'destructive',
-          onPress: () => roteador.replace('/'),
-        },
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Sim, Sair', style: 'destructive', onPress: () => roteador.replace('/login' as never) },
       ]
     );
   };
 
   return (
-    <SafeAreaView style={[estilosPerfil.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={estilosPerfil.rolagem}>
-        {/* Cartão de identificação rápida */}
-        <View
-          style={[
-            estilosPerfil.cartaoResumo,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <View style={[estilosPerfil.fotoArea, { borderColor: theme.primary, backgroundColor: theme.background }]}>
-            <Text style={estilosPerfil.fotoIcone}>👤</Text>
-          </View>
-          <Text
-            style={[
-              estilosPerfil.nomeUsuario,
-              { color: theme.text, fontSize: tokens.typography.fontSize.lg * fontScale },
-            ]}
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+        {/* Cabeçalho do Perfil */}
+        <View style={{ alignItems: 'center', marginBottom: 24 }}>
+          <View
+            style={{
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              borderWidth: 2,
+              borderColor: theme.primary,
+              justifyContent: 'center',
+              alignItems: 'center',
+              backgroundColor: theme.surface,
+              marginBottom: 12,
+            }}
           >
-            {dadosUsuario.nome}
-          </Text>
-          <Text
-            style={[
-              estilosPerfil.emailUsuario,
-              { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale },
-            ]}
-          >
-            {dadosUsuario.email}
-          </Text>
-          <View style={[estilosPerfil.etiquetaFuncao, { backgroundColor: `${theme.primary}15` }]}>
-            <Text style={[estilosPerfil.textoFuncao, { color: theme.primary, fontSize: 12 * fontScale }]}>
-              {dadosUsuario.funcao}
-            </Text>
+            <AppIcon name="user" size={40} variant="primary" />
           </View>
+          <Text style={{ fontWeight: 'bold', color: theme.text, fontSize: 18 * fontScale }}>
+            Colaborador Casa da Criança
+          </Text>
+          <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginTop: 2 }}>
+            colaborador@casadacrianca.org.br
+          </Text>
         </View>
 
-        <Text
-          style={[
-            estilosPerfil.tituloSecao,
-            { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale },
-          ]}
-        >
-          Opções da Minha Conta
-        </Text>
+        {/* Opções de Navegação do Perfil */}
+        <View style={{ gap: 12, marginBottom: 24 }}>
+          <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="2.1.1 Visualizar perfil detalhado"
+            onPress={() => Alert.alert('Visualizar Perfil', 'Nome: Colaborador\nE-mail: colaborador@casadacrianca.org.br\nNível: Operador / Funcionário')}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 16,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              minHeight: 52,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <AppIcon name="user" size={20} variant="primary" />
+              <Text style={{ fontWeight: '600', color: theme.text, fontSize: 14 * fontScale }}>
+                2.1.1 Visualizar Perfil Detalhado
+              </Text>
+            </View>
+            <AppIcon name="chevron-right" size={16} variant="neutral" />
+          </TouchableOpacity>
 
-        <View style={estilosPerfil.listaOpcoes}>
-          {/* Tela 2.1.1 - Visualizar perfil detalhado */}
-          <ActionCard
-            titulo="Visualizar Informações"
-            descricao="Consultar todos os seus dados cadastrados sem fazer alterações."
-            icone="📄"
-            aoTocar={() =>
-              abrirAviso(
-                'Tela 2.1.1 - Visualizar Perfil',
-                `Nome: ${dadosUsuario.nome}\nE-mail: ${dadosUsuario.email}\nFunção: ${dadosUsuario.funcao}`
-              )
-            }
-          />
+          <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="2.1.2 Editar perfil e dados cadastrais"
+            onPress={() => Alert.alert('Editar Perfil', 'Funcionalidade de edição de nome e telefone disponível.')}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 16,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              minHeight: 52,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <AppIcon name="settings" size={20} variant="primary" />
+              <Text style={{ fontWeight: '600', color: theme.text, fontSize: 14 * fontScale }}>
+                2.1.2 Editar Perfil
+              </Text>
+            </View>
+            <AppIcon name="chevron-right" size={16} variant="neutral" />
+          </TouchableOpacity>
 
-          {/* Tela 2.1.2 - Editar perfil */}
-          <ActionCard
-            titulo="Editar Meus Dados"
-            descricao="Atualizar seu nome de exibição, telefone e foto de identificação."
-            icone="✏️"
-            aoTocar={() =>
-              abrirAviso('Tela 2.1.2 - Editar Perfil', 'O formulário de edição de dados será ativado em breve.')
-            }
-          />
-
-          {/* Tela 2.1.3 - Alterar preferências */}
-          <ActionCard
-            titulo="Preferências do Sistema"
-            descricao="Ajustar sons de confirmação e formas de aviso do aplicativo."
-            icone="⚙️"
-            aoTocar={() =>
-              abrirAviso('Tela 2.1.3 - Preferências', 'Configurações de som e idioma serão ligadas aqui.')
-            }
-          />
-
-          {/* Tela 02.3 - Acessibilidade Geral */}
-          <ActionCard
-            titulo="Acessibilidade e Leitura"
-            descricao="Ajustar tamanho da letra, cores em alto contraste e opções de voz."
-            icone="♿"
-            destaque={true}
-            corDestaque={theme.primary}
-            aoTocar={() =>
-              abrirAviso(
-                'Tela 02.3 - Acessibilidade',
-                'Painel completo para leitor de tela, voz e ajustes de visual.'
-              )
-            }
-          />
+          <TouchableOpacity
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="2.1.3 Alterar preferências do sistema e acessibilidade"
+            onPress={() => roteador.push('/accessibility')}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: 16,
+              borderRadius: 12,
+              borderWidth: 1.5,
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              minHeight: 52,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              <AppIcon name="contrast" size={20} variant="secondary" />
+              <Text style={{ fontWeight: '600', color: theme.text, fontSize: 14 * fontScale }}>
+                2.1.3 Alterar Preferências e Acessibilidade
+              </Text>
+            </View>
+            <AppIcon name="chevron-right" size={16} variant="neutral" />
+          </TouchableOpacity>
         </View>
 
-        {/* Tela 2.1.4 - Botão Sair / Logout */}
-        <View style={estilosPerfil.areaLogout}>
-          <AppButton
-            title="Sair da Conta (Logout)"
-            variant="danger"
-            onPress={confirmarSaida}
-            accessibilityHint="Toque para encerrar a sua sessão e voltar à tela inicial"
-          />
-        </View>
+        {/* Botão de Logout (2.1.4) */}
+        <AppButton
+          title="2.1.4 Sair da Conta (Logout)"
+          variant="danger"
+          onPress={confirmarLogout}
+          accessibilityHint="Encerra a sessão atual e retorna à tela de login"
+        />
       </ScrollView>
     </SafeAreaView>
   );
