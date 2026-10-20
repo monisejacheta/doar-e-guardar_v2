@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Administrativa | Casa da Criança</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#1E3A8A',
+            brandGreen: '#10B981',
+            accentAmber: '#F59E0B',
+            stateError: '#DC2626',
+            neutralDark: '#111827',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../../public/css/styles.css">
+  <script src="../../public/js/accessibility.js" defer></script>
+</head>
+<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+
+  <!-- Navegação Administrativa Superior -->
+  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
+        🏠
+      </div>
+      <div>
+        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
+        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 text-sm font-semibold">
+      <a href="./dashboard.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Dashboard</a>
+      <a href="./moderacao-campanhas.html" class="hover:text-green-300">Moderar Campanhas</a>
+      <a href="./locais-armazenamento.html" class="hover:text-green-300">Armazenamento</a>
+      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
+        🌓 Contraste
+      </button>
+      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
+        Sair
+      </a>
+    </div>
+  </nav>
+
+  <main class="flex-grow max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Visão Geral do Inventário</h1>
+        <p class="text-xs sm:text-sm text-gray-600 mt-0.5">
+          Métricas operacionais consolidadas a partir do aplicativo móvel institucional.
+        </p>
+      </div>
+      <div class="text-xs font-semibold text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
+        Sincronia AWS Lambda: <span class="text-brandGreen font-bold">Online (118ms)</span>
+      </div>
+    </div>
+
+    <!-- Cards de Indicadores Chave (KPIs) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Estoque Total</span>
+        <div class="text-3xl font-extrabold text-brandBlue mt-2">1.420</div>
+        <p class="text-xs text-gray-500 mt-1">Pacotes e latas cadastrados</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-red-200 shadow-sm">
+        <span class="text-xs font-bold text-red-600 uppercase tracking-wider">Estoque Crítico</span>
+        <div class="text-3xl font-extrabold text-stateError mt-2">3 itens</div>
+        <p class="text-xs text-red-500 mt-1">Abaixo da cota mínima (leite, óleo)</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
+        <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Validade Próxima (FEFO)</span>
+        <div class="text-3xl font-extrabold text-accentAmber mt-2">2 lotes</div>
+        <p class="text-xs text-amber-600 mt-1">Vencem em menos de 7 dias</p>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm">
+        <span class="text-xs font-bold text-brandGreen uppercase tracking-wider">Fila de Campanhas</span>
+        <div class="text-3xl font-extrabold text-brandGreen mt-2">1 pendente</div>
+        <p class="text-xs text-gray-500 mt-1">Aguardando moderação técnica</p>
+      </div>
+    </div>
+
+    <!-- Atalhos Rápidos Operacionais -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <a href="./moderacao-campanhas.html" class="p-4 bg-white rounded-xl border border-gray-200 hover:border-brandGreen shadow-sm flex items-center justify-between group transition">
+        <div>
+          <h2 class="text-sm font-bold text-gray-800 group-hover:text-brandGreen">Moderar Campanhas da Comunidade</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Aprovar ou justificar reprovações</p>
+        </div>
+        <span class="text-xl">📋</span>
+      </a>
+
+      <a href="./locais-armazenamento.html" class="p-4 bg-white rounded-xl border border-gray-200 hover:border-brandBlue shadow-sm flex items-center justify-between group transition">
+        <div>
+          <h2 class="text-sm font-bold text-gray-800 group-hover:text-brandBlue">Gerenciar Armários e Geladeiras</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Controle de prateleiras e gavetas</p>
+        </div>
+        <span class="text-xl">🚪</span>
+      </a>
+
+      <div onclick="alert('Exportação de relatório em PDF disparada pelo backend serverless!')" class="p-4 bg-white rounded-xl border border-gray-200 hover:border-brandBlue shadow-sm flex items-center justify-between group cursor-pointer transition">
+        <div>
+          <h2 class="text-sm font-bold text-gray-800 group-hover:text-brandBlue">Gerar Relatório de Estoque (PDF)</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Balanço FEFO com gráficos</p>
+        </div>
+        <span class="text-xl">📄</span>
+      </div>
+    </div>
+
+    <!-- Atividades e Movimentações Recentes -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+      <h2 class="text-base font-bold text-brandBlue border-b pb-2">Registro Recente de Movimentações (Auditoria)</h2>
+      <div class="space-y-3 text-xs">
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-brandBlue">Entrada de Lote:</span> Leite Integral UHT (24 pacotes) no Armário A
+            <p class="text-gray-500 mt-0.5">Operador: Daniel Soares • 20/10/2026 às 15:30</p>
+          </div>
+          <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">Entrada</span>
+        </div>
+
+        <div class="p-3 bg-red-50 rounded-xl border border-red-200 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-stateError">Baixa com Trava PERDA:</span> Iogurte Natural (2 un) por vencimento
+            <p class="text-gray-500 mt-0.5">Operadora: Laura Brianti • Justificativa: Lote atingiu a validade máxima</p>
+          </div>
+          <span class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-full">Descarte</span>
+        </div>
+
+        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-center">
+          <div>
+            <span class="font-bold text-gray-800">Transferência Interna:</span> Arroz Agulhinha (10 pacotes) da Despensa para Geladeira
+            <p class="text-gray-500 mt-0.5">Operador: Juliano Mancini • Transação atômica confirmada</p>
+          </div>
+          <span class="bg-blue-100 text-brandBlue font-bold px-2.5 py-1 rounded-full">Transferência</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
+    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
+  </footer>
+</body>
+</html>
