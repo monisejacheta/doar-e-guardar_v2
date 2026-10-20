@@ -1,0 +1,55 @@
+/* web/public/css/styles.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --brand-blue: #1E3A8A;
+  --brand-green: #10B981;
+  --accent-amber: #F59E0B;
+  --state-error: #DC2626;
+  --neutral-dark: #111827;
+  --neutral-sub: #4B5563;
+  --neutral-surface: #F3F4F6;
+  --font-multiplier: 1rem;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: var(--neutral-dark);
+  font-size: var(--font-multiplier);
+}
+
+/* Modo Alto Contraste (WCAG AAA) */
+body.high-contrast {
+  background-color: #000000 !important;
+  color: #FFFFFF !important;
+}
+
+body.high-contrast .bg-white,
+body.high-contrast .bg-slate-50,
+body.high-contrast .bg-gray-100 {
+  background-color: #121212 !important;
+  color: #FFFFFF !important;
+  border-color: #FFFF00 !important;
+}
+
+body.high-contrast a,
+body.high-contrast button {
+  outline: 2px solid #FFFF00 !important;
+}
+
+/* Escala de Fonte Acessível (WCAG 1.4.4) */
+body.font-large {
+  font-size: 1.25rem !important;
+}
+
+body.font-extra {
+  font-size: 1.4rem !important;
+}
+
+/* Touch Targets Acessíveis (WCAG 2.5.5 >= 48px) */
+.btn-touch {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}

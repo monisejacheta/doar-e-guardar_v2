@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Como e Onde Doar | Casa da Criança</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#1E3A8A',
+            brandGreen: '#10B981',
+            accentAmber: '#F59E0B',
+            stateError: '#DC2626',
+            neutralDark: '#111827',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../../public/css/styles.css">
+  <script src="../../public/js/accessibility.js" defer></script>
+</head>
+<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+
+  <!-- Cabeçalho -->
+  <nav class="bg-brandBlue text-white py-4 px-4 sm:px-8 flex justify-between items-center shadow-md">
+    <a href="../../index.html" class="flex items-center gap-3">
+      <div class="w-10 h-10 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-xl shadow">
+        🏠
+      </div>
+      <div>
+        <span class="text-xl font-bold tracking-tight block">Doar&Guardar</span>
+        <span class="text-xs text-blue-200 block">Casa da Criança</span>
+      </div>
+    </a>
+    <div class="flex items-center gap-3">
+      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
+        🌓 Contraste
+      </button>
+      <a href="../../index.html" class="text-white hover:text-green-300 font-semibold text-sm">
+        Voltar à Página Inicial
+      </a>
+    </div>
+  </nav>
+
+  <main class="flex-grow max-w-6xl mx-auto p-4 sm:p-8 space-y-8">
+
+    <!-- Título Principal -->
+    <div>
+      <h1 class="text-2xl sm:text-4xl font-extrabold text-brandBlue mb-2">
+        Como e Onde Doar Alimentos
+      </h1>
+      <p class="text-sm text-gray-600">
+        Saiba como entregar sua contribuição presencialmente ou apoiar campanhas comunitárias ativas.
+      </p>
+    </div>
+
+    <!-- Banner de Isenção e Esclarecimento (US01) -->
+    <div class="bg-emerald-50 border-l-4 border-brandGreen p-4 rounded-r-xl shadow-sm" role="alert">
+      <div class="flex items-start gap-3">
+        <span class="text-2xl">💚</span>
+        <div>
+          <h2 class="font-bold text-emerald-900 text-sm">Toda doação faz a diferença!</h2>
+          <p class="text-xs text-emerald-800 mt-0.5">
+            Os alimentos indicados como <strong>críticos</strong> abaixo são sugestões baseadas no saldo atual do nosso estoque. <strong>Qualquer alimento, leite ou mantimento em boas condições de consumo é bem-vindo e aceito com imensa gratidão.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Seção Dividida: Painel de Itens Críticos + Informações de Contato -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- 1. Painel de Sugestão de Itens Críticos (US01) -->
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2">
+            <span>📦</span> Itens Críticos no Estoque
+          </h2>
+          <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold">
+            Urgência de Reposição
+          </span>
+        </div>
+
+        <p class="text-xs text-gray-500 mb-4">
+          Alimentos monitorados automaticamente pelo sistema de inventário:
+        </p>
+
+        <div class="space-y-3">
+          <div class="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-xl">
+            <div>
+              <p class="font-bold text-sm text-gray-800">Leite Integral UHT (1 Litro)</p>
+              <p class="text-xs text-gray-500">Categoria: Laticínios</p>
+            </div>
+            <span class="text-xs font-bold text-red-600 bg-white px-2 py-1 rounded border border-red-300">
+              Estoque Mínimo
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <div>
+              <p class="font-bold text-sm text-gray-800">Feijão Carioca Tipo 1 (1kg)</p>
+              <p class="text-xs text-gray-500">Categoria: Grãos e Cereais</p>
+            </div>
+            <span class="text-xs font-bold text-amber-700 bg-white px-2 py-1 rounded border border-amber-300">
+              Poucas Unidades
+            </span>
+          </div>
+
+          <div class="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-xl">
+            <div>
+              <p class="font-bold text-sm text-gray-800">Óleo de Soja (900ml)</p>
+              <p class="text-xs text-gray-500">Categoria: Óleos e Temperos</p>
+            </div>
+            <span class="text-xs font-bold text-amber-700 bg-white px-2 py-1 rounded border border-amber-300">
+              Poucas Unidades
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Canais de Contato e Chave Pix -->
+      <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <h2 class="text-lg font-bold text-brandBlue mb-4 flex items-center gap-2">
+            <span>📞</span> Canais de Atendimento e Doação
+          </h2>
+          <div class="space-y-3 text-sm">
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-gray-700 w-24">WhatsApp:</span>
+              <span class="text-brandGreen font-bold">(19) 98765-4321</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-gray-700 w-24">Telefone:</span>
+              <span>(19) 3863-0000</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-gray-700 w-24">E-mail:</span>
+              <span>doacoes@casadacrianca.org.br</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="font-bold text-gray-700 w-24">Horário:</span>
+              <span>Segunda a Sexta, das 07h30 às 17h00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chave Pix -->
+        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+          <p class="text-xs font-bold text-brandBlue mb-1">Doação Financeira Direta via PIX:</p>
+          <div class="flex items-center justify-between">
+            <code class="text-sm font-mono text-gray-800 font-bold">cnpj: 51.123.456/0001-78</code>
+            <button onclick="navigator.clipboard.writeText('51.123.456/0001-78'); alert('Chave PIX copiada!');" class="text-xs bg-brandBlue text-white px-2.5 py-1.5 rounded font-semibold hover:bg-blue-900">
+              Copiar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa e Localização Física com Google Maps API (US01) -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <h2 class="text-lg font-bold text-brandBlue mb-2 flex items-center gap-2">
+        <span>📍</span> Localização da Sede e Ponto de Coleta
+      </h2>
+      <p class="text-xs text-gray-600 mb-4">
+        Endereço: <strong>Rua XV de Novembro, 1000 - Centro, Itapira - SP, 13970-000</strong>
+      </p>
+
+      <!-- Frame Responsivo do Google Maps -->
+      <div class="w-full h-72 rounded-xl overflow-hidden border border-gray-300">
+        <iframe
+          title="Localização da Casa da Criança no Google Maps"
+          width="100%"
+          height="100%"
+          style="border:0"
+          loading="lazy"
+          allowfullscreen
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14742.66228308477!2d-46.82916!3d-22.43472!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c8e76c245a4a99%3A0x6b77242e88a38!2sItapira%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1697800000000">
+        </iframe>
+      </div>
+    </div>
+
+    <!-- Vitrine de Campanhas Homologadas Ativas (US01) -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2">
+            <span>🎉</span> Campanhas da Comunidade em Andamento
+          </h2>
+          <p class="text-xs text-gray-500">
+            Iniciativas de doadores já validadas e aprovadas pela Casa da Criança.
+          </p>
+        </div>
+        <a href="../../index.html#modal-login" class="text-xs bg-brandGreen text-white font-bold px-3 py-2 rounded-lg hover:bg-emerald-600 transition">
+          + Criar Minha Campanha
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-sm text-brandBlue">Campanha de Leite do Bairro Santa Cruz</h3>
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Ativa</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-2">
+            Organizada por: <strong>Juliano Mancini</strong> • Ponto de Coleta: Mercearia Central
+          </p>
+          <div class="mt-3 text-xs text-gray-700">
+            <strong>Meta:</strong> 200 Litros de Leite Integral UHT
+          </div>
+        </div>
+
+        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-sm text-brandBlue">Arrecadação de Mantimentos Grêmio Estudantil</h3>
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Ativa</span>
+          </div>
+          <p class="text-xs text-gray-600 mt-2">
+            Organizada por: <strong>Laura Brianti</strong> • Ponto de Coleta: Colégio Municipal
+          </p>
+          <div class="mt-3 text-xs text-gray-700">
+            <strong>Meta:</strong> 150 kg de Arroz e Feijão
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Rodapé -->
+  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
+    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
+  </footer>
+</body>
+</html>
