@@ -82,6 +82,7 @@ def funcaoGravarSessaoUsuarioNoSql(dados_usuario: Dict[str, Any], plataforma: st
             "id_usuario": dados_usuario["uid"],
             "email_usuario": dados_usuario["email"],
             "nome_usuario": dados_usuario.get("nome", ""),
+            "url_foto_perfil": dados_usuario.get("foto") or dados_usuario.get("photoURL", ""),
             "plataforma_acesso": plataforma,
             "nivel_acesso_permissao": dados_usuario.get("role", "funcionario_operador"),
             "status_sessao_ativa": True,
