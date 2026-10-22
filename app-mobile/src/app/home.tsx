@@ -1,5 +1,5 @@
 // app-mobile/src/app/home.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Text,
   View,
@@ -9,25 +9,31 @@ import {
   Image,
   TextInput,
   Modal,
+  ActivityIndicator,
+  RefreshControl,
   useWindowDimensions,
 } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { auth } from '../services/firebaseConfig';
+import { requisicaoApi } from '../services/api';
 import { useAppTheme } from '../context/ThemeContext';
 
-interface ItemEstoqueConsulta {
+interface LoteDynamoDB {
+  id_lote_produto: string;
   id_produto: string;
   nome_produto: string;
-  codigo_barra: string;
   categoria: string;
-  lote: string;
-  local_armazenamento: string;
-  sublocal: string;
-  quantidade_pacotes: number;
-  data_validade: string;
-  data_entrada: string;
-  status_validade: 'regular' | 'proximo_vencimento' | 'vencido';
+  codigo_barra_produto: string;
+  numero_codigo_lote: string;
+  quantidade_atual_pacote: number;
+  quantidade_inicial_pacote?: number;
+  estoque_minimo_pacote?: number;
+  data_entrada_lote?: string;
+  data_validade_lote: string;
+  status_validade_lote: string;
+  id_local_armazenamento?: string;
+  local_descricao: string;
   observacao?: string;
 }
 
@@ -37,105 +43,47 @@ export default function HomeScreen() {
   const { theme, tokens, fontScale } = useAppTheme();
   const { width: larguraJanela } = useWindowDimensions();
 
+  // Estados do Usuário (Firebase Auth)
   const [usuarioNome, setUsuarioNome] = useState('Colaborador');
   const [fotoPerfil, setFotoPerfil] = useState<string | null>(null);
   const [erroCarregarFoto, setErroCarregarFoto] = useState(false);
+
+  // Estados dos Dados Vindos do DynamoDB
+  const [lotes, setLotes] = useState<LoteDynamoDB[]>([]);
+  const [totalPacotesGeral, setTotalPacotesGeral] = useState(0);
+  const [carregando, setCarregando] = useState(true);
+  const [recarregando, setRecarregando] = useState(false);
+
+  // Filtros e Visualização
   const [termoBusca, setTermoBusca] = useState('');
   const [modoExibicao, setModoExibicao] = useState<'lista' | 'grid'>('lista');
 
   // Estado do Modal de Detalhes
-  const [itemSelecionado, setItemSelecionado] = useState<ItemEstoqueConsulta | null>(null);
+  const [itemSelecionado, setItemSelecionado] = useState<LoteDynamoDB | null>(null);
   const [modalVisivel, setModalVisivel] = useState(false);
 
-  // Itens de estoque para consulta rápida (apenas leitura)
-  const [itensEstoque] = useState<ItemEstoqueConsulta[]>([
-    {
-      id_produto: 'prod_001',
-      nome_produto: 'Leite Integral UHT 1L (Líder)',
-      codigo_barra: '7891000100103',
-      categoria: 'Laticínios',
-      lote: 'LOTE-2026-L01',
-      local_armazenamento: 'Geladeira 1',
-      sublocal: 'Prat. Central',
-      quantidade_pacotes: 6,
-      data_entrada: '10/10/2026',
-      data_validade: '24/10/2026',
-      status_validade: 'proximo_vencimento',
-      observacao: 'Consumir com urgência na preparação dos lanches matinais.',
-    },
-    {
-      id_produto: 'prod_002',
-      nome_produto: 'Arroz Agulhinha Tipo 1 5kg (Camil)',
-      codigo_barra: '7891000200204',
-      categoria: 'Grãos e Cereais',
-      lote: 'LOTE-AR-88',
-      local_armazenamento: 'Armário A',
-      sublocal: 'Prat. 2',
-      quantidade_pacotes: 48,
-      data_entrada: '05/10/2026',
-      data_validade: '15/04/2027',
-      status_validade: 'regular',
-      observacao: 'Fardo fechado em embalagem secundária protegida contra umidade.',
-    },
-    {
-      id_produto: 'prod_003',
-      nome_produto: 'Feijão Carioca 1kg (Kicaldo)',
-      codigo_barra: '7891000300305',
-      categoria: 'Grãos e Cereais',
-      lote: 'LOTE-FJ-12',
-      local_armazenamento: 'Armário A',
-      sublocal: 'Prat. 1',
-      quantidade_pacotes: 30,
-      data_entrada: '08/10/2026',
-      data_validade: '10/01/2027',
-      status_validade: 'regular',
-      observacao: 'Doação de campanha comunitária paroquial.',
-    },
-    {
-      id_produto: 'prod_004',
-      nome_produto: 'Macarrão Espaguete 500g (Barilla)',
-      codigo_barra: '7891000400406',
-      categoria: 'Massas',
-      lote: 'LOTE-MC-04',
-      local_armazenamento: 'Armário B',
-      sublocal: 'Prat. 3',
-      quantidade_pacotes: 25,
-      data_entrada: '12/09/2026',
-      data_validade: '02/11/2026',
-      status_validade: 'proximo_vencimento',
-      observacao: 'Lote prioritário no critério FEFO da despensa.',
-    },
-    {
-      id_produto: 'prod_005',
-      nome_produto: 'Óleo de Soja 900ml (Soya)',
-      codigo_barra: '7891000500507',
-      categoria: 'Óleos e Gorduras',
-      lote: 'LOTE-OL-30',
-      local_armazenamento: 'Armário A',
-      sublocal: 'Prat. 4',
-      quantidade_pacotes: 12,
-      data_entrada: '14/10/2026',
-      data_validade: '30/08/2027',
-      status_validade: 'regular',
-      observacao: 'Armazenado ao abrigo da luz solar direta.',
-    },
-    {
-      id_produto: 'prod_006',
-      nome_produto: 'Açúcar Refinado 1kg (União)',
-      codigo_barra: '7891000600608',
-      categoria: 'Mercearia Doce',
-      lote: 'LOTE-AC-19',
-      local_armazenamento: 'Armário B',
-      sublocal: 'Prat. 1',
-      quantidade_pacotes: 18,
-      data_entrada: '16/10/2026',
-      data_validade: '12/12/2027',
-      status_validade: 'regular',
-      observacao: 'Pacotes íntegros sem rompimento de lacre.',
-    },
-  ]);
+  // Carrega os dados reais do DynamoDB via AWS Lambda
+  const buscarEstoqueDynamoDB = useCallback(async () => {
+    try {
+      const resposta: any = await requisicaoApi('/api/estoque', {
+        metodo: 'POST',
+        dados: { modulo: 'estoque', acao: 'consultar_estoque' },
+      });
+
+      if (resposta?.sucesso && Array.isArray(resposta.lotes)) {
+        setLotes(resposta.lotes);
+        setTotalPacotesGeral(resposta.total_pacotes || 0);
+      }
+    } catch (erro) {
+      console.warn('[DYNAMODB HOME] Falha ao recuperar estoque:', erro);
+    } finally {
+      setCarregando(false);
+      setRecarregando(false);
+    }
+  }, []);
 
   useEffect(() => {
+    // Escuta sessão ativa do Firebase
     const desinscrever = auth.onAuthStateChanged((user) => {
       if (user) {
         setUsuarioNome(user.displayName || user.email?.split('@')[0] || 'Colaborador');
@@ -146,20 +94,48 @@ export default function HomeScreen() {
       }
     });
 
-    return () => desinscrever();
-  }, []);
+    buscarEstoqueDynamoDB();
 
-  const abrirDetalhesProduto = (item: ItemEstoqueConsulta) => {
+    return () => desinscrever();
+  }, [buscarEstoqueDynamoDB]);
+
+  // Totalizadores de Alerta Operacional
+  const totalLotesVencendo = lotes.filter(
+    (l) => l.status_validade_lote === 'próximo do vencimento'
+  ).length;
+
+  const totalItensCriticos = lotes.filter(
+    (l) => (l.quantidade_atual_pacote || 0) < (l.estoque_minimo_pacote || 10)
+  ).length;
+
+  // Filtragem em tempo real na barra de busca
+  const itensFiltrados = lotes.filter((item) => {
+    const termo = termoBusca.toLowerCase();
+    return (
+      item.nome_produto?.toLowerCase().includes(termo) ||
+      item.codigo_barra_produto?.includes(termo) ||
+      item.local_descricao?.toLowerCase().includes(termo) ||
+      item.numero_codigo_lote?.toLowerCase().includes(termo) ||
+      item.categoria?.toLowerCase().includes(termo)
+    );
+  });
+
+  const abrirDetalhes = (item: LoteDynamoDB) => {
     setItemSelecionado(item);
     setModalVisivel(true);
   };
 
-  const fecharDetalhesProduto = () => {
+  const fecharDetalhes = () => {
     setModalVisivel(false);
     setItemSelecionado(null);
   };
 
-  // Widgets da Barra Inferior
+  // Cálculo de Grid (3 por linha)
+  const paddingHorizontalTotal = 40;
+  const espacamentoGrid = 8;
+  const larguraCardGrid = (larguraJanela - paddingHorizontalTotal - espacamentoGrid * 2) / 3;
+
+  // Widgets Fixos da Barra Inferior
   const widgetsInferiores = [
     { nome: 'Início', icone: 'home', rota: '/home' },
     { nome: 'Estoque', icone: 'package', rota: '/stock' },
@@ -167,18 +143,6 @@ export default function HomeScreen() {
     { nome: 'Avisos', icone: 'bell', rota: '/notifications' },
     { nome: 'Perfil', icone: 'user', rota: '/profile' },
   ];
-
-  const itensFiltrados = itensEstoque.filter((item) =>
-    item.nome_produto.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    item.codigo_barra.includes(termoBusca) ||
-    item.local_armazenamento.toLowerCase().includes(termoBusca.toLowerCase()) ||
-    item.lote.toLowerCase().includes(termoBusca.toLowerCase())
-  );
-
-  // Grid de 3 colunas
-  const paddingHorizontalTotal = 40;
-  const espacamentoGrid = 8;
-  const larguraCardGrid = (larguraJanela - paddingHorizontalTotal - espacamentoGrid * 2) / 3;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -188,14 +152,24 @@ export default function HomeScreen() {
           paddingBottom: 96,
         }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={recarregando}
+            onRefresh={() => {
+              setRecarregando(true);
+              buscarEstoqueDynamoDB();
+            }}
+            tintColor={theme.primary}
+          />
+        }
       >
-        {/* Cabeçalho Superior */}
+        {/* Cabeçalho Superior com Perfil do Google */}
         <View
           style={{
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: 20,
+            marginBottom: 16,
           }}
         >
           <View style={{ flex: 1, paddingRight: 12 }}>
@@ -222,19 +196,19 @@ export default function HomeScreen() {
             </Text>
           </View>
 
-          {/* Botão de Perfil */}
+          {/* Avatar com Foto do Google */}
           <TouchableOpacity
             onPress={() => roteador.push('/profile')}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Abrir perfil do colaborador e configurações"
+            accessibilityLabel="Abrir perfil do usuário e configurações"
             style={{
               width: 50,
               height: 50,
               borderRadius: 25,
               backgroundColor: '#E5E7EB',
               borderWidth: 2,
-              borderColor: '#10B981',
+              borderColor: '#10B981', // Verde Doar
               alignItems: 'center',
               justifyContent: 'center',
               overflow: 'hidden',
@@ -255,35 +229,69 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Alerta Informativo FEFO */}
+        {/* Card Resumo do DynamoDB */}
         <View
           style={{
-            backgroundColor: '#FFFBEB',
+            backgroundColor: theme.primary,
             borderRadius: 16,
             padding: 16,
-            borderLeftWidth: 5,
-            borderLeftColor: '#F59E0B',
-            marginBottom: 20,
+            marginBottom: 16,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
             shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.05,
-            shadowRadius: 3,
-            elevation: 1,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
           }}
         >
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-            <Feather name="alert-triangle" size={18} color="#D97706" style={{ marginRight: 8 }} />
-            <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 14 * fontScale }}>
-              Critério FEFO Ativo: 2 itens com validade próxima
+          <View>
+            <Text style={{ color: '#E0E7FF', fontSize: 12 * fontScale, fontWeight: '600' }}>
+              Total no Banco DynamoDB
+            </Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 24 * fontScale, fontWeight: '800', marginTop: 2 }}>
+              {totalPacotesGeral} pacotes
             </Text>
           </View>
-          <Text style={{ color: '#B45309', fontSize: 12 * fontScale, lineHeight: 18 }}>
-            Toque nos itens sinalizados em âmbar para conferir localização exata e dados do lote.
-          </Text>
+          <View style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 12 * fontScale }}>
+              {lotes.length} lotes ativos
+            </Text>
+          </View>
         </View>
 
-        {/* Barra de Pesquisa e Alternador Lista/Grade */}
-        <View style={{ marginBottom: 16 }}>
+        {/* Card de Alertas FEFO & Estoque Mínimo */}
+        {totalLotesVencendo > 0 && (
+          <View
+            style={{
+              backgroundColor: '#FFFBEB',
+              borderRadius: 16,
+              padding: 14,
+              borderLeftWidth: 5,
+              borderLeftColor: '#F59E0B',
+              marginBottom: 18,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 1 },
+              shadowOpacity: 0.05,
+              shadowRadius: 3,
+              elevation: 1,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+              <Feather name="alert-triangle" size={16} color="#D97706" style={{ marginRight: 6 }} />
+              <Text style={{ fontWeight: '700', color: '#92400E', fontSize: 13 * fontScale }}>
+                Atenção FEFO: {totalLotesVencendo} lote(s) próximo(s) do vencimento
+              </Text>
+            </View>
+            <Text style={{ color: '#B45309', fontSize: 11 * fontScale, lineHeight: 16 }}>
+              Priorize os itens sinalizados em âmbar na preparação das refeições diárias.
+            </Text>
+          </View>
+        )}
+
+        {/* Cabeçalho da Seção de Busca e Alternador de Visão */}
+        <View style={{ marginBottom: 14 }}>
           <View
             style={{
               flexDirection: 'row',
@@ -292,14 +300,8 @@ export default function HomeScreen() {
               marginBottom: 10,
             }}
           >
-            <Text
-              style={{
-                color: theme.text,
-                fontSize: 16 * fontScale,
-                fontWeight: '700',
-              }}
-            >
-              Consulta Rápida do Estoque
+            <Text style={{ color: theme.text, fontSize: 16 * fontScale, fontWeight: '700' }}>
+              Itens em Estoque ({itensFiltrados.length})
             </Text>
 
             {/* Alternador Lista / Grade */}
@@ -320,22 +322,18 @@ export default function HomeScreen() {
                 accessibilityLabel="Exibir estoque em lista detalhada"
                 accessibilityState={{ selected: modoExibicao === 'lista' }}
                 style={{
-                  minWidth: 44,
-                  minHeight: 38,
+                  minWidth: 40,
+                  minHeight: 34,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: modoExibicao === 'lista' ? '#FFFFFF' : 'transparent',
                   borderRadius: 8,
-                  shadowColor: modoExibicao === 'lista' ? '#000' : 'transparent',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: modoExibicao === 'lista' ? 0.08 : 0,
-                  shadowRadius: 2,
                   elevation: modoExibicao === 'lista' ? 1 : 0,
                 }}
               >
                 <Feather
                   name="list"
-                  size={18}
+                  size={16}
                   color={modoExibicao === 'lista' ? '#1E3A8A' : '#6B7280'}
                 />
               </TouchableOpacity>
@@ -347,29 +345,25 @@ export default function HomeScreen() {
                 accessibilityLabel="Exibir estoque em grade de 3 colunas"
                 accessibilityState={{ selected: modoExibicao === 'grid' }}
                 style={{
-                  minWidth: 44,
-                  minHeight: 38,
+                  minWidth: 40,
+                  minHeight: 34,
                   alignItems: 'center',
                   justifyContent: 'center',
                   backgroundColor: modoExibicao === 'grid' ? '#FFFFFF' : 'transparent',
                   borderRadius: 8,
-                  shadowColor: modoExibicao === 'grid' ? '#000' : 'transparent',
-                  shadowOffset: { width: 0, height: 1 },
-                  shadowOpacity: modoExibicao === 'grid' ? 0.08 : 0,
-                  shadowRadius: 2,
                   elevation: modoExibicao === 'grid' ? 1 : 0,
                 }}
               >
                 <Ionicons
                   name="grid-outline"
-                  size={18}
+                  size={16}
                   color={modoExibicao === 'grid' ? '#1E3A8A' : '#6B7280'}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Campo de Busca */}
+          {/* Campo de Entrada de Busca */}
           <View
             style={{
               flexDirection: 'row',
@@ -379,12 +373,12 @@ export default function HomeScreen() {
               borderWidth: 1.5,
               borderColor: '#E5E7EB',
               paddingHorizontal: 12,
-              height: 48,
+              height: 46,
             }}
           >
-            <Feather name="search" size={18} color="#9CA3AF" style={{ marginRight: 8 }} />
+            <Feather name="search" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
             <TextInput
-              placeholder="Buscar por produto, EAN, lote ou local..."
+              placeholder="Buscar por produto, lote, armário ou EAN..."
               placeholderTextColor="#9CA3AF"
               value={termoBusca}
               onChangeText={setTermoBusca}
@@ -395,36 +389,42 @@ export default function HomeScreen() {
               }}
             />
             {termoBusca.length > 0 && (
-              <TouchableOpacity
-                onPress={() => setTermoBusca('')}
-                style={{ padding: 4 }}
-                accessibilityLabel="Limpar pesquisa"
-              >
+              <TouchableOpacity onPress={() => setTermoBusca('')} style={{ padding: 4 }}>
                 <Feather name="x-circle" size={16} color="#9CA3AF" />
               </TouchableOpacity>
             )}
           </View>
         </View>
 
-        {/* LISTA TOUCHABLE */}
-        {modoExibicao === 'lista' ? (
-          <View style={{ gap: 12 }}>
+        {/* Indicador de Carregamento */}
+        {carregando ? (
+          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color={theme.primary} />
+            <Text style={{ marginTop: 10, color: theme.subtext, fontSize: 13 * fontScale }}>
+              Sincronizando dados com o DynamoDB...
+            </Text>
+          </View>
+        ) : modoExibicao === 'lista' ? (
+          /* MODO 1: Lista Detalhada */
+          <View style={{ gap: 10 }}>
             {itensFiltrados.map((item) => {
-              const isAlerta = item.status_validade === 'proximo_vencimento';
+              const isVencendo = item.status_validade_lote === 'próximo do vencimento';
+              const isCritico = (item.quantidade_atual_pacote || 0) < (item.estoque_minimo_pacote || 10);
+
               return (
                 <TouchableOpacity
-                  key={item.id_produto}
-                  onPress={() => abrirDetalhesProduto(item)}
-                  activeOpacity={0.7}
+                  key={item.id_lote_produto}
+                  onPress={() => abrirDetalhes(item)}
+                  activeOpacity={0.75}
                   accessible={true}
                   accessibilityRole="button"
-                  accessibilityLabel={`Visualizar detalhes de ${item.nome_produto}, saldo de ${item.quantidade_pacotes} pacotes em ${item.local_armazenamento}`}
+                  accessibilityLabel={`${item.nome_produto}, saldo de ${item.quantidade_atual_pacote} pacotes em ${item.local_descricao}`}
                   style={{
                     backgroundColor: '#FFFFFF',
-                    borderRadius: 16,
-                    padding: 16,
+                    borderRadius: 14,
+                    padding: 14,
                     borderWidth: 1.5,
-                    borderColor: isAlerta ? '#FCD34D' : '#E5E7EB',
+                    borderColor: isVencendo ? '#FCD34D' : isCritico ? '#FCA5A5' : '#E5E7EB',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 1 },
                     shadowOpacity: 0.04,
@@ -437,7 +437,7 @@ export default function HomeScreen() {
                       flexDirection: 'row',
                       justifyContent: 'space-between',
                       alignItems: 'flex-start',
-                      marginBottom: 8,
+                      marginBottom: 6,
                     }}
                   >
                     <View style={{ flex: 1, paddingRight: 8 }}>
@@ -451,16 +451,17 @@ export default function HomeScreen() {
                       >
                         {item.nome_produto}
                       </Text>
-                      <Text style={{ fontSize: 11 * fontScale, color: '#6B7280', marginTop: 2 }}>
-                        EAN: {item.codigo_barra} • {item.categoria}
+                      <Text style={{ fontSize: 11 * fontScale, color: '#6B7280', marginTop: 1 }}>
+                        Lote: {item.numero_codigo_lote} • {item.categoria}
                       </Text>
                     </View>
 
+                    {/* Saldo de Pacotes */}
                     <View
                       style={{
                         backgroundColor: '#EFF6FF',
-                        borderRadius: 10,
-                        paddingVertical: 4,
+                        borderRadius: 8,
+                        paddingVertical: 3,
                         paddingHorizontal: 8,
                         borderWidth: 1,
                         borderColor: '#BFDBFE',
@@ -474,20 +475,15 @@ export default function HomeScreen() {
                           color: '#1E3A8A',
                         }}
                       >
-                        {item.quantidade_pacotes}
+                        {item.quantidade_atual_pacote}
                       </Text>
-                      <Text
-                        style={{
-                          fontSize: 9 * fontScale,
-                          color: '#1E3A8A',
-                          fontWeight: '600',
-                        }}
-                      >
+                      <Text style={{ fontSize: 9 * fontScale, color: '#1E3A8A', fontWeight: '600' }}>
                         pacotes
                       </Text>
                     </View>
                   </View>
 
+                  {/* Linha Inferior: Localização e Vencimento */}
                   <View
                     style={{
                       flexDirection: 'row',
@@ -499,15 +495,9 @@ export default function HomeScreen() {
                     }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <Feather name="box" size={13} color="#4B5563" style={{ marginRight: 5 }} />
-                      <Text
-                        style={{
-                          fontSize: 11 * fontScale,
-                          color: '#4B5563',
-                          fontWeight: '500',
-                        }}
-                      >
-                        {item.local_armazenamento} ({item.sublocal})
+                      <Feather name="box" size={12} color="#4B5563" style={{ marginRight: 5 }} />
+                      <Text style={{ fontSize: 11 * fontScale, color: '#4B5563', fontWeight: '500' }}>
+                        {item.local_descricao}
                       </Text>
                     </View>
 
@@ -515,26 +505,26 @@ export default function HomeScreen() {
                       style={{
                         flexDirection: 'row',
                         alignItems: 'center',
-                        backgroundColor: isAlerta ? '#FEF3C7' : '#F3F4F6',
-                        paddingHorizontal: 8,
-                        paddingVertical: 4,
-                        borderRadius: 8,
+                        backgroundColor: isVencendo ? '#FEF3C7' : '#F3F4F6',
+                        paddingHorizontal: 7,
+                        paddingVertical: 3,
+                        borderRadius: 6,
                       }}
                     >
                       <Feather
-                        name={isAlerta ? 'alert-circle' : 'calendar'}
-                        size={12}
-                        color={isAlerta ? '#B45309' : '#4B5563'}
+                        name={isVencendo ? 'alert-circle' : 'calendar'}
+                        size={11}
+                        color={isVencendo ? '#B45309' : '#4B5563'}
                         style={{ marginRight: 4 }}
                       />
                       <Text
                         style={{
                           fontSize: 10 * fontScale,
-                          fontWeight: isAlerta ? '700' : '500',
-                          color: isAlerta ? '#B45309' : '#4B5563',
+                          fontWeight: isVencendo ? '700' : '500',
+                          color: isVencendo ? '#B45309' : '#4B5563',
                         }}
                       >
-                        Vence: {item.data_validade}
+                        Vence: {item.data_validade_lote}
                       </Text>
                     </View>
                   </View>
@@ -543,7 +533,7 @@ export default function HomeScreen() {
             })}
           </View>
         ) : (
-          /* GRADE TOUCHABLE (3 POR LINHA) */
+          /* MODO 2: Grade (3 Colunas por Linha) */
           <View
             style={{
               flexDirection: 'row',
@@ -552,23 +542,23 @@ export default function HomeScreen() {
             }}
           >
             {itensFiltrados.map((item) => {
-              const isAlerta = item.status_validade === 'proximo_vencimento';
+              const isVencendo = item.status_validade_lote === 'próximo do vencimento';
               return (
                 <TouchableOpacity
-                  key={item.id_produto}
-                  onPress={() => abrirDetalhesProduto(item)}
+                  key={item.id_lote_produto}
+                  onPress={() => abrirDetalhes(item)}
                   activeOpacity={0.7}
                   accessible={true}
                   accessibilityRole="button"
-                  accessibilityLabel={`Visualizar detalhes de ${item.nome_produto}, ${item.quantidade_pacotes} pacotes em ${item.local_armazenamento}`}
+                  accessibilityLabel={`Visualizar detalhes de ${item.nome_produto}`}
                   style={{
                     width: larguraCardGrid,
-                    minHeight: 130,
+                    minHeight: 125,
                     backgroundColor: '#FFFFFF',
                     borderRadius: 12,
                     padding: 8,
                     borderWidth: 1.5,
-                    borderColor: isAlerta ? '#FCD34D' : '#E5E7EB',
+                    borderColor: isVencendo ? '#FCD34D' : '#E5E7EB',
                     justifyContent: 'space-between',
                     shadowColor: '#000',
                     shadowOffset: { width: 0, height: 1 },
@@ -601,13 +591,13 @@ export default function HomeScreen() {
                             color: '#1E3A8A',
                           }}
                         >
-                          {item.quantidade_pacotes}p
+                          {item.quantidade_atual_pacote}p
                         </Text>
                       </View>
-                      {isAlerta ? (
-                        <Feather name="alert-triangle" size={13} color="#D97706" />
+                      {isVencendo ? (
+                        <Feather name="alert-triangle" size={12} color="#D97706" />
                       ) : (
-                        <Feather name="check-circle" size={13} color="#10B981" />
+                        <Feather name="check-circle" size={12} color="#10B981" />
                       )}
                     </View>
 
@@ -633,18 +623,18 @@ export default function HomeScreen() {
                       }}
                       numberOfLines={1}
                     >
-                      {item.local_armazenamento}
+                      {item.local_descricao?.split('-')[0]?.trim()}
                     </Text>
                     <Text
                       style={{
                         fontSize: 8.5 * fontScale,
-                        fontWeight: isAlerta ? '700' : '400',
-                        color: isAlerta ? '#B45309' : '#9CA3AF',
+                        fontWeight: isVencendo ? '700' : '400',
+                        color: isVencendo ? '#B45309' : '#9CA3AF',
                         marginTop: 1,
                       }}
                       numberOfLines={1}
                     >
-                      {item.data_validade.slice(0, 5)}
+                      {item.data_validade_lote?.slice(5)}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -653,7 +643,8 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {itensFiltrados.length === 0 && (
+        {/* Estado Vazio de Busca */}
+        {!carregando && itensFiltrados.length === 0 && (
           <View
             style={{
               padding: 28,
@@ -662,26 +653,26 @@ export default function HomeScreen() {
               borderRadius: 16,
               borderWidth: 1,
               borderColor: '#E5E7EB',
-              marginTop: 8,
+              marginTop: 10,
             }}
           >
             <Feather name="inbox" size={32} color="#9CA3AF" style={{ marginBottom: 8 }} />
             <Text style={{ fontWeight: '700', color: '#374151', fontSize: 13 * fontScale }}>
-              Nenhum produto encontrado
+              Nenhum lote encontrado
             </Text>
             <Text style={{ color: '#9CA3AF', fontSize: 11 * fontScale, marginTop: 2 }}>
-              Tente buscar por outro termo ou código de barras.
+              Tente buscar por outro termo, local ou código de barras.
             </Text>
           </View>
         )}
       </ScrollView>
 
-      {/* MODAL DE INFORMAÇÕES COMPLETAS DO PRODUTO */}
+      {/* MODAL DE DETALHES COMPLETOS DO LOTE (DYNAMODB) */}
       <Modal
         visible={modalVisivel}
         transparent={true}
         animationType="fade"
-        onRequestClose={fecharDetalhesProduto}
+        onRequestClose={fecharDetalhes}
       >
         <View
           style={{
@@ -698,7 +689,7 @@ export default function HomeScreen() {
               maxWidth: 420,
               backgroundColor: '#FFFFFF',
               borderRadius: 20,
-              padding: 22,
+              padding: 20,
               shadowColor: '#000',
               shadowOffset: { width: 0, height: 4 },
               shadowOpacity: 0.2,
@@ -712,10 +703,10 @@ export default function HomeScreen() {
                 flexDirection: 'row',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
-                marginBottom: 16,
+                marginBottom: 14,
                 borderBottomWidth: 1,
                 borderBottomColor: '#F3F4F6',
-                paddingBottom: 12,
+                paddingBottom: 10,
               }}
             >
               <View style={{ flex: 1, paddingRight: 10 }}>
@@ -724,178 +715,121 @@ export default function HomeScreen() {
                     fontSize: 16 * fontScale,
                     fontWeight: '800',
                     color: '#1E3A8A', // Azul Guardar
-                    lineHeight: 22,
+                    lineHeight: 20,
                   }}
                 >
                   {itemSelecionado?.nome_produto}
                 </Text>
-                <Text
-                  style={{
-                    fontSize: 11 * fontScale,
-                    color: '#6B7280',
-                    marginTop: 2,
-                    fontWeight: '500',
-                  }}
-                >
-                  {itemSelecionado?.categoria}
+                <Text style={{ fontSize: 11 * fontScale, color: '#6B7280', marginTop: 2, fontWeight: '500' }}>
+                  Categoria: {itemSelecionado?.categoria}
                 </Text>
               </View>
 
               <TouchableOpacity
-                onPress={fecharDetalhesProduto}
+                onPress={fecharDetalhes}
                 accessible={true}
                 accessibilityRole="button"
-                accessibilityLabel="Fechar janela de detalhes do produto"
+                accessibilityLabel="Fechar janela"
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 18,
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
                   backgroundColor: '#F3F4F6',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <Feather name="x" size={20} color="#4B5563" />
+                <Feather name="x" size={18} color="#4B5563" />
               </TouchableOpacity>
             </View>
 
-            {/* Informações Estruturadas do Produto */}
-            <View style={{ gap: 10, marginBottom: 18 }}>
+            {/* Informações Estruturadas do Lote */}
+            <View style={{ gap: 8, marginBottom: 16 }}>
               {/* Saldo de Pacotes */}
               <View
                 style={{
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                   backgroundColor: '#EFF6FF',
-                  padding: 12,
-                  borderRadius: 12,
+                  padding: 10,
+                  borderRadius: 10,
                   borderWidth: 1,
                   borderColor: '#BFDBFE',
                 }}
               >
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Feather name="layers" size={16} color="#1E3A8A" style={{ marginRight: 8 }} />
+                  <Feather name="layers" size={15} color="#1E3A8A" style={{ marginRight: 6 }} />
                   <Text style={{ fontSize: 12 * fontScale, color: '#1E3A8A', fontWeight: '600' }}>
-                    Saldo em Estoque:
+                    Saldo Disponível:
                   </Text>
                 </View>
                 <Text style={{ fontSize: 13 * fontScale, fontWeight: '800', color: '#1E3A8A' }}>
-                  {itemSelecionado?.quantidade_pacotes} pacotes
+                  {itemSelecionado?.quantidade_atual_pacote} pacotes
                 </Text>
               </View>
 
               {/* Código EAN e Lote */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingVertical: 4,
-                }}
-              >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 }}>
                 <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Código de Barras:</Text>
                 <Text style={{ fontSize: 12 * fontScale, fontWeight: '700', color: '#111827' }}>
-                  {itemSelecionado?.codigo_barra}
+                  {itemSelecionado?.codigo_barra_produto}
                 </Text>
               </View>
 
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingVertical: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Código do Lote:</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 }}>
+                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Número do Lote:</Text>
                 <Text style={{ fontSize: 12 * fontScale, fontWeight: '700', color: '#111827' }}>
-                  {itemSelecionado?.lote}
+                  {itemSelecionado?.numero_codigo_lote}
                 </Text>
               </View>
 
               {/* Localização Física (Armário / Geladeira) */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingVertical: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Local Físico:</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 }}>
+                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Compartimento:</Text>
                 <Text style={{ fontSize: 12 * fontScale, fontWeight: '700', color: '#111827' }}>
-                  {itemSelecionado?.local_armazenamento} ({itemSelecionado?.sublocal})
+                  {itemSelecionado?.local_descricao}
                 </Text>
               </View>
 
-              {/* Entrada e Validade FEFO */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingVertical: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Data de Entrada:</Text>
-                <Text style={{ fontSize: 12 * fontScale, fontWeight: '600', color: '#374151' }}>
-                  {itemSelecionado?.data_entrada}
-                </Text>
-              </View>
+              {/* Data de Entrada e Validade FEFO */}
+              {itemSelecionado?.data_entrada_lote && (
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 }}>
+                  <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Data de Entrada:</Text>
+                  <Text style={{ fontSize: 12 * fontScale, fontWeight: '600', color: '#374151' }}>
+                    {itemSelecionado.data_entrada_lote}
+                  </Text>
+                </View>
+              )}
 
-              <View
-                style={{
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  paddingVertical: 4,
-                }}
-              >
-                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Data de Validade:</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 }}>
+                <Text style={{ fontSize: 12 * fontScale, color: '#6B7280' }}>Data de Validade (FEFO):</Text>
                 <Text
                   style={{
                     fontSize: 12 * fontScale,
                     fontWeight: '800',
                     color:
-                      itemSelecionado?.status_validade === 'proximo_vencimento'
+                      itemSelecionado?.status_validade_lote === 'próximo do vencimento'
                         ? '#D97706'
                         : '#10B981',
                   }}
                 >
-                  {itemSelecionado?.data_validade}
+                  {itemSelecionado?.data_validade_lote}
                 </Text>
               </View>
-
-              {/* Observação / Notas */}
-              {itemSelecionado?.observacao && (
-                <View
-                  style={{
-                    backgroundColor: '#F9FAFB',
-                    padding: 10,
-                    borderRadius: 10,
-                    borderWidth: 1,
-                    borderColor: '#E5E7EB',
-                    marginTop: 4,
-                  }}
-                >
-                  <Text style={{ fontSize: 11 * fontScale, color: '#6B7280', fontStyle: 'italic' }}>
-                    "{itemSelecionado.observacao}"
-                  </Text>
-                </View>
-              )}
             </View>
 
             {/* Botão de Fechar Modal */}
             <TouchableOpacity
-              onPress={fecharDetalhesProduto}
+              onPress={fecharDetalhes}
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Entendido, fechar detalhes"
+              accessibilityLabel="Fechar janela de detalhes"
               style={{
-                minHeight: 48,
+                minHeight: 46,
                 backgroundColor: '#1E3A8A', // Azul Guardar
                 borderRadius: 12,
                 alignItems: 'center',
                 justifyContent: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
-                shadowRadius: 3,
                 elevation: 2,
               }}
             >
@@ -907,7 +841,7 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* Widgets Inferiores de Navegação */}
+      {/* Widgets Inferiores Fixos de Navegação */}
       <View
         style={{
           position: 'absolute',

@@ -1,14 +1,5 @@
 // app-mobile/src/services/api.ts
-import { Platform } from 'react-native';
-
-// Se estiver rodando no navegador (Web), usa localhost.
-// No emulador Android do Android Studio, usa 10.0.2.2.
-const API_BASE_URL = Platform.select({
-  web: 'http://localhost:3000',
-  android: 'http://10.0.2.2:3000',
-  ios: 'http://localhost:3000',
-  default: 'http://localhost:3000',
-});
+const API_BASE_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws';
 
 interface RequisicaoHttpOptions {
   metodo?: 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -18,9 +9,10 @@ interface RequisicaoHttpOptions {
 
 export async function requisicaoApi<T>(rota: string, options: RequisicaoHttpOptions = {}): Promise<T> {
   const { metodo = 'GET', dados, token } = options;
-  const urlCompleta = `${API_BASE_URL}${rota}`;
+  const rotaFormatada = rota.startsWith('/') ? rota : `/${rota}`;
+  const urlCompleta = `${API_BASE_URL}${rotaFormatada}`;
 
-  console.log(`[CLIENTE API] Disparando ${metodo} para: ${urlCompleta}`);
+  console.log(`[CLIENTE AWS REAL] Disparando ${metodo} para: ${urlCompleta}`);
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -36,10 +28,18 @@ export async function requisicaoApi<T>(rota: string, options: RequisicaoHttpOpti
     body: dados ? JSON.stringify(dados) : undefined,
   });
 
-  const payload = await resposta.json();
+  // Lê como texto primeiro para proteger contra respostas não-JSON (como 502/504)
+  const textoResposta = await resposta.text();
+  let payload: any = {};
+
+  try {
+    payload = JSON.parse(textoResposta);
+  } catch {
+    payload = { mensagem: textoResposta || `Erro HTTP ${resposta.status}` };
+  }
 
   if (!resposta.ok) {
-    throw new Error(payload.mensagem || payload.erro || 'Erro na comunicação com o servidor.');
+    throw new Error(payload.mensagem || payload.erro || `Falha na requisição: status ${resposta.status}`);
   }
 
   return payload as T;

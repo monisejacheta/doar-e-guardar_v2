@@ -1,47 +1,37 @@
 // app-mobile/src/services/authService.ts
+import { requisicaoApi } from './api';
 
 export interface UsuarioAutenticado {
-  nome: string;
-  email: string;
-  funcao: string;
-  foto?: string;
+  id_usuario: string;
+  nome_usuario: string;
+  email_usuario: string;
+  nivel_acesso_permissao: string;
+  url_foto_perfil?: string;
 }
-
-const ENDERECO_SERVICO = process.env.EXPO_PUBLIC_API_URL || '';
 
 export const authService = {
   /**
-   * Envia os dados de entrada para confirmação na central
+   * Envia os dados reais da autenticação para validação na AWS Lambda e persistência no DynamoDB.
    */
-  async entrarComGoogle(tokenIdentificacao: string): Promise<UsuarioAutenticado> {
-    try {
-      if (!ENDERECO_SERVICO) {
-        // Modo de demonstração enquanto o serviço na nuvem estiver sendo configurado
-        return {
-          nome: 'Colaborador da Casa da Criança',
-          email: 'colaborador@casadacrianca.org.br',
-          funcao: 'Atendimento e Estoque',
-        };
-      }
+  async sincronizarUsuarioComBackend(
+    idToken: string,
+    perfil: { id: string; name?: string | null; email?: string | null; foto?: string | null },
+    plataforma: string = 'portal_web'
+  ): Promise<UsuarioAutenticado> {
+    const resposta: any = await requisicaoApi('/api/auth/login', {
+      metodo: 'POST',
+      dados: {
+        tipo_login: 'google',
+        id_token: idToken,
+        perfil_usuario: perfil,
+        plataforma,
+      },
+    });
 
-      const resposta = await fetch(ENDERECO_SERVICO, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken: tokenIdentificacao }),
-      });
-
-      const retorno = await resposta.json();
-
-      if (!resposta.ok) {
-        throw new Error(retorno.mensagem || 'Não conseguimos concluir sua entrada agora. Tente novamente em breve.');
-      }
-
-      return retorno.usuario;
-    } catch (erro: any) {
-      if (erro.message.includes('Network') || erro.message.includes('Failed to fetch')) {
-        throw new Error('Parece que o celular está sem internet no momento. Verifique sua conexão e tente de novo.');
-      }
-      throw new Error(erro.message || 'Tivemos uma pequena dificuldade para entrar. Por favor, tente mais uma vez.');
+    if (!resposta.sucesso || !resposta.usuario) {
+      throw new Error(resposta.mensagem || 'Não foi possível autorizar o acesso.');
     }
+
+    return resposta.usuario;
   },
 };

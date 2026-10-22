@@ -12,8 +12,8 @@ import {
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '../services/firebaseConfig';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../services/firebaseConfig';
 import { useAppTheme } from '../context/ThemeContext';
 import { AppInput } from '../components/common/AppInput';
 import { AppButton } from '../components/common/AppButton';
@@ -27,48 +27,52 @@ export default function IndexLoginScreen() {
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
 
-  // Login Oficial Google Identity via Popup (RF02 / Tela 01)
+  // Login Oficial Google com seleção de contas obrigatória
+  // Login 100% Firebase (Totalmente desvinculado da AWS)
   const autenticarComGoogle = async () => {
     setCarregando(true);
     try {
-      // 1. Abre a janela do Google para você selecionar sua conta real
-      const resultado = await signInWithPopup(auth, googleProvider);
-      const usuarioGoogle = resultado.user;
-
-      console.log('[LOGIN GOOGLE REAL] Usuário:', usuarioGoogle.displayName, usuarioGoogle.email);
-
-      // 2. Extrai o ID Token JWT oficial
-      const idTokenReal = await usuarioGoogle.getIdToken();
-
-      // 3. Envia os dados reais da sua conta para o backend
-      const resposta: any = await requisicaoApi('/api/auth/login', {
-        metodo: 'POST',
-        dados: {
-          tipo_login: 'google',
-          id_token: idTokenReal,
-          perfil_usuario: {
-            id: usuarioGoogle.uid,
-            name: usuarioGoogle.displayName || usuarioGoogle.email?.split('@')[0],
-            email: usuarioGoogle.email,
-            foto: usuarioGoogle.photoURL,
-          },
-          plataforma: Platform.OS === 'web' ? 'portal_web' : 'mobile_android',
-        },
+      // 1. Abre a janela do Google para selecionar a conta
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account',
       });
 
-      if (resposta?.sucesso) {
+      const resultado = await signInWithPopup(auth, provider);
+      const usuarioGoogle = resultado.user;
+
+      console.log('[LOGIN FIREBASE SUCESSO]:', usuarioGoogle.displayName, usuarioGoogle.email);
+
+      const nome = usuarioGoogle.displayName || usuarioGoogle.email?.split('@')[0] || 'Colaborador';
+
+      // 2. Confirma o login e vai direto para a tela inicial
+      if (Platform.OS === 'web') {
+        window.alert(`Tudo pronto!\nOlá, ${nome}. Sua conta Google foi autorizada com sucesso!`);
         roteador.replace('/home');
       } else {
-        Alert.alert('Falha na Autenticação', resposta?.mensagem || 'Erro ao validar login.');
+        Alert.alert(
+          'Tudo pronto!',
+          `Olá, ${nome}. Sua conta Google foi autorizada com sucesso!`,
+          [
+            {
+              text: 'Acessar o Início',
+              onPress: () => roteador.replace('/home'),
+            },
+          ]
+        );
       }
     } catch (erro: any) {
-      console.error('[ERRO GOOGLE AUTH]', erro);
-      Alert.alert('Erro ao autenticar com o Google', erro.message);
+      if (erro.code === 'auth/popup-closed-by-user') {
+        console.log('Janela de seleção de conta fechada pelo usuário.');
+      } else {
+        console.error('[ERRO GOOGLE AUTH]', erro);
+        alert(erro.message || 'Tivemos uma dificuldade para autenticar com o Google.');
+      }
     } finally {
       setCarregando(false);
     }
   };
-
+    
   const autenticarPorCredenciais = async () => {
     if (!email.trim() || !senha.trim()) {
       Alert.alert('Campos Obrigatórios', 'Informe seu e-mail institucional e senha para entrar.');

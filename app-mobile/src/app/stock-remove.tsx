@@ -1,69 +1,45 @@
-// src/app/stock-remove.tsx
-import React, { useState } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TextInput, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAppTheme } from '../context/ThemeContext';
-import { AppButton } from '../components/common/AppButton';
-import { estilosStockRemove } from '../styles/stock-remove.styles';
+// app-mobile/src/app/stock-remove.tsx (Trecho principal de comunicação com o backend)
+import { requisicaoApi } from '../services/api';
 
-export default function StockRemoveScreen() {
-  const roteador = useRouter();
-  const { theme, tokens, fontScale } = useAppTheme();
-  const [motivo, setMotivo] = useState('perda - descarte vencido');
-  const [confirmacao, setConfirmacao] = useState('');
-
-  const processarBaixa = () => {
-    if (motivo.includes('perda') && confirmacao.trim() !== 'PERDA') {
-      Alert.alert(
-        'Confirmação Necessária',
-        'Para confirmar a baixa por descarte, digite exatamente a palavra PERDA em letras maiúsculas.'
-      );
-      return;
+// 1. Carregamento dos lotes reais ao abrir a tela:
+const carregarLotesReais = async () => {
+  try {
+    const resposta: any = await requisicaoApi('/api/estoque', {
+      metodo: 'POST',
+      dados: { modulo: 'estoque', acao: 'consultar_estoque' },
+    });
+    if (resposta?.sucesso && Array.isArray(resposta.lotes)) {
+      setLotes(resposta.lotes); // Lotes reais do DynamoDB
     }
-    Alert.alert(
-      'Baixa Concluída',
-      'A saída do item foi registrada e auditada com sucesso.',
-      [{ text: 'OK', onPress: () => roteador.back() }]
-    );
-  };
+  } catch (erro) {
+    Alert.alert('Erro', 'Não foi possível carregar os lotes do banco de dados.');
+  }
+};
 
-  return (
-    <SafeAreaView style={[estilosStockRemove.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={estilosStockRemove.rolagem}>
-        <View style={estilosStockRemove.cabecalho}>
-          <Text style={[estilosStockRemove.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-            Tela 3.2 - Remover Produtos do Estoque
-          </Text>
-          <Text style={[estilosStockRemove.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Baixa de itens com confirmação de descarte via palavra PERDA.
-          </Text>
-        </View>
+// 2. Confirmação da baixa de estoque em tempo real na AWS:
+const executarBaixaEstoque = async () => {
+  try {
+    const resposta: any = await requisicaoApi('/api/estoque', {
+      metodo: 'POST',
+      dados: {
+        modulo: 'estoque',
+        acao: 'remover_estoque',
+        id_lote_produto: loteSelecionado.id_lote_produto,
+        quantidade: quantidadeSaida,
+        motivo_saida: motivoSelecionado,
+        palavra_confirmacao: palavraPerda,
+        justificativa: justificativa,
+        id_usuario: auth.currentUser?.uid || '',
+      },
+    });
 
-        <View style={[estilosStockRemove.secaoCard, { backgroundColor: theme.surface, borderColor: theme.danger }]}>
-          <Text style={[estilosStockRemove.instrucaoPerda, { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Atenção: A remoção definitiva de mantimentos exige justificativa formal e trava de proteção contra baixas acidentais.
-          </Text>
-
-          <Text style={{ fontWeight: 'bold', color: theme.text, marginBottom: 6 }}>
-            Digite "PERDA" para autorizar o descarte:
-          </Text>
-          <TextInput
-            placeholder="Digite PERDA aqui"
-            placeholderTextColor={theme.subtext}
-            value={confirmacao}
-            onChangeText={setConfirmacao}
-            autoCapitalize="characters"
-            style={[estilosStockRemove.campoDigitacao, { backgroundColor: theme.background, borderColor: theme.danger, color: theme.text }]}
-          />
-
-          <AppButton
-            title="Confirmar Baixa do Estoque"
-            variant="danger"
-            onPress={processarBaixa}
-            accessibilityHint="Efetiva a remoção do lote do inventário"
-          />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
+    if (resposta?.sucesso) {
+      Alert.alert('Sucesso', 'Baixa registrada com sucesso no DynamoDB!');
+      carregarLotesReais(); // Atualiza a lista na hora
+    } else {
+      Alert.alert('Atenção', resposta.mensagem || 'Falha ao processar saída.');
+    }
+  } catch (erro: any) {
+    Alert.alert('Erro na operação', erro.message || 'Falha na comunicação.');
+  }
+};

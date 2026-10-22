@@ -2,7 +2,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 
-// Substitua com as chaves reais copiadas do seu Firebase Console
 const firebaseConfig = {
   apiKey: "AIzaSyDDmJWmKMOgSQg0XxfpAVtrNy8XY79G7VM",
   authDomain: "doar-e-guardar-v2.firebaseapp.com",
@@ -14,5 +13,13 @@ const firebaseConfig = {
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+
 export const auth = getAuth(app);
+
+// Instancia o provedor do Google
 export const googleProvider = new GoogleAuthProvider();
+
+// Força o Google a sempre exibir a tela de seleção de contas:
+googleProvider.setCustomParameters({
+  prompt: 'select_account',
+});
