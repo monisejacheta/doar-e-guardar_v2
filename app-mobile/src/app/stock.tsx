@@ -1,293 +1,246 @@
-// src/app/stock.tsx
-import React, { useState } from 'react';
+// app-mobile/src/app/stock.tsx
+import React from 'react';
 import {
   Text,
   View,
   SafeAreaView,
   ScrollView,
-  TextInput,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, usePathname } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
-import { estilosEstoque } from '../styles/stock.styles';
-
-interface ProdutoEstoque {
-  id: string;
-  nome: string;
-  categoria: string;
-  localizacao: string;
-  quantidadeTotal: number;
-  unidade: string;
-  diasParaVencerMenorLote: number;
-}
 
 export default function StockScreen() {
   const roteador = useRouter();
+  const rotaAtual = usePathname();
   const { theme, tokens, fontScale } = useAppTheme();
-  const [busca, setBusca] = useState('');
 
-  // Dados preliminares de demonstração do estoque da ONG
-  const [produtos] = useState<ProdutoEstoque[]>([
+  // 4 Operações Oficiais de Gerenciamento de Estoque
+  const operacoesEstoque = [
     {
-      id: '1',
-      nome: 'Arroz Tipo 1',
-      categoria: 'Grãos e Cereais',
-      localizacao: 'Armário A - Prateleira 2',
-      quantidadeTotal: 45,
-      unidade: 'pcts (1kg)',
-      diasParaVencerMenorLote: 60,
+      id: 'entrada',
+      titulo: 'Entrada de Alimentos',
+      descricao: 'Registro de doações e compras com leitura de código de barras ou cadastro manual.',
+      rota: '/stock-add',
+      icone: 'plus-circle',
+      corDestaque: '#10B981', // Verde Doar
+      corFundo: '#ECFDF5',
     },
     {
-      id: '2',
-      nome: 'Leite Integral',
-      categoria: 'Laticínios',
-      localizacao: 'Geladeira 1',
-      quantidadeTotal: 12,
-      unidade: 'litros',
-      diasParaVencerMenorLote: 4, // Alerta FEFO < 7 dias
+      id: 'saida',
+      titulo: 'Saída / Baixa',
+      descricao: 'Retirada de mantimentos para o preparo das refeições ou descarte com trava PERDA.',
+      rota: '/stock-remove',
+      icone: 'minus-circle',
+      corDestaque: '#EF4444', // Vermelho Alerta
+      corFundo: '#FEF2F2',
     },
     {
-      id: '3',
-      nome: 'Feijão Carioca',
-      categoria: 'Grãos e Cereais',
-      localizacao: 'Armário B - Prateleira 1',
-      quantidadeTotal: 6,
-      unidade: 'pcts (1kg)',
-      diasParaVencerMenorLote: 15,
+      id: 'mover',
+      titulo: 'Movimentação Interna',
+      descricao: 'Transferência de lotes entre armários, despensas e geladeiras da instituição.',
+      rota: '/stock-move',
+      icone: 'repeat',
+      corDestaque: '#1E3A8A', // Azul Guardar
+      corFundo: '#EFF6FF',
     },
     {
-      id: '4',
-      nome: 'Óleo de Soja',
-      categoria: 'Óleos e Gorduras',
-      localizacao: 'Armário A - Prateleira 1',
-      quantidadeTotal: 20,
-      unidade: 'garrafas (900ml)',
-      diasParaVencerMenorLote: 90,
+      id: 'lotes',
+      titulo: 'Consulta de Lotes',
+      descricao: 'Histórico consolidado, datas de validade (FEFO) e compartimentos físicos.',
+      rota: '/stock-details',
+      icone: 'clipboard',
+      corDestaque: '#6B7280', // Neutro Operacional
+      corFundo: '#F9FAFB',
     },
-  ]);
+  ];
 
-  const abrirAvisoOperacao = (operacao: string) => {
-    Alert.alert(
-      operacao,
-      'A funcionalidade detalhada com leitor de câmera e validação de segurança será vinculada no próximo passo.'
-    );
-  };
-
-  const produtosFiltrados = produtos.filter((p) =>
-    p.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    p.categoria.toLowerCase().includes(busca.toLowerCase())
-  );
+  // Widgets Fixos da Barra Inferior
+  const widgetsInferiores = [
+    { nome: 'Início', icone: 'home', rota: '/home' },
+    { nome: 'Estoque', icone: 'package', rota: '/stock' },
+    { nome: 'Dora IA', icone: 'cpu', rota: '/dora' },
+    { nome: 'Avisos', icone: 'bell', rota: '/notifications' },
+    { nome: 'Perfil', icone: 'user', rota: '/profile' },
+  ];
 
   return (
-    <SafeAreaView style={[estilosEstoque.container, { backgroundColor: theme.background }]}>
-      {/* Barra de Busca e Atalhos Operacionais da Tela 03 */}
-      <View style={[estilosEstoque.cabecalhoFixo, { borderBottomColor: theme.border }]}>
-        <View
-          style={[
-            estilosEstoque.areaBusca,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <Text style={{ fontSize: 16 }}>🔍</Text>
-          <TextInput
-            placeholder="Buscar por nome do produto ou categoria..."
-            placeholderTextColor={theme.subtext}
-            value={busca}
-            onChangeText={setBusca}
-            accessible={true}
-            accessibilityLabel="Campo de busca de mantimentos no estoque"
-            style={[
-              estilosEstoque.campoBusca,
-              { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale },
-            ]}
-          />
-          {busca.length > 0 && (
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <ScrollView
+        contentContainerStyle={{
+          padding: 20,
+          paddingBottom: 96,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Cabeçalho */}
+        <View style={{ marginBottom: 24 }}>
+          <Text
+            style={{
+              color: theme.subtext,
+              fontSize: 12 * fontScale,
+              textTransform: 'uppercase',
+              letterSpacing: 0.5,
+              fontWeight: '600',
+              marginBottom: 4,
+            }}
+          >
+            Gestão Operacional • Doar&Guardar
+          </Text>
+          <Text
+            style={{
+              color: theme.primary,
+              fontSize: 24 * fontScale,
+              fontWeight: '800',
+            }}
+          >
+            Gerenciamento de Estoque
+          </Text>
+          <Text
+            style={{
+              color: theme.subtext,
+              fontSize: 13 * fontScale,
+              marginTop: 4,
+              lineHeight: 18,
+            }}
+          >
+            Selecione uma das ações operacionais abaixo para atualizar ou auditar os mantimentos da Casa da Criança.
+          </Text>
+        </View>
+
+        {/* Os Quatro Botões de Ação Operacional */}
+        <View style={{ gap: 14 }}>
+          {operacoesEstoque.map((op) => (
             <TouchableOpacity
-              onPress={() => setBusca('')}
+              key={op.id}
+              onPress={() => roteador.push(op.rota as any)}
+              activeOpacity={0.75}
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Limpar busca"
+              accessibilityLabel={`${op.titulo}. ${op.descricao}`}
+              accessibilityHint="Toque para abrir a tela correspondente"
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderRadius: 16,
+                padding: 18,
+                borderWidth: 1.5,
+                borderColor: theme.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+                minHeight: 88, // WCAG Touch Target
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+                elevation: 2,
+              }}
             >
-              <Text style={{ color: theme.subtext, fontWeight: 'bold' }}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Botões Operacionais das Subtelas (3.1, 3.2, 3.3, 3.4) */}
-        <View style={estilosEstoque.gradeBotoesAcao}>
-          {/* Tela 3.1 - Adicionar com Código de Barras (Verde Doar) */}
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Entrada de produto. Ler código de barras ou cadastrar lote"
-            onPress={() => roteador.push('/stock-add')}
-            style={[
-              estilosEstoque.botaoAcaoEstoque,
-              { backgroundColor: theme.surface, borderColor: theme.secondary },
-            ]}
-          >
-            <Text style={estilosEstoque.iconeAcao}>📷</Text>
-            <Text style={[estilosEstoque.textoAcao, { color: theme.secondary, fontSize: 13 * fontScale }]}>
-              + Entrada
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tela 3.2 - Remover Produtos / Baixa com "PERDA" */}
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Saída de produto. Registrar consumo ou descarte por perda"
-            onPress={() => roteador.push('/stock-remove')}
-            style={[
-              estilosEstoque.botaoAcaoEstoque,
-              { backgroundColor: theme.surface, borderColor: theme.danger },
-            ]}
-          >
-            <Text style={estilosEstoque.iconeAcao}>📤</Text>
-            <Text style={[estilosEstoque.textoAcao, { color: theme.danger, fontSize: 13 * fontScale }]}>
-              - Saída
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tela 3.3 - Mudar Localização */}
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Transferir produtos de armário ou geladeira"
-            onPress={() => roteador.push('/stock-move')}
-            style={[
-              estilosEstoque.botaoAcaoEstoque,
-              { backgroundColor: theme.surface, borderColor: theme.border },
-            ]}
-          >
-            <Text style={estilosEstoque.iconeAcao}>🔄</Text>
-            <Text style={[estilosEstoque.textoAcao, { color: theme.text, fontSize: 13 * fontScale }]}>
-              Mover
-            </Text>
-          </TouchableOpacity>
-
-          {/* Tela 3.4 - Consulta Detalhada */}
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Consulta detalhada de todos os lotes e validades"
-            onPress={() => roteador.push('/stock-details')}
-            style={[
-              estilosEstoque.botaoAcaoEstoque,
-              { backgroundColor: theme.surface, borderColor: theme.primary },
-            ]}
-          >
-            <Text style={estilosEstoque.iconeAcao}>📋</Text>
-            <Text style={[estilosEstoque.textoAcao, { color: theme.primary, fontSize: 13 * fontScale }]}>
-              Lotes
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Grid de Itens em Estoque */}
-      <ScrollView contentContainerStyle={estilosEstoque.rolagemLista}>
-        <Text
-          style={[
-            estilosEstoque.tituloSecao,
-            { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale },
-          ]}
-        >
-          Mantimentos no Inventário ({produtosFiltrados.length})
-        </Text>
-
-        {produtosFiltrados.length === 0 ? (
-          <View style={estilosEstoque.listaVazia}>
-            <Text style={{ fontSize: 32 }}>📦</Text>
-            <Text style={{ color: theme.subtext, marginTop: 8 }}>
-              Nenhum alimento encontrado com esse nome.
-            </Text>
-          </View>
-        ) : (
-          produtosFiltrados.map((item) => {
-            const venceEmBreve = item.diasParaVencerMenorLote <= 7; // Regra FEFO alerta visual
-
-            return (
-              <TouchableOpacity
-                key={item.id}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`${item.nome}. Categoria: ${item.categoria}. Local: ${item.localizacao}. Quantidade: ${item.quantidadeTotal} ${item.unidade}. ${venceEmBreve ? 'Atenção: lote próximo do vencimento.' : ''}`}
-                accessibilityHint="Toque duas vezes para abrir os detalhes e lotes deste produto"
-                activeOpacity={0.8}
-                onPress={() => abrirAvisoOperacao(`Detalhes do produto: ${item.nome}`)}
-                style={[
-                  estilosEstoque.cartaoProduto,
-                  {
-                    backgroundColor: theme.surface,
-                    borderColor: venceEmBreve ? tokens.colors.accentAmber500 : theme.border,
-                  },
-                ]}
+              {/* Ícone com Cor Semântica */}
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  backgroundColor: op.corFundo,
+                  borderWidth: 1.5,
+                  borderColor: op.corDestaque,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: 16,
+                }}
               >
-                <View
-                  style={[
-                    estilosEstoque.areaIconeProduto,
-                    {
-                      borderColor: venceEmBreve ? tokens.colors.accentAmber500 : theme.border,
-                      backgroundColor: theme.background,
-                    },
-                  ]}
+                <Feather name={op.icone as any} size={24} color={op.corDestaque} />
+              </View>
+
+              {/* Textos Informativos */}
+              <View style={{ flex: 1, paddingRight: 8 }}>
+                <Text
+                  style={{
+                    fontSize: 16 * fontScale,
+                    fontWeight: '700',
+                    color: theme.text,
+                    marginBottom: 4,
+                  }}
                 >
-                  <Text style={estilosEstoque.iconeProduto}>🥫</Text>
-                </View>
+                  {op.titulo}
+                </Text>
+                <Text
+                  style={{
+                    fontSize: 12 * fontScale,
+                    color: theme.subtext,
+                    lineHeight: 16,
+                  }}
+                >
+                  {op.descricao}
+                </Text>
+              </View>
 
-                <View style={estilosEstoque.infoProduto}>
-                  <Text
-                    style={[
-                      estilosEstoque.nomeProduto,
-                      { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale },
-                    ]}
-                  >
-                    {item.nome}
-                  </Text>
-                  <Text
-                    style={[
-                      estilosEstoque.detalhesProduto,
-                      { color: theme.subtext, fontSize: tokens.typography.fontSize.xs * fontScale },
-                    ]}
-                  >
-                    {item.categoria} • {item.localizacao}
-                  </Text>
-
-                  {venceEmBreve && (
-                    <View
-                      style={[
-                        estilosEstoque.alertaVencimento,
-                        { backgroundColor: `${tokens.colors.accentAmber500}20` },
-                      ]}
-                    >
-                      <Text style={[estilosEstoque.textoAlerta, { color: tokens.colors.accentAmber500 }]}>
-                        ⚠️ Lote vence em {item.diasParaVencerMenorLote} dias
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={estilosEstoque.resumoQuantidade}>
-                  <Text
-                    style={[
-                      estilosEstoque.valorQuantidade,
-                      { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale },
-                    ]}
-                  >
-                    {item.quantidadeTotal}
-                  </Text>
-                  <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>
-                    {item.unidade}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })
-        )}
+              {/* Seta Direcional de Navegação */}
+              <Feather name="chevron-right" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
+
+      {/* Widgets Inferiores Fixos de Navegação */}
+      <View
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 68,
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1.5,
+          borderTopColor: '#E5E7EB',
+          flexDirection: 'row',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+          paddingBottom: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 8,
+        }}
+      >
+        {widgetsInferiores.map((widget, idx) => {
+          const ativo = rotaAtual === widget.rota;
+          return (
+            <TouchableOpacity
+              key={idx}
+              onPress={() => roteador.push(widget.rota as any)}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={`Ir para ${widget.nome}`}
+              accessibilityState={{ selected: ativo }}
+              style={{
+                alignItems: 'center',
+                justifyContent: 'center',
+                minWidth: 48,
+                minHeight: 48,
+              }}
+            >
+              <Feather
+                name={widget.icone as any}
+                size={20}
+                color={ativo ? '#1E3A8A' : '#6B7280'}
+                style={{ marginBottom: 2 }}
+              />
+              <Text
+                style={{
+                  fontSize: 10 * fontScale,
+                  fontWeight: ativo ? '700' : '500',
+                  color: ativo ? '#1E3A8A' : '#6B7280',
+                }}
+              >
+                {widget.nome}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
     </SafeAreaView>
   );
 }
