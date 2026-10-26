@@ -7,28 +7,56 @@ export const estilosReports = StyleSheet.create({
   cabecalho: { marginBottom: 16 },
   titulo: { fontWeight: 'bold', marginBottom: 4 },
   subtitulo: { lineHeight: 20 },
-  // Chaves de retrocompatibilidade
-  cartaoPrincipal: { borderWidth: 1.5, borderRadius: 14, padding: 16, marginBottom: 16 },
-  textoInformativo: { lineHeight: 22, marginBottom: 14 },
-  areaAcao: { marginTop: 8, width: '100%' },
-  campoDigitacao: { borderWidth: 1.5, borderRadius: 12, paddingHorizontal: 14, minHeight: 48, marginBottom: 12 },
-  // Estilos específicos da Tela 04
+  
   secaoCard: { borderWidth: 1.5, borderRadius: 14, padding: 16, marginBottom: 18 },
   tituloSecao: { fontWeight: 'bold', marginBottom: 12 },
+  
   linhaGraficos: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
   botaoTipoGrafico: {
     flex: 1,
     minWidth: '45%',
-    minHeight: 48, // Touch target WCAG AAA
-    borderWidth: 1.5,
+    minHeight: 48, // Touch target mínimo de 48px[cite: 7]
+    borderWidth: 1,
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
     paddingVertical: 10,
+    paddingHorizontal: 8,
   },
-  barraSimuladaContainer: { marginTop: 8, gap: 10 },
-  linhaBarra: { gap: 4 },
-  rotuloBarra: { flexDirection: 'row', justifyContent: 'space-between' },
-  trilhoBarra: { height: 12, borderRadius: 6, overflow: 'hidden', width: '100%' },
-  preenchimentoBarra: { height: '100%', borderRadius: 6 },
+  
+  // Base segura para gráficos nativos
+  areaGraficoSegura: { marginTop: 10, minHeight: 180, justifyContent: 'center' },
+  
+  // Grade de atalhos (2 por linha)
+  gradeBotoes: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    gap: 12,
+  },
+  miniCard: {
+    width: '48%', // Garante 2 por linha
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    minHeight: 100, // Menor e mais compacto
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniCardIcone: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  miniCardTitulo: {
+    fontWeight: '700',
+    textAlign: 'center',
+    lineHeight: 16,
+  }
 });
