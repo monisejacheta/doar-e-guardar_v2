@@ -1,5 +1,5 @@
 // src/app/stock-details.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Text,
   View,
@@ -7,414 +7,421 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+  Image,
+  useWindowDimensions,
+  Modal
 } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
-import { AppIcon } from '../components/common/AppIcon';
 import { estilosStockDetails } from '../styles/stock-details.styles';
+import { requisicaoApi } from '../services/api';
 
-interface LoteDetalhado {
-  id: string;
-  codigoLote: string;
-  dataEntrada: string;
-  dataValidade: string;
-  diasParaVencer: number;
-  localizacao: string;
-  quantidadePacotes: number;
+interface LoteItem {
+  id_lote_produto: string;
+  id_produto: string;
+  nome_produto: string;
+  categoria: string;
+  codigo_barra_produto: string;
+  numero_codigo_lote: string;
+  quantidade_atual_pacote: number;
+  data_validade_lote: string;
+  local_descricao: string;
+  foto_url?: string;
+  url_foto_produto?: string;
+  data_ms: number;
 }
 
-interface ProdutoCatalogo {
-  id: string;
-  nome: string;
-  codigoBarras: string;
+interface ProdutoAgrupado {
+  codigo_barra_produto: string;
+  nome_produto: string;
   categoria: string;
-  subcategoria: string;
-  lotes: LoteDetalhado[];
+  quantidade_total: number;
+  foto_url?: string;
+  lotes: LoteItem[];
 }
 
 export default function StockDetailsScreen() {
+  const roteador = useRouter();
   const { theme, tokens, fontScale } = useAppTheme();
+  const { width: larguraJanela } = useWindowDimensions();
 
-  // Base simulada de produtos e respetivos lotes ativos
-  const [catalogo] = useState<ProdutoCatalogo[]>([
-    {
-      id: 'prod-1',
-      nome: 'Leite Integral UHT 1L',
-      codigoBarras: '7891000100103',
-      categoria: 'Laticínios',
-      subcategoria: 'Leites Fluidos',
-      lotes: [
-        {
-          id: 'L1',
-          codigoLote: 'LOTE-2026-A1',
-          dataEntrada: '01/10/2026',
-          dataValidade: '23/10/2026',
-          diasParaVencer: 4, // Próximo do vencimento (< 7 dias)
-          localizacao: 'Geladeira 1',
-          quantidadePacotes: 8,
-        },
-        {
-          id: 'L2',
-          codigoLote: 'LOTE-2026-B3',
-          dataEntrada: '10/10/2026',
-          dataValidade: '18/11/2026',
-          diasParaVencer: 30, // Regular
-          localizacao: 'Armário A',
-          quantidadePacotes: 16,
-        },
-        {
-          id: 'L3',
-          codigoLote: 'LOTE-2026-V0',
-          dataEntrada: '15/08/2026',
-          dataValidade: '15/10/2026',
-          diasParaVencer: -4, // Vencido
-          localizacao: 'Armário A',
-          quantidadePacotes: 2,
-        },
-      ],
-    },
-    {
-      id: 'prod-2',
-      nome: 'Arroz Tipo 1 (Pacote 1kg)',
-      codigoBarras: '7896006711114',
-      categoria: 'Alimentos não perecíveis',
-      subcategoria: 'Grãos',
-      lotes: [
-        {
-          id: 'L4',
-          codigoLote: 'LOTE-2026-AR1',
-          dataEntrada: '05/09/2026',
-          dataValidade: '10/12/2026',
-          diasParaVencer: 52,
-          localizacao: 'Armário B',
-          quantidadePacotes: 30,
-        },
-        {
-          id: 'L5',
-          codigoLote: 'LOTE-2026-AR2',
-          dataEntrada: '12/10/2026',
-          dataValidade: '20/03/2027',
-          diasParaVencer: 152,
-          localizacao: 'Armário A',
-          quantidadePacotes: 15,
-        },
-      ],
-    },
-  ]);
-
+  const [lotesRaw, setLotesRaw] = useState<LoteItem[]>([]);
+  const [carregando, setCarregando] = useState(true);
   const [pesquisa, setPesquisa] = useState('');
-  const [produtoSelecionadoId, setProdutoSelecionadoId] = useState('prod-1');
-  const [filtroLocal, setFiltroLocal] = useState<string>('TODOS');
-  const [criterioOrdenacao, setCriterioOrdenacao] = useState<'VALIDADE_ASC' | 'QTD_DESC' | 'LOCAL'>('VALIDADE_ASC');
+  const [modoExibicao, setModoExibicao] = useState<'lista' | 'grid'>('lista');
 
-  const produtosFiltrados = catalogo.filter(
-    (p) =>
-      p.nome.toLowerCase().includes(pesquisa.toLowerCase()) ||
-      p.codigoBarras.includes(pesquisa)
-  );
+  const [produtoSelecionado, setProdutoSelecionado] = useState<ProdutoAgrupado | null>(null);
+  const [modalLotesVisivel, setModalLotesVisivel] = useState(false);
 
-  const produtoAtual =
-    catalogo.find((p) => p.id === produtoSelecionadoId) || catalogo[0];
+  // 🚀 Placeholders em formato .png oficiais
+  const obterPlaceholderPorCategoria = (categoria: string) => {
+    const cat = (categoria || '').toLowerCase();
+    try {
+      if (cat.includes('lati') || cat.includes('leite')) return require('../../assets/images/placeholder_laticinios.png');
+      if (cat.includes('grão') || cat.includes('arroz') || cat.includes('feij')) return require('../../assets/images/placeholder_graos.png');
+      if (cat.includes('massa') || cat.includes('macarr')) return require('../../assets/images/placeholder_massas.png');
+      if (cat.includes('óleo') || cat.includes('oleo') || cat.includes('gordura')) return require('../../assets/images/placeholder_oleos.png');
+      return require('../../assets/images/placeholder_geral.png');
+    } catch {
+      return require('../../assets/images/placeholder_geral.png');
+    }
+  };
 
-  // Cálculo do Resumo Consolidado exigido na Tela 3.4
-  const resumoConsolidado = useMemo(() => {
-    const lotes = produtoAtual.lotes;
-    const totalPacotes = lotes.reduce((acc, l) => acc + l.quantidadePacotes, 0);
-    const ordenadosPorValidade = [...lotes].sort(
-      (a, b) => a.diasParaVencer - b.diasParaVencer
+  const converterDataParaMs = (dataStr: string) => {
+    if (!dataStr) return 9999999999999;
+    if (dataStr.includes('/')) {
+      const [d, m, y] = dataStr.split('/');
+      return new Date(`${y}-${m}-${d}T00:00:00`).getTime();
+    }
+    return new Date(`${dataStr}T00:00:00`).getTime();
+  };
+
+  const avaliarStatusLote = (dataLoteStr: string) => {
+    if (!dataLoteStr) return 'regular';
+    
+    let dataVal;
+    if (dataLoteStr.includes('/')) {
+      const [d, m, y] = dataLoteStr.split('/');
+      dataVal = new Date(`${y}-${m}-${d}T00:00:00`);
+    } else {
+      dataVal = new Date(`${dataLoteStr}T00:00:00`);
+    }
+  
+    if (!isNaN(dataVal.getTime())) {
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const diffDias = Math.ceil((dataVal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDias < 0) return 'vencido';
+      if (diffDias <= 7) return 'proximo_vencimento';
+    }
+    return 'regular';
+  };
+
+  const carregarEstoque = useCallback(async () => {
+    try {
+      setCarregando(true);
+      const resposta: any = await requisicaoApi('/api/estoque', {
+        metodo: 'POST',
+        dados: { modulo: 'estoque', acao: 'consultar_estoque' },
+      });
+
+      if (resposta?.sucesso && Array.isArray(resposta.lotes)) {
+        // Ignora lotes com quantidade zero
+        const lotesProcessados = resposta.lotes
+          .filter((l: any) => Number(l.quantidade_atual_pacote) > 0)
+          .map((l: any) => ({
+            ...l,
+            data_ms: converterDataParaMs(l.data_validade_lote),
+            quantidade_atual_pacote: Number(l.quantidade_atual_pacote)
+          }));
+        
+        setLotesRaw(lotesProcessados);
+      } else {
+        setLotesRaw([]);
+      }
+    } catch (erro) {
+      Alert.alert('Erro', 'Falha ao buscar detalhes dos lotes na nuvem.');
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    carregarEstoque();
+  }, [carregarEstoque]);
+
+  const catalogoAgrupado = useMemo(() => {
+    const mapa = new Map<string, ProdutoAgrupado>();
+
+    lotesRaw.forEach((lote) => {
+      const ean = lote.codigo_barra_produto || lote.id_produto;
+      const foto = lote.url_foto_produto || lote.foto_url;
+      
+      if (!mapa.has(ean)) {
+        mapa.set(ean, {
+          codigo_barra_produto: ean,
+          nome_produto: lote.nome_produto,
+          categoria: lote.categoria,
+          quantidade_total: 0,
+          foto_url: foto,
+          lotes: [],
+        });
+      }
+      const prod = mapa.get(ean)!;
+      prod.quantidade_total += lote.quantidade_atual_pacote;
+      prod.lotes.push(lote);
+    });
+
+    let lista = Array.from(mapa.values());
+    lista.forEach(p => p.lotes.sort((a, b) => a.data_ms - b.data_ms));
+    return lista.sort((a, b) => a.nome_produto.localeCompare(b.nome_produto));
+  }, [lotesRaw]);
+
+  const produtosFiltrados = useMemo(() => {
+    const termo = pesquisa.toLowerCase().trim();
+    if (!termo) return catalogoAgrupado;
+    return catalogoAgrupado.filter(
+      p => p.nome_produto.toLowerCase().includes(termo) || p.codigo_barra_produto.includes(termo) || p.categoria.toLowerCase().includes(termo)
     );
+  }, [catalogoAgrupado, pesquisa]);
 
-    return {
-      totalPacotes,
-      quantidadeLotesAtivos: lotes.length,
-      validadeMaisProxima: ordenadosPorValidade[0]?.dataValidade || '-',
-      validadeMaisDistante:
-        ordenadosPorValidade[ordenadosPorValidade.length - 1]?.dataValidade || '-',
-    };
-  }, [produtoAtual]);
 
-  // Aplicação de filtros avançados e ordenação de lotes
-  const lotesExibidos = useMemo(() => {
-    let lista = [...produtoAtual.lotes];
-
-    if (filtroLocal !== 'TODOS') {
-      lista = lista.filter((l) => l.localizacao === filtroLocal);
-    }
-
-    if (criterioOrdenacao === 'VALIDADE_ASC') {
-      lista.sort((a, b) => a.diasParaVencer - b.diasParaVencer);
-    } else if (criterioOrdenacao === 'QTD_DESC') {
-      lista.sort((a, b) => b.quantidadePacotes - a.quantidadePacotes);
-    } else if (criterioOrdenacao === 'LOCAL') {
-      lista.sort((a, b) => a.localizacao.localeCompare(b.localizacao));
-    }
-
-    return lista;
-  }, [produtoAtual, filtroLocal, criterioOrdenacao]);
+  // Calculando largura para o modo Grid (3 colunas)
+  const paddingLateral = 16;
+  const espacoEntreCards = 8;
+  const larguraDisponivel = larguraJanela - paddingLateral * 2;
+  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * 2) / 3);
 
   return (
     <SafeAreaView style={[estilosStockDetails.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={estilosStockDetails.rolagem}>
-        {/* Cabeçalho */}
+      <ScrollView contentContainerStyle={estilosStockDetails.rolagem} keyboardShouldPersistTaps="handled">
+        
+        <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          onPress={() => roteador.back()}
+          style={estilosStockDetails.botaoVoltar}
+        >
+          <Feather name="arrow-left" size={22} color={theme.primary} />
+          <Text style={[estilosStockDetails.textoBotaoVoltar, { color: theme.primary, fontSize: 15 * fontScale }]}>
+            Voltar
+          </Text>
+        </TouchableOpacity>
+
         <View style={estilosStockDetails.cabecalho}>
-          <Text
-            style={[
-              estilosStockDetails.titulo,
-              { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale },
-            ]}
-          >
-            Consulta Detalhada de Lotes
+          <Text style={[estilosStockDetails.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
+            Consulta de Estoque
           </Text>
-          <Text
-            style={[
-              estilosStockDetails.subtitulo,
-              { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale },
-            ]}
-          >
-            Analise o resumo consolidado do produto, filtre por armário e verifique prioridades de vencimento.
+          <Text style={[estilosStockDetails.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
+            Pesquise um produto para consultar todos os lotes ativos, sua distribuição em locais e suas datas de validade.
           </Text>
         </View>
 
-        {/* Barra de Pesquisa de Produtos */}
-        <View
-          style={[
-            estilosStockDetails.barraBusca,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <AppIcon name="search" size={18} variant="neutral" />
-          <TextInput
-            placeholder="Pesquisar produto por nome ou código de barras..."
-            placeholderTextColor={theme.subtext}
-            value={pesquisa}
-            onChangeText={setPesquisa}
-            accessible={true}
-            accessibilityLabel="Pesquisar produto para consulta detalhada"
-            style={[
-              estilosStockDetails.inputBusca,
-              { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale },
-            ]}
-          />
-        </View>
-
-        {/* Grelha de Seleção Rápida de Produtos */}
-        <View style={estilosStockDetails.seletorProdutos}>
-          {produtosFiltrados.map((prod) => {
-            const ativo = prod.id === produtoAtual.id;
-            return (
-              <TouchableOpacity
-                key={prod.id}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`Selecionar produto ${prod.nome}`}
-                onPress={() => setProdutoSelecionadoId(prod.id)}
-                style={[
-                  estilosStockDetails.pilulaProduto,
-                  {
-                    backgroundColor: ativo ? theme.primary : theme.surface,
-                    borderColor: ativo ? theme.primary : theme.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    estilosStockDetails.textoPilula,
-                    { color: ativo ? '#FFFFFF' : theme.text },
-                  ]}
-                >
-                  {prod.nome}
-                </Text>
+        <View style={estilosStockDetails.searchBarRow}>
+          <View style={[estilosStockDetails.inputSearchWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <Feather name="search" size={16} color="#94A3B8" />
+            <TextInput
+              placeholder="Pesquisar catálogo por nome ou EAN..."
+              placeholderTextColor="#94A3B8"
+              value={pesquisa}
+              onChangeText={setPesquisa}
+              style={[estilosStockDetails.searchInput, { color: theme.text, fontSize: 12.5 * fontScale }]}
+            />
+            {pesquisa.length > 0 && (
+              <TouchableOpacity onPress={() => setPesquisa('')}>
+                <Feather name="x-circle" size={16} color="#94A3B8" />
               </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Painel de Resumo Consolidado do Produto */}
-        <View
-          style={[
-            estilosStockDetails.painelConsolidado,
-            { backgroundColor: theme.surface, borderColor: theme.primary },
-          ]}
-        >
-          <Text
-            style={[
-              estilosStockDetails.tituloProdutoConsolidado,
-              { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale },
-            ]}
-          >
-            {produtoAtual.nome}
-          </Text>
-          <Text
-            style={[
-              estilosStockDetails.subtituloProdutoConsolidado,
-              { color: theme.subtext, fontSize: tokens.typography.fontSize.xs * fontScale },
-            ]}
-          >
-            EAN: {produtoAtual.codigoBarras} • {produtoAtual.categoria} ({produtoAtual.subcategoria})
-          </Text>
-
-          <View style={estilosStockDetails.gradeConsolidada}>
-            <View style={[estilosStockDetails.blocoMetrica, { backgroundColor: theme.background, borderColor: theme.border }]}>
-              <Text style={[estilosStockDetails.rotuloMetrica, { color: theme.subtext }]}>
-                Total em Estoque
-              </Text>
-              <Text style={[estilosStockDetails.valorMetrica, { color: theme.primary }]}>
-                {resumoConsolidado.totalPacotes} pacotes
-              </Text>
-            </View>
-
-            <View style={[estilosStockDetails.blocoMetrica, { backgroundColor: theme.background, borderColor: theme.border }]}>
-              <Text style={[estilosStockDetails.rotuloMetrica, { color: theme.subtext }]}>
-                Lotes Ativos
-              </Text>
-              <Text style={[estilosStockDetails.valorMetrica, { color: theme.text }]}>
-                {resumoConsolidado.quantidadeLotesAtivos} lote(s)
-              </Text>
-            </View>
-
-            <View style={[estilosStockDetails.blocoMetrica, { backgroundColor: theme.background, borderColor: tokens.colors.accentAmber500 }]}>
-              <Text style={[estilosStockDetails.rotuloMetrica, { color: theme.subtext }]}>
-                Vencimento Mais Próximo
-              </Text>
-              <Text style={[estilosStockDetails.valorMetrica, { color: tokens.colors.accentAmber500 }]}>
-                {resumoConsolidado.validadeMaisProxima}
-              </Text>
-            </View>
-
-            <View style={[estilosStockDetails.blocoMetrica, { backgroundColor: theme.background, borderColor: theme.border }]}>
-              <Text style={[estilosStockDetails.rotuloMetrica, { color: theme.subtext }]}>
-                Vencimento Mais Distante
-              </Text>
-              <Text style={[estilosStockDetails.valorMetrica, { color: theme.secondary }]}>
-                {resumoConsolidado.validadeMaisDistante}
-              </Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Controles de Filtro por Localização e Ordenação */}
-        <View style={estilosStockDetails.secaoFiltros}>
-          <Text style={[estilosStockDetails.rotuloFiltro, { color: theme.text, fontSize: 13 * fontScale }]}>
-            Filtrar por Local Físico:
-          </Text>
-          <View style={estilosStockDetails.linhaBotoesFiltro}>
-            {['TODOS', 'Armário A', 'Armário B', 'Geladeira 1'].map((loc) => (
-              <TouchableOpacity
-                key={loc}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`Filtrar lotes no local ${loc}`}
-                onPress={() => setFiltroLocal(loc)}
-                style={[
-                  estilosStockDetails.botaoFiltro,
-                  {
-                    backgroundColor: filtroLocal === loc ? `${theme.primary}15` : theme.surface,
-                    borderColor: filtroLocal === loc ? theme.primary : theme.border,
-                  },
-                ]}
-              >
-                <Text style={{ fontWeight: '600', color: filtroLocal === loc ? theme.primary : theme.text, fontSize: 12 }}>
-                  {loc}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            )}
           </View>
 
-          <Text style={[estilosStockDetails.rotuloFiltro, { color: theme.text, fontSize: 13 * fontScale }]}>
-            Ordenar Lotes por:
-          </Text>
-          <View style={estilosStockDetails.linhaBotoesFiltro}>
-            {[
-              { id: 'VALIDADE_ASC', label: 'Validade (Mais urgente)' },
-              { id: 'QTD_DESC', label: 'Maior Quantidade' },
-              { id: 'LOCAL', label: 'Localização' },
-            ].map((ord) => (
-              <TouchableOpacity
-                key={ord.id}
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`Ordenar lista por ${ord.label}`}
-                onPress={() => setCriterioOrdenacao(ord.id as any)}
-                style={[
-                  estilosStockDetails.botaoFiltro,
-                  {
-                    backgroundColor: criterioOrdenacao === ord.id ? `${theme.secondary}15` : theme.surface,
-                    borderColor: criterioOrdenacao === ord.id ? theme.secondary : theme.border,
-                  },
-                ]}
-              >
-                <Text style={{ fontWeight: '600', color: criterioOrdenacao === ord.id ? theme.secondary : theme.text, fontSize: 12 }}>
-                  {ord.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Lista de Lotes Individuais com Alertas Visuais e Textuais (WCAG 1.4.1) */}
-        {lotesExibidos.map((lote) => {
-          const vencido = lote.diasParaVencer < 0;
-          const proximoVencimento = lote.diasParaVencer >= 0 && lote.diasParaVencer <= 7;
-
-          const corDestaque = vencido
-            ? theme.danger
-            : proximoVencimento
-            ? tokens.colors.accentAmber500
-            : theme.secondary;
-
-          const rotuloStatus = vencido
-            ? `Vencido há ${Math.abs(lote.diasParaVencer)} dias`
-            : proximoVencimento
-            ? `Vence em ${lote.diasParaVencer} dias`
-            : 'Regular';
-
-          return (
-            <View
-              key={lote.id}
-              accessible={true}
-              accessibilityLabel={`Lote ${lote.codigoLote}. Status: ${rotuloStatus}. Validade: ${lote.dataValidade}. Local: ${lote.localizacao}. Quantidade: ${lote.quantidadePacotes} pacotes.`}
-              style={[
-                estilosStockDetails.cartaoLoteDetalhe,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: vencido || proximoVencimento ? corDestaque : theme.border,
-                },
-              ]}
+          <View style={estilosStockDetails.toggleGroup}>
+            <TouchableOpacity
+              onPress={() => setModoExibicao('lista')}
+              style={[estilosStockDetails.toggleBtn, modoExibicao === 'lista' && estilosStockDetails.toggleBtnActive]}
             >
-              <View style={estilosStockDetails.topoCartaoLote}>
-                <Text style={[estilosStockDetails.codigoLoteTexto, { color: theme.text, fontSize: 14 * fontScale }]}>
-                  {lote.codigoLote}
-                </Text>
+              <Feather name="list" size={16} color={modoExibicao === 'lista' ? theme.primary : '#64748B'} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setModoExibicao('grid')}
+              style={[estilosStockDetails.toggleBtn, modoExibicao === 'grid' && estilosStockDetails.toggleBtnActive]}
+            >
+              <Feather name="grid" size={16} color={modoExibicao === 'grid' ? theme.primary : '#64748B'} />
+            </TouchableOpacity>
+          </View>
+        </View>
 
-                <View style={[estilosStockDetails.badgeStatusLote, { backgroundColor: `${corDestaque}20` }]}>
-                  <AppIcon
-                    name={vencido ? 'alert-triangle' : 'clock'}
-                    size={14}
-                    color={corDestaque}
-                  />
-                  <Text style={[estilosStockDetails.textoBadgeStatus, { color: corDestaque }]}>
-                    {rotuloStatus}
+        {carregando ? (
+          <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
+        ) : produtosFiltrados.length === 0 ? (
+          <Text style={{ textAlign: 'center', color: theme.subtext, marginTop: 40 }}>
+            Nenhum produto localizado no estoque.
+          </Text>
+        ) : modoExibicao === 'lista' ? (
+          <View style={{ gap: 8 }}>
+            {produtosFiltrados.map((item) => (
+              <TouchableOpacity
+                key={item.codigo_barra_produto}
+                onPress={() => {
+                  setProdutoSelecionado(item);
+                  setModalLotesVisivel(true);
+                }}
+                activeOpacity={0.8}
+                style={[estilosStockDetails.listaCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+              >
+                <Image
+                  source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                  style={estilosStockDetails.listaFoto}
+                  resizeMode="cover"
+                />
+
+                <View style={{ flex: 1, paddingHorizontal: 10 }}>
+                  <Text style={[estilosStockDetails.produtoNome, { color: theme.text, fontSize: 13 * fontScale }]} numberOfLines={1}>
+                    {item.nome_produto}
+                  </Text>
+                  <Text style={[estilosStockDetails.produtoMeta, { color: theme.subtext, fontSize: 10.5 * fontScale }]} numberOfLines={1}>
+                    {item.categoria} • EAN: {item.codigo_barra_produto}
+                  </Text>
+                  <Text style={[estilosStockDetails.produtoSub, { color: theme.primary, fontSize: 10 * fontScale }]}>
+                    {item.lotes.length} lote(s) registrado(s)
                   </Text>
                 </View>
-              </View>
 
-              <View style={estilosStockDetails.linhaMetadadosLote}>
-                <Text style={{ color: theme.subtext, fontSize: 12 * fontScale }}>
-                  Entrada: {lote.dataEntrada} • Validade: <Text style={{ fontWeight: 'bold', color: theme.text }}>{lote.dataValidade}</Text>
-                </Text>
-              </View>
+                <View style={[estilosStockDetails.badgeQtdConsolidada, { borderColor: theme.border }]}>
+                  <Text style={[estilosStockDetails.badgeQtdNumero, { color: theme.primary, fontSize: 12.5 * fontScale }]}>
+                    {item.quantidade_total}
+                  </Text>
+                  <Text style={[estilosStockDetails.badgeQtdRotulo, { color: theme.primary, fontSize: 8.5 * fontScale }]}>
+                    pcts
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        ) : (
+          <View style={estilosStockDetails.gridContainer}>
+            {produtosFiltrados.map((item) => (
+              <TouchableOpacity
+                key={item.codigo_barra_produto}
+                onPress={() => {
+                  setProdutoSelecionado(item);
+                  setModalLotesVisivel(true);
+                }}
+                activeOpacity={0.8}
+                style={[estilosStockDetails.gridCard, { width: larguraCardGrid, backgroundColor: theme.surface, borderColor: theme.border }]}
+              >
+                <Image
+                  source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                  style={estilosStockDetails.gridFoto}
+                  resizeMode="cover"
+                />
 
-              <View style={estilosStockDetails.linhaMetadadosLote}>
-                <Text style={{ color: theme.subtext, fontSize: 12 * fontScale }}>
-                  Local: <Text style={{ fontWeight: '600', color: theme.text }}>{lote.localizacao}</Text>
-                </Text>
-                <Text style={{ fontWeight: 'bold', color: theme.primary, fontSize: 13 * fontScale }}>
-                  {lote.quantidadePacotes} pacotes
-                </Text>
-              </View>
-            </View>
-          );
-        })}
+                <View style={estilosStockDetails.gridConteudo}>
+                  <View style={estilosStockDetails.gridBadgeRow}>
+                    <View style={estilosStockDetails.gridQtdBadge}>
+                      <Text style={[estilosStockDetails.gridQtdText, { color: theme.primary, fontSize: 9 * fontScale }]}>
+                        {item.quantidade_total}p
+                      </Text>
+                    </View>
+                    <Text style={[estilosStockDetails.gridLotesText, { color: theme.subtext, fontSize: 8.5 * fontScale }]}>
+                      {item.lotes.length} lotes
+                    </Text>
+                  </View>
+                  <Text style={[estilosStockDetails.gridTitulo, { color: theme.text, fontSize: 10.5 * fontScale }]} numberOfLines={2}>
+                    {item.nome_produto}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
+
+      {/* 🚀 MODAL DOS LOTES E FICHA TÉCNICA - CAPA FULL WIDTH */}
+      <Modal
+        visible={modalLotesVisivel}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalLotesVisivel(false)}
+      >
+        <View style={estilosStockDetails.modalOverlay}>
+          <View style={estilosStockDetails.modalCard}>
+            
+            <View style={estilosStockDetails.modalCapaContainer}>
+              <TouchableOpacity
+                onPress={() => setModalLotesVisivel(false)}
+                style={estilosStockDetails.modalCloseBtnAbsolute}
+                accessibilityLabel="Fechar"
+              >
+                <Feather name="x" size={18} color="#000000" />
+              </TouchableOpacity>
+              
+              <Image
+                source={produtoSelecionado?.foto_url ? { uri: produtoSelecionado.foto_url } : obterPlaceholderPorCategoria(produtoSelecionado?.categoria || '')}
+                style={estilosStockDetails.modalProdutoFotoCapa}
+                resizeMode="cover"
+              />
+            </View>
+
+            <View style={estilosStockDetails.modalConteudoBox}>
+              <Text style={[estilosStockDetails.modalProdutoNomeCenter, { color: theme.primary, fontSize: 17 * fontScale }]} numberOfLines={2}>
+                {produtoSelecionado?.nome_produto}
+              </Text>
+              <Text style={[estilosStockDetails.modalProdutoMetaCenter, { color: theme.subtext, fontSize: 12 * fontScale }]}>
+                {produtoSelecionado?.categoria} • EAN: {produtoSelecionado?.codigo_barra_produto}
+              </Text>
+
+              <View style={estilosStockDetails.modalResumoBox}>
+                <Text style={[estilosStockDetails.modalResumoTexto, { color: theme.primary, fontSize: 12.5 * fontScale }]}>
+                  Estoque atual consolidado: <Text style={{ fontWeight: '800' }}>{produtoSelecionado?.quantidade_total} pacotes</Text>
+                </Text>
+              </View>
+
+              <Text style={[estilosStockDetails.modalLotesTitulo, { color: theme.text, fontSize: 13 * fontScale }]}>
+                Lotes registrados deste produto:
+              </Text>
+
+              <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
+                {produtoSelecionado?.lotes.map((lote) => {
+                  const statusLote = avaliarStatusLote(lote.data_validade_lote);
+                  const isVencido = statusLote === 'vencido';
+                  const isProximo = statusLote === 'proximo_vencimento';
+
+                  return (
+                    <View
+                      key={lote.id_lote_produto}
+                      style={[
+                        estilosStockDetails.loteCardItem,
+                        {
+                          borderColor: isVencido ? '#EF4444' : isProximo ? '#FCD34D' : '#E2E8F0',
+                          backgroundColor: isVencido ? '#FEE2E2' : isProximo ? '#FEFDF8' : '#F8FAFC',
+                        },
+                      ]}
+                    >
+                      <View style={estilosStockDetails.loteLinhaTopo}>
+                        <Text style={[estilosStockDetails.loteCodigo, { color: theme.text, fontSize: 11.5 * fontScale }]}>
+                          Lote: {lote.numero_codigo_lote}
+                        </Text>
+                        <Text style={[estilosStockDetails.loteQtd, { color: isVencido ? '#B91C1C' : theme.primary, fontSize: 11.5 * fontScale }]}>
+                          {lote.quantidade_atual_pacote} pacotes
+                        </Text>
+                      </View>
+
+                      <Text style={[estilosStockDetails.loteLocal, { color: theme.subtext, fontSize: 10.5 * fontScale }]}>
+                        Local: {lote.local_descricao}
+                      </Text>
+
+                      <Text
+                        style={[
+                          estilosStockDetails.loteValidade,
+                          {
+                            color: isVencido ? '#DC2626' : isProximo ? '#D97706' : '#16A34A',
+                            fontSize: 10.5 * fontScale,
+                            fontWeight: isVencido || isProximo ? '700' : '500',
+                          },
+                        ]}
+                      >
+                        Validade: {lote.data_validade_lote} {isVencido ? '(Passou do prazo)' : isProximo ? '(Vence logo)' : '(No prazo)'}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+
+              <TouchableOpacity
+                onPress={() => setModalLotesVisivel(false)}
+                style={[estilosStockDetails.modalBtnPrimario, { backgroundColor: theme.primary }]}
+              >
+                <Text style={[estilosStockDetails.modalBtnTexto, { fontSize: 13 * fontScale }]}>Fechar e Voltar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }

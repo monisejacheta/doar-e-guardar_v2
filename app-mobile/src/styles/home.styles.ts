@@ -1,5 +1,5 @@
 // src/styles/home.styles.ts
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 
 export const estilosHome = StyleSheet.create({
   container: {
@@ -40,6 +40,8 @@ export const estilosHome = StyleSheet.create({
     width: 42,
     height: 42,
   },
+  
+  // Card de Totais
   totalCard: {
     borderRadius: 14,
     paddingVertical: 12,
@@ -76,34 +78,29 @@ export const estilosHome = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+
+  // Alerta FEFO Compacto
   alertaAcolhedor: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFBEB',
-    borderRadius: 12,
-    padding: 10,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderWidth: 1,
     borderColor: '#FDE68A',
     marginBottom: 14,
     width: '100%',
   },
   alertaAcolhedorIcone: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: '#FEF3C7',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginRight: 6,
   },
-  alertaAcolhedorTitulo: {
-    fontWeight: '700',
-    color: '#92400E',
+  alertaAcolhedorTextoLinha: {
+    flex: 1,
+    fontWeight: '500',
   },
-  alertaAcolhedorTexto: {
-    color: '#B45309',
-    marginTop: 1,
-    lineHeight: 15,
-  },
+
+  // Buscas e Filtros
   searchSection: {
     marginBottom: 12,
     width: '100%',
@@ -159,46 +156,38 @@ export const estilosHome = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Gaveta de Filtros
   gavetaFiltros: {
     marginTop: 8,
     borderWidth: 1.5,
     borderRadius: 12,
     padding: 12,
-    gap: 12,
+    gap: 10,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 3,
   },
-  blocoFiltro: {
-    gap: 6,
+  linhaFiltro: {
+    gap: 4,
   },
-  headerCategoriasRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  labelSecaoFiltro: {
-    fontWeight: '700',
-  },
-  limparFiltroTexto: {
+  labelFiltro: {
     fontWeight: '600',
   },
-  scrollCategoriasContainer: {
+  botoesWrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
-    paddingVertical: 2,
   },
   chipCategoria: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: '#F8FAFC',
     borderWidth: 1,
     borderColor: '#CBD5E1',
     borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    minHeight: 32,
+    paddingVertical: 4,
+    paddingHorizontal: 9,
   },
   chipCategoriaAtivo: {
     backgroundColor: '#0284C7',
@@ -211,39 +200,26 @@ export const estilosHome = StyleSheet.create({
   chipCategoriaTextoAtivo: {
     color: '#FFFFFF',
   },
-  botoesWrapRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    rowGap: 8,
-  },
   chipOrdenacaoFixo: {
-    width: '48.5%',
-    height: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
-    borderWidth: 1.2,
-    paddingHorizontal: 6,
+    borderWidth: 1,
+    width: '48.5%', 
+    height: 44,
   },
   chipOrdenacaoTexto: {
     fontWeight: '600',
-    textAlign: 'center',
   },
-  loadingBox: {
-    paddingVertical: 28,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 6,
-  },
+
+  // Modo Lista
   listaCard: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
     borderRadius: 12,
-    borderWidth: 1.8,
+    borderWidth: 1.5,
     width: '100%',
     elevation: 1,
   },
@@ -256,16 +232,16 @@ export const estilosHome = StyleSheet.create({
   tituloComAlertaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    marginBottom: 2,
   },
   produtoNome: {
     fontWeight: '700',
-    flexShrink: 1,
   },
   produtoMeta: {
     marginTop: 1,
   },
   produtoSub: {
+    fontWeight: '600',
     marginTop: 2,
   },
   badgeQtdConsolidada: {
@@ -284,6 +260,8 @@ export const estilosHome = StyleSheet.create({
   badgeQtdRotulo: {
     fontWeight: '600',
   },
+
+  // Modo Grid
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -292,7 +270,7 @@ export const estilosHome = StyleSheet.create({
   },
   gridCard: {
     borderRadius: 10,
-    borderWidth: 1.8,
+    borderWidth: 1.5,
     overflow: 'hidden',
     elevation: 1,
   },
@@ -326,6 +304,8 @@ export const estilosHome = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 13,
   },
+
+  // Estados Vazios
   emptyBox: {
     padding: 20,
     alignItems: 'center',
@@ -341,6 +321,16 @@ export const estilosHome = StyleSheet.create({
   emptySubtitle: {
     marginTop: 2,
   },
+  loadingBox: {
+    paddingVertical: 28,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 6,
+    fontWeight: '600',
+  },
+
+  // Modal de Detalhes - REFATORAÇÃO CAPA GRANDE
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -352,41 +342,60 @@ export const estilosHome = StyleSheet.create({
     width: '100%',
     maxWidth: 380,
     borderRadius: 16,
-    padding: 16,
+    backgroundColor: '#FFFFFF',
     elevation: 6,
+    overflow: 'hidden', // Importante para as bordas da imagem no topo
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingBottom: 8,
-  },
-  modalProdutoNome: {
-    fontWeight: '800',
-  },
-  modalProdutoMeta: {
-    marginTop: 2,
-  },
-  modalCloseBtn: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  // Capa Flutuante
+  modalCapaContainer: {
+    width: '100%',
+    height: 160,
+    position: 'relative',
     backgroundColor: '#F1F5F9',
+  },
+  modalProdutoFotoCapa: {
+    width: '100%',
+    height: '100%',
+  },
+  modalCloseBtnAbsolute: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.85)', // Fundo translúcido branco para contraste
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
+    elevation: 4,
+  },
+  // Conteúdo do Modal
+  modalConteudoBox: {
+    padding: 16,
+    paddingTop: 12,
+  },
+  modalProdutoNomeCenter: {
+    fontWeight: '900',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  modalProdutoMetaCenter: {
+    textAlign: 'center',
+    marginBottom: 12,
   },
   modalResumoBox: {
     backgroundColor: '#EFF6FF',
     borderRadius: 8,
-    padding: 8,
-    marginVertical: 8,
+    padding: 10,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#BFDBFE',
+    alignItems: 'center',
   },
   modalResumoTexto: {
     fontWeight: '600',
+    textAlign: 'center',
   },
   modalLotesTitulo: {
     fontWeight: '700',
@@ -426,6 +435,8 @@ export const estilosHome = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '700',
   },
+
+  // Menu Hambúrguer
   menuOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
@@ -435,7 +446,8 @@ export const estilosHome = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 16,
-    paddingBottom: 28,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    maxHeight: '80%',
   },
   menuDragBar: {
     width: 36,
@@ -461,6 +473,7 @@ export const estilosHome = StyleSheet.create({
     paddingHorizontal: 10,
     borderWidth: 1,
     borderRadius: 10,
+    marginBottom: 8,
   },
   menuItemIconBox: {
     width: 34,
@@ -474,6 +487,8 @@ export const estilosHome = StyleSheet.create({
     flex: 1,
     fontWeight: '600',
   },
+
+  // Barra Inferior Global
   bottomBar: {
     position: 'absolute',
     bottom: 0,
