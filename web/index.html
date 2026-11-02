@@ -35,8 +35,6 @@
 
   <!-- Navbar Lateral Fixa -->
   <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
-    
-    <!-- Informações da Sessão do Usuário (Com Avatar Randomizado) -->
     <div class="p-6 text-center border-b border-white/60 bg-white/30">
       <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm overflow-hidden border-2 border-white">
         <img id="avatar-visitante" src="" alt="Avatar Público" class="w-full h-full object-cover">
@@ -48,7 +46,6 @@
       </div>
     </div>
 
-    <!-- Navegação -->
     <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
       <a href="#" onclick="irParaSlide(0)" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
         <i class="ph ph-house text-xl"></i> Início
@@ -61,7 +58,6 @@
       </a>
     </nav>
 
-    <!-- Botões de Ação Inferiores -->
     <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
       <button onclick="abrirModal('modal-configuracoes')" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
         <i class="ph ph-gear text-xl"></i> Configurações
@@ -76,11 +72,12 @@
   <main class="flex-1 relative overflow-hidden bg-slate-50">
     <div id="carousel-container" class="flex w-full h-full transition-transform duration-500 ease-in-out">
       
-      <!-- SLIDE 1: Boas-vindas (Com Background) -->
-      <section class="min-w-full h-full flex flex-col items-center justify-center p-8 text-center bg-cover bg-center" style="background-image: url('./public/assets/backgroundCarrossel01.jpg');">
-        <!-- Overlay opcional para garantir a legibilidade do texto -->
-        <div class="absolute inset-0 bg-white/40 backdrop-blur-sm z-0"></div>
-        <div class="max-w-3xl z-10">
+      <!-- SLIDE 1: Boas-vindas -->
+      <section class="min-w-full h-full flex flex-col items-center justify-center p-8 text-center relative">
+        <!-- Background Isolado com 50% de Opacidade e Sem Blur -->
+        <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundCarrossel01.jpg');"></div>
+        
+        <div class="max-w-3xl z-10 bg-white/60 p-8 rounded-3xl backdrop-blur-sm shadow-sm">
           <i class="ph ph-package text-6xl text-brandBlue mb-4"></i>
           <h1 class="text-4xl lg:text-6xl font-extrabold text-brandBlue mb-6 leading-tight">
             Nutrindo o futuro das nossas crianças.
@@ -94,10 +91,12 @@
         </div>
       </section>
 
-      <!-- SLIDE 2: Institucional (Com Background) -->
-      <section class="min-w-full h-full overflow-y-auto p-8 lg:p-16 flex items-center bg-cover bg-center relative" style="background-image: url('./public/assets/backgroundCarrossel02.jpg');">
-        <div class="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-0"></div>
-        <div class="max-w-5xl mx-auto w-full z-10">
+      <!-- SLIDE 2: Institucional -->
+      <section class="min-w-full h-full overflow-y-auto p-8 lg:p-16 flex items-center relative">
+        <!-- Background Isolado com 50% de Opacidade e Sem Blur -->
+        <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundCarrossel02.jpg');"></div>
+        
+        <div class="max-w-5xl mx-auto w-full z-10 bg-white/70 p-10 rounded-[2.5rem] backdrop-blur-md shadow-sm">
           <div class="text-center mb-12">
             <i class="ph ph-clock-counter-clockwise text-4xl text-brandBlue mb-4"></i>
             <h3 class="text-3xl font-bold text-brandBlue mb-4">A Nossa História</h3>
@@ -107,19 +106,19 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-pastelBlue/70 backdrop-blur-md p-8 rounded-3xl border border-pastelBlue text-center shadow-sm">
+            <div class="bg-pastelBlue/90 p-8 rounded-3xl border border-pastelBlue text-center shadow-sm">
               <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-brandBlue shadow-sm"><i class="ph ph-target text-2xl"></i></div>
               <h4 class="text-xl font-bold text-brandBlue mb-3">Nossa Missão</h4>
               <p class="text-slate-700 font-medium">Educar crianças através da moralidade, para que se tornem cidadãos plenos e conscientes.</p>
             </div>
 
-            <div class="bg-pastelGreen/70 backdrop-blur-md p-8 rounded-3xl border border-pastelGreen text-center shadow-sm">
+            <div class="bg-pastelGreen/90 p-8 rounded-3xl border border-pastelGreen text-center shadow-sm">
               <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700 shadow-sm"><i class="ph ph-binoculars text-2xl"></i></div>
               <h4 class="text-xl font-bold text-emerald-900 mb-3">Nossa Visão</h4>
               <p class="text-slate-700 font-medium">Formar pessoas críticas, autônomas e perfeitamente capazes de transformar a sociedade.</p>
             </div>
 
-            <div class="bg-pastelYellow/70 backdrop-blur-md p-8 rounded-3xl border border-pastelYellow text-center shadow-sm">
+            <div class="bg-pastelYellow/90 p-8 rounded-3xl border border-pastelYellow text-center shadow-sm">
               <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-700 shadow-sm"><i class="ph ph-hands-clapping text-2xl"></i></div>
               <h4 class="text-xl font-bold text-yellow-900 mb-3">Nossos Valores</h4>
               <p class="text-slate-700 font-medium">Acolhimento com carinho, responsabilidade social, transparência e respeito pelo desenvolvimento.</p>
@@ -141,7 +140,7 @@
     </div>
   </main>
 
-  <!-- MODAL DE LOGIN (Oculto) -->
+  <!-- MODAL DE LOGIN -->
   <div id="modal-login" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
       <button onclick="fecharModal('modal-login')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
@@ -176,7 +175,7 @@
     </div>
   </div>
 
-  <!-- MODAL DE CONFIGURAÇÕES (Oculto) -->
+  <!-- MODAL DE CONFIGURAÇÕES -->
   <div id="modal-configuracoes" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-xl max-w-sm w-full p-8 relative transform scale-95 transition-transform duration-300">
       <button onclick="fecharModal('modal-configuracoes')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
@@ -223,9 +222,8 @@
       }, 300);
     }
 
-    // Inicialização da Randomização de Avatar
     document.addEventListener("DOMContentLoaded", () => {
-      const randomID = Math.floor(Math.random() * 9) + 1; // Sorteia entre 1 e 9
+      const randomID = Math.floor(Math.random() * 9) + 1; 
       const formattedID = "0" + randomID; 
       const avatarElement = document.getElementById('avatar-visitante');
       
