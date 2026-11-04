@@ -4,17 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Configurações da Conta | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
@@ -23,119 +29,178 @@
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
+  <!-- Navbar Lateral Fixa -->
+  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
+    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
+      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
+        <i class="ph ph-package text-3xl"></i>
       </div>
-      <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel do Doador</span>
-      </div>
+      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
+      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
     </div>
 
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./estoque.html" class="hover:text-green-300">Estoque Transparente</a>
-      <a href="./campanhas.html" class="hover:text-green-300">Criar Campanha</a>
-      <a href="./minhas-campanhas.html" class="hover:text-green-300">Minhas Campanhas</a>
-      <a href="./configuracoes.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Configurações</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
+    <!-- Navegação do Doador -->
+    <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-squares-four text-xl"></i> Dashboard
       </a>
-    </div>
-  </nav>
+      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-magnifying-glass text-xl"></i> Estoque Transparente
+      </a>
+      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-megaphone text-xl"></i> Criar Campanha
+      </a>
+      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
+      </a>
+      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+        <i class="ph ph-user-gear text-xl"></i> Configurações
+      </a>
+    </nav>
 
-  <main class="flex-grow max-w-3xl mx-auto p-4 sm:p-8 space-y-6">
+    <!-- Área Inferior da Navbar -->
+    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
+      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
+        <i class="ph ph-moon text-xl"></i> Contraste
+      </button>
+
+      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
+        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
+      </button>
+    </div>
+  </aside>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
     <div>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Configurações e Consentimento</h1>
-      <p class="text-xs sm:text-sm text-gray-600 mt-1">
-        Atualize seus dados cadastrais e gerencie suas permissões de privacidade conforme a LGPD.
+      <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+        <i class="ph ph-user-gear text-3xl"></i> Conta e Privacidade
+      </h1>
+      <p class="text-sm text-slate-600 mt-2 max-w-2xl">
+        Atualize seus dados vinculados ao Google e gerencie suas permissões de privacidade conforme a LGPD.
       </p>
     </div>
 
-    <div class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+    <div class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-8">
 
-      <!-- Dados Cadastrais -->
+      <!-- Dados Extraídos do Google (Somente Leitura neste MVP) -->
       <div class="space-y-4">
-        <h2 class="text-base font-bold text-brandBlue border-b pb-2">Dados do Doador</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2 border-b border-slate-100 pb-3">
+          <i class="ph-fill ph-identification-card text-xl text-blue-400"></i> Perfil Firebase
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Nome Completo</label>
-            <input type="text" id="nome-usuario" value="Juliano Mancini" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Nome Autenticado</label>
+            <input type="text" id="perfil-nome" readonly disabled class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">E-mail</label>
-            <input type="email" id="email-usuario" value="juliano@exemplo.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Telefone / WhatsApp</label>
-            <input type="text" id="tel-usuario" value="(19) 98765-4321" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">E-mail Vinculado</label>
+            <input type="email" id="perfil-email" readonly disabled class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed">
           </div>
         </div>
       </div>
 
-      <!-- Gerenciamento de Consentimento LGPD (US04 / RF05) -->
+      <!-- Gerenciamento LGPD -->
       <div class="space-y-4">
-        <h2 class="text-base font-bold text-brandBlue border-b pb-2">Privacidade e Canais de Comunicação (Opt-In / Opt-Out)</h2>
-        <p class="text-xs text-gray-600">
-          Você tem total controle sobre como a Casa da Criança se comunica com você. Marque ou desmarque os canais desejados a qualquer momento:
+        <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2 border-b border-slate-100 pb-3">
+          <i class="ph-fill ph-shield-check text-xl text-blue-400"></i> Consentimentos (LGPD)
+        </h2>
+        <p class="text-sm font-medium text-slate-600 mb-2">
+          Você tem total controle sobre os canais da ONG. Marque as opções que autoriza:
         </p>
 
         <div class="space-y-3">
-          <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100">
-            <input type="checkbox" id="optin-email" checked class="mt-1 w-4 h-4 text-brandBlue rounded focus:ring-brandBlue">
+          <label class="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-brandBlue transition group">
+            <div class="pt-0.5">
+              <input type="checkbox" id="optin-email" checked class="w-5 h-5 text-brandBlue rounded focus:ring-brandBlue">
+            </div>
             <div>
-              <span class="font-bold text-xs text-gray-900 block">Autorizo comunicados por E-mail</span>
-              <span class="text-xs text-gray-500">Receba informativos de itens críticos abaixo do estoque mínimo e balanços de campanhas homologadas.</span>
+              <span class="font-bold text-sm text-brandBlue block mb-0.5 group-hover:text-blue-900 transition">Autorizo comunicados por E-mail</span>
+              <span class="text-xs text-slate-500 font-medium">Receba informativos de itens críticos abaixo do estoque mínimo e balanços das campanhas.</span>
             </div>
           </label>
 
-          <label class="flex items-start gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200 cursor-pointer hover:bg-gray-100">
-            <input type="checkbox" id="optin-whatsapp" checked class="mt-1 w-4 h-4 text-brandBlue rounded focus:ring-brandBlue">
+          <label class="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-brandBlue transition group">
+            <div class="pt-0.5">
+              <input type="checkbox" id="optin-whatsapp" checked class="w-5 h-5 text-brandBlue rounded focus:ring-brandBlue">
+            </div>
             <div>
-              <span class="font-bold text-xs text-gray-900 block">Autorizo alertas urgentes via WhatsApp</span>
-              <span class="text-xs text-gray-500">Receba atualizações de status da sua campanha e notificações prioritárias da Casa da Criança.</span>
+              <span class="font-bold text-sm text-brandBlue block mb-0.5 group-hover:text-blue-900 transition">Autorizo alertas urgentes via WhatsApp</span>
+              <span class="text-xs text-slate-500 font-medium">Receba atualizações de status da sua campanha e notificações prioritárias da Casa da Criança.</span>
             </div>
           </label>
         </div>
 
-        <div class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-brandBlue">
-          Consentimento registrado em: <strong id="timestamp-consentimento">20/10/2026 às 16:40 (LGPD Ativo)</strong>
+        <div class="mt-4 p-4 bg-pastelYellow/40 border border-pastelYellow rounded-xl text-xs font-semibold text-yellow-800 flex items-center gap-2">
+          <i class="ph-fill ph-clock text-lg"></i>
+          Registro atualizado em: <span id="timestamp-consentimento">--/--/----</span>
         </div>
       </div>
 
-      <!-- Botão de Salvar Alterações -->
-      <div class="pt-4 border-t flex justify-end">
-        <button onclick="salvarConfiguracoes()" class="bg-brandBlue hover:bg-blue-900 text-white font-bold px-6 py-2.5 rounded-xl btn-touch shadow transition text-sm">
-          Salvar Preferências
+      <div class="pt-4 border-t border-slate-100 flex justify-end">
+        <button onclick="salvarConfiguracoes()" class="bg-brandBlue text-white font-bold px-8 py-3 rounded-xl hover:bg-blue-900 transition shadow-sm flex items-center justify-center gap-2">
+          <i class="ph-bold ph-floppy-disk"></i> Gravar Preferências
         </button>
       </div>
-
     </div>
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-  <script>
-    function salvarConfiguracoes() {
-      const emailOpt = document.getElementById('optin-email').checked;
-      const zapOpt = document.getElementById('optin-whatsapp').checked;
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDmJWmKMOgSQg0XxfpAVtrNy8XY79G7VM",
+      authDomain: "doar-e-guardar-v2.firebaseapp.com",
+      projectId: "doar-e-guardar-v2",
+      storageBucket: "doar-e-guardar-v2.firebasestorage.app",
+      messagingSenderId: "206062751062",
+      appId: "1:206062751062:web:38cda34f65ca612043daf7",
+      measurementId: "G-87KFR89NX0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Preenche os inputs com os dados provindos da conta Google do usuário logado
+        document.getElementById('perfil-nome').value = user.displayName || 'Sem nome cadastrado';
+        document.getElementById('perfil-email').value = user.email || 'Sem e-mail cadastrado';
+        
+        const hoje = new Date();
+        document.getElementById('timestamp-consentimento').innerText = hoje.toLocaleString('pt-BR') + ' (Autenticado via Google)';
+      } else {
+        // Se a pessoa deslogar ou não tiver sessão, manda pra tela de login
+        window.location.href = '../../index.html';
+      }
+    });
+
+    window.realizarLogout = async () => {
+      try {
+        await signOut(auth);
+        window.location.href = '../../index.html';
+      } catch (erro) {
+        console.error("Erro no deslogar: ", erro);
+      }
+    };
+
+    window.salvarConfiguracoes = () => {
+      const emailStatus = document.getElementById('optin-email').checked;
+      const zapStatus = document.getElementById('optin-whatsapp').checked;
       const agora = new Date().toLocaleString('pt-BR');
 
-      document.getElementById('timestamp-consentimento').innerText = `${agora} (Atualizado)`;
+      document.getElementById('timestamp-consentimento').innerText = `${agora} (Registro Atualizado Manualmente)`;
 
       alert(
-        `Preferências salvas com sucesso!\n\n` +
-        `• E-mail Opt-In: ${emailOpt ? 'ATIVO' : 'REVOGADO (Opt-Out)'}\n` +
-        `• WhatsApp Opt-In: ${zapOpt ? 'ATIVO' : 'REVOGADO (Opt-Out)'}\n` +
-        `• Carimbo temporal registrado em conformidade com a LGPD.`
+        `Suas preferências de privacidade (LGPD) foram salvas com sucesso!
+
+` +
+        `• Informativos por E-mail: ${emailStatus ? 'Ativo' : 'Revogado'}
+` +
+        `• Alertas por WhatsApp: ${zapStatus ? 'Ativo' : 'Revogado'}`
       );
     }
   </script>

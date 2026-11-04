@@ -4,17 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Criar Campanha | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
@@ -23,107 +29,130 @@
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
+  <!-- Navbar Lateral Fixa -->
+  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
+    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
+      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
+        <i class="ph ph-package text-3xl"></i>
       </div>
-      <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel do Doador</span>
-      </div>
+      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
+      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
     </div>
 
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./estoque.html" class="hover:text-green-300">Estoque Transparente</a>
-      <a href="./campanhas.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Criar Campanha</a>
-      <a href="./minhas-campanhas.html" class="hover:text-green-300">Minhas Campanhas</a>
-      <a href="./configuracoes.html" class="hover:text-green-300">Configurações</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
+    <!-- Navegação do Doador -->
+    <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-squares-four text-xl"></i> Dashboard
       </a>
-    </div>
-  </nav>
+      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-magnifying-glass text-xl"></i> Estoque Transparente
+      </a>
+      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+        <i class="ph ph-megaphone text-xl"></i> Criar Campanha
+      </a>
+      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
+      </a>
+      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-user-gear text-xl"></i> Configurações
+      </a>
+    </nav>
 
-  <main class="flex-grow max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
+    <!-- Área Inferior da Navbar -->
+    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
+      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
+        <i class="ph ph-moon text-xl"></i> Contraste
+      </button>
+
+      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
+        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
+      </button>
+    </div>
+  </aside>
+
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
     <div>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Propor Campanha de Arrecadação</h1>
-      <p class="text-xs sm:text-sm text-gray-600 mt-1">
-        A Casa da Criança não gera campanhas ativas diretamente; avaliamos e orientamos as iniciativas propostas por doadores da comunidade.
+      <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+        <i class="ph ph-megaphone text-3xl"></i> Propor Campanha
+      </h1>
+      <p class="text-sm text-slate-600 mt-2 max-w-2xl">
+        A Casa da Criança avalia e orienta as iniciativas propostas por doadores da comunidade. Preencha os dados para moderação.
       </p>
     </div>
 
-    <form id="form-campanha" onsubmit="submeterCampanha(event)" class="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+    <form id="form-campanha" onsubmit="submeterCampanha(event)" class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-8">
 
-      <!-- Dados Básicos da Campanha -->
-      <div class="space-y-4">
-        <h2 class="text-base font-bold text-brandBlue border-b pb-2">1. Informações Gerais da Iniciativa</h2>
+      <!-- Dados Básicos -->
+      <div class="space-y-5">
+        <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2 border-b border-slate-100 pb-3">
+          <i class="ph-fill ph-info text-xl text-blue-400"></i> 1. Informações Gerais
+        </h2>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Nome da Campanha *</label>
-          <input type="text" id="nome-campanha" required placeholder="Ex: Arrecadação de Leite do Grêmio Estudantil" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nome da Campanha *</label>
+          <input type="text" id="nome-campanha" required placeholder="Ex: Arrecadação de Leite do Grêmio Estudantil" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Objetivo e Ponto de Coleta *</label>
-          <textarea id="objetivo-campanha" rows="3" required placeholder="Descreva onde os alimentos serão arrecadados e o propósito..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none"></textarea>
+          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Objetivo e Ponto de Coleta *</label>
+          <textarea id="objetivo-campanha" rows="3" required placeholder="Descreva onde os alimentos serão arrecadados e o propósito da ação..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition"></textarea>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Data de Início *</label>
-            <input type="date" id="data-inicio" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Data de Início *</label>
+            <input type="date" id="data-inicio" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Data Prevista de Término *</label>
-            <input type="date" id="data-fim" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Data Prevista de Término *</label>
+            <input type="date" id="data-fim" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
           </div>
         </div>
       </div>
 
-      <!-- Construtor Dinâmico de Metas de Itens (US02) -->
-      <div class="space-y-4">
-        <div class="flex justify-between items-center border-b pb-2">
-          <h2 class="text-base font-bold text-brandBlue">2. Metas de Alimentos Pretendidas</h2>
-          <span class="text-xs text-gray-500">Adicione os insumos um a um</span>
+      <!-- Construtor de Metas -->
+      <div class="space-y-5">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2">
+             <i class="ph-fill ph-target text-xl text-blue-400"></i> 2. Metas de Alimentos
+          </h2>
+          <span class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Adicione os insumos um a um</span>
         </div>
 
-        <!-- Área de Inserção Linha a Linha -->
-        <div class="p-4 bg-gray-50 rounded-xl border border-gray-200 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <!-- Área de Inserção -->
+        <div class="p-5 bg-pastelBlue/30 rounded-2xl border border-pastelBlue grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div class="sm:col-span-2">
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Item Solicitado</label>
-            <input type="text" id="item-input" placeholder="Ex: Leite Integral 1L, Arroz 5kg, Feijão..." class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+            <label class="block text-xs font-bold text-brandBlue mb-1.5 uppercase tracking-wide">Item Solicitado</label>
+            <input type="text" id="item-input" placeholder="Ex: Leite Integral 1L, Arroz 5kg..." class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
           </div>
           <div>
-            <label class="block text-xs font-semibold text-gray-700 mb-1">Quantidade Meta (Pacotes)</label>
-            <input type="number" id="qtd-input" min="1" placeholder="Ex: 50" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:border-brandBlue focus:outline-none">
+            <label class="block text-xs font-bold text-brandBlue mb-1.5 uppercase tracking-wide">Meta (Qtd)</label>
+            <input type="number" id="qtd-input" min="1" placeholder="Ex: 50" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
           </div>
-          <div class="sm:col-span-3 text-right">
-            <button type="button" onclick="adicionarProximoItem()" class="bg-brandBlue hover:bg-blue-900 text-white font-semibold text-xs px-4 py-2 rounded-lg btn-touch transition">
-              + Adicionar Próximo Item
+          <div class="sm:col-span-3">
+            <button type="button" onclick="adicionarProximoItem()" class="w-full sm:w-auto bg-white border-2 border-brandBlue text-brandBlue hover:bg-blue-50 font-bold text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
+              <i class="ph-bold ph-plus"></i> Adicionar à Meta
             </button>
           </div>
         </div>
 
-        <!-- Tabela com os Itens Adicionados -->
-        <div class="border border-gray-200 rounded-xl overflow-hidden">
+        <!-- Tabela Metas -->
+        <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           <table class="w-full text-left text-sm" id="tabela-metas">
-            <thead class="bg-gray-100 text-xs font-bold text-gray-700 uppercase">
+            <thead class="bg-slate-100 text-xs font-bold text-slate-600 uppercase">
               <tr>
-                <th class="p-3">Alimento / Item</th>
-                <th class="p-3">Quantidade Pretendida</th>
-                <th class="p-3 text-center">Ação</th>
+                <th class="p-4">Alimento / Item</th>
+                <th class="p-4">Qtd. Pretendida</th>
+                <th class="p-4 text-center">Ação</th>
               </tr>
             </thead>
-            <tbody id="lista-metas" class="divide-y divide-gray-200">
+            <tbody id="lista-metas" class="divide-y divide-slate-100 bg-white">
               <tr id="linha-vazia">
-                <td colspan="3" class="p-4 text-center text-xs text-gray-400">
-                  Nenhum item adicionado ainda. É obrigatório incluir pelo menos um insumo para submeter a proposta.
+                <td colspan="3" class="p-8 text-center text-sm text-slate-400 font-medium">
+                  <i class="ph ph-shopping-cart text-3xl mb-2 text-slate-300"></i><br>
+                  Nenhum item adicionado. É obrigatório incluir pelo menos um insumo.
                 </td>
               </tr>
             </tbody>
@@ -131,21 +160,52 @@
         </div>
       </div>
 
-      <!-- Botão de Submissão -->
-      <div class="pt-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
-        <p class="text-xs text-gray-500">
-          Status inicial: <strong>Pendente de Análise</strong> (aguarda aprovação dos funcionários).
+      <!-- Botão Submeter -->
+      <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <p class="text-xs font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-lg">
+          Status inicial: <strong class="text-brandBlue">Pendente de Análise</strong>
         </p>
-        <button type="submit" class="w-full sm:w-auto bg-brandGreen hover:bg-emerald-600 text-white font-bold px-8 py-3 rounded-xl btn-touch shadow transition">
-          Enviar Proposta para Moderação
+        
+        <button id="btn-submit" type="submit" class="w-full sm:w-auto bg-pastelGreen text-emerald-900 font-bold px-10 py-3.5 rounded-xl hover:bg-[#b5ead5] border border-emerald-200 transition shadow-sm flex items-center justify-center gap-2">
+          <i class="ph-bold ph-paper-plane-right"></i> Enviar Proposta
         </button>
       </div>
     </form>
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDmJWmKMOgSQg0XxfpAVtrNy8XY79G7VM",
+      authDomain: "doar-e-guardar-v2.firebaseapp.com",
+      projectId: "doar-e-guardar-v2",
+      storageBucket: "doar-e-guardar-v2.firebasestorage.app",
+      messagingSenderId: "206062751062",
+      appId: "1:206062751062:web:38cda34f65ca612043daf7",
+      measurementId: "G-87KFR89NX0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    let usuarioLogadoId = null;
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        usuarioLogadoId = user.uid;
+      } else {
+        window.location.href = '../../index.html';
+      }
+    });
+
+    window.realizarLogout = async () => {
+      await signOut(auth);
+      window.location.href = '../../index.html';
+    };
+
+    window.usuarioLogadoIdGlobal = () => usuarioLogadoId;
+  </script>
 
   <script>
     const itensAdicionados = [];
@@ -157,11 +217,11 @@
       const qtd = parseInt(qtdInput.value, 10);
 
       if (!nome || !qtd || qtd <= 0) {
-        alert('Informe o nome do item e uma quantidade meta válida superior a zero.');
+        alert('Informe o nome do item e uma quantidade meta válida.');
         return;
       }
 
-      itensAdicionados.push({ nome, qtd });
+      itensAdicionados.push({ nome, qtd, unidade_medida_item: 'pacotes/unidades' });
       nomeInput.value = '';
       qtdInput.value = '';
       renderizarTabela();
@@ -179,8 +239,9 @@
       if (itensAdicionados.length === 0) {
         tbody.innerHTML = `
           <tr id="linha-vazia">
-            <td colspan="3" class="p-4 text-center text-xs text-gray-400">
-              Nenhum item adicionado ainda. É obrigatório incluir pelo menos um insumo para submeter a proposta.
+            <td colspan="3" class="p-8 text-center text-sm text-slate-400 font-medium">
+              <i class="ph ph-shopping-cart text-3xl mb-2 text-slate-300"></i><br>
+              Nenhum item adicionado. É obrigatório incluir pelo menos um insumo.
             </td>
           </tr>`;
         return;
@@ -188,39 +249,75 @@
 
       itensAdicionados.forEach((item, index) => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-gray-50';
+        tr.className = 'hover:bg-slate-50 transition';
         tr.innerHTML = `
-          <td class="p-3 font-semibold text-gray-800">${item.nome}</td>
-          <td class="p-3">${item.qtd} pacotes/unidades</td>
-          <td class="p-3 text-center">
-            <button type="button" onclick="removerItem(${index})" class="text-red-600 hover:text-red-800 font-bold text-xs p-1">
-              Remover
+          <td class="p-4 font-bold text-brandBlue">${item.nome}</td>
+          <td class="p-4 text-slate-600 font-medium">${item.qtd} un.</td>
+          <td class="p-4 text-center">
+            <button type="button" onclick="removerItem(${index})" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg font-bold transition">
+              <i class="ph-bold ph-trash"></i>
             </button>
           </td>`;
         tbody.appendChild(tr);
       });
     }
 
-    function submeterCampanha(event) {
+    async function submeterCampanha(event) {
       event.preventDefault();
 
       const dInicio = document.getElementById('data-inicio').value;
       const dFim = document.getElementById('data-fim').value;
 
-      // Regra US02: Validação temporal
       if (new Date(dFim) < new Date(dInicio)) {
-        alert('A data de término não pode ser anterior à data de início da campanha.');
+        alert('A data de término não pode ser anterior à data de início.');
         return;
       }
 
-      // Regra US02: Exigência de itens
       if (itensAdicionados.length === 0) {
-        alert('É obrigatório adicionar pelo menos uma meta de alimento antes de enviar para moderação.');
+        alert('É obrigatório adicionar pelo menos um alimento à meta.');
         return;
       }
 
-      alert('Proposta de Campanha submetida com sucesso!\nStatus: Pendente de Análise pela equipe da Casa da Criança.');
-      window.location.href = './minhas-campanhas.html';
+      const uid = window.usuarioLogadoIdGlobal ? window.usuarioLogadoIdGlobal() : 'user_dev';
+      const btnSubmit = document.getElementById('btn-submit');
+      
+      try {
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> Enviando...';
+
+        const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
+        
+        const payload = {
+          acao: "criar_campanha",
+          dados: {
+            id_doador_responsavel: uid,
+            nome_campanha: document.getElementById('nome-campanha').value,
+            objetivo_descricao_campanha: document.getElementById('objetivo-campanha').value,
+            data_inicio_campanha: dInicio,
+            data_termino_campanha: dFim,
+            itens_metas: itensAdicionados
+          }
+        };
+
+        const resp = await fetch(API_AWS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await resp.json();
+        
+        if (data.sucesso) {
+          alert('Proposta submetida com sucesso! Acompanhe a moderação no seu painel.');
+          window.location.href = './minhas-campanhas.html';
+        } else {
+           throw new Error(data.erro || 'Falha ao salvar no banco');
+        }
+      } catch (err) {
+        alert('Erro ao processar na nuvem: ' + err.message);
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<i class="ph-bold ph-paper-plane-right"></i> Enviar Proposta';
+      }
     }
   </script>
 </body>
