@@ -3,103 +3,331 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Relatórios | Casa da Criança</title>
+  <title>Central de Relatórios (AWS) | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
+  <style>
+    @media print {
+      #sidebar-admin-container, #barra-controles-relatorio { display: none !important; }
+      body { background: #ffffff !important; height: auto !important; overflow: visible !important; }
+      main { padding: 0 !important; overflow: visible !important; }
+    }
+  </style>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
-      </div>
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
+  <div id="sidebar-admin-container"></div>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+
+    <!-- Cabeçalho Principal (Padrão Index) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
-      <a href="./consulta-avancada.html" class="hover:text-green-300">Consulta Lotes</a>
-      <a href="./relatorios.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Relatórios</a>
-      <a href="./mensageria.html" class="hover:text-green-300">Mensagens</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
-      </a>
-    </div>
-  </nav>
-
-  <main class="flex-grow max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
-    <div>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Central de Relatórios e Exportação</h1>
-      <p class="text-xs sm:text-sm text-gray-600 mt-1">
-        Consolidação analítica de estoque, perdas confirmadas com a palavra PERDA e movimentações.
-      </p>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Tipo de Relatório</label>
-          <select id="tipo-relatorio" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-            <option value="estoque">Estoque Atual e Saldo</option>
-            <option value="movimentacao">Movimentações e Transferências</option>
-            <option value="perdas">Perdas e Descartes (Trava PERDA)</option>
-            <option value="validade">Controle de Validades (FEFO)</option>
-          </select>
+        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
+          <i class="ph-fill ph-file-pdf"></i>
+          Tabelas AWS: <code>tb_lotesProdutos</code> • <code>tb_movimentacoes</code> • <code>tb_logsAuditorias</code>
         </div>
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Período Inicial</label>
-          <input type="date" value="2026-10-01" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-        </div>
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Período Final</label>
-          <input type="date" value="2026-10-20" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-        </div>
+        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+          <i class="ph ph-chart-line-up text-3xl"></i>
+          Central de Relatórios e Prestação de Contas
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
+          Extraia relatórios auditáveis em CSV (Excel) ou PDF a partir dos registros reais da nuvem AWS.
+        </p>
       </div>
-
-      <!-- Representação Gráfica -->
-      <div class="p-6 bg-gray-50 border border-gray-200 rounded-xl text-center space-y-2">
-        <span class="text-3xl">📊</span>
-        <h3 class="font-bold text-sm text-gray-800">Visualização Gráfica Comparativa</h3>
-        <p class="text-xs text-gray-500">Distribuição de insumos: 65% Grãos, 20% Laticínios, 15% Enlatados.</p>
-      </div>
-
-      <!-- Ações de Exportação -->
-      <div class="pt-4 border-t flex flex-wrap justify-end gap-3 text-xs">
-        <button onclick="alert('Exportando arquivo CSV consolidado...')" class="px-4 py-2.5 border border-gray-300 rounded-xl hover:bg-gray-100 font-semibold btn-touch">
-          Exportar CSV
+      
+      <div id="barra-controles-relatorio" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <button type="button" onclick="exportarRelatorioCsv()" class="inline-flex items-center justify-center gap-2 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-5 py-3 rounded-xl border border-emerald-200 transition shadow-sm text-sm">
+          <i class="ph-bold ph-file-csv text-lg text-emerald-700"></i> Exportar CSV (Excel)
         </button>
-        <button onclick="alert('PDF gerado pelas funções AWS Lambda e enviado aos e-mails configurados!')" class="px-6 py-2.5 bg-brandBlue hover:bg-blue-900 text-white font-bold rounded-xl btn-touch shadow">
-          Baixar Relatório em PDF
+        <button type="button" onclick="window.print()" class="inline-flex items-center justify-center gap-2 bg-brandBlue hover:bg-blue-900 text-white font-bold px-5 py-3 rounded-xl transition shadow-sm text-sm">
+          <i class="ph-bold ph-printer text-lg"></i> Imprimir / Salvar PDF
         </button>
       </div>
     </div>
+
+    <!-- Filtros do Relatório -->
+    <section class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+      <div class="md:col-span-5">
+        <label for="tipo-relatorio" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Modelo de Relatório Oficial</label>
+        <select id="tipo-relatorio" onchange="renderizarRelatorioSelecionado()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:border-brandBlue">
+          <option value="INVENTARIO_FEFO">1. Posição Completa de Estoque e Validades FEFO (tb_lotesProdutos)</option>
+          <option value="MOVIMENTACOES">2. Trilha de Auditoria de Movimentações (tb_movimentacoes)</option>
+          <option value="BALANCO_MINIMO">3. Balanço de Segurança: Saldo Atual vs. Estoque Mínimo</option>
+          <option value="RISCO_PERDAS">4. Relatório de Risco de Perdas e Lotes Críticos (&le; 30 dias)</option>
+        </select>
+      </div>
+
+      <div class="md:col-span-4">
+        <label for="relatorio-prateleira" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Filtrar por Compartimento</label>
+        <select id="relatorio-prateleira" onchange="renderizarRelatorioSelecionado()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          <option value="TODAS">Todos os Compartimentos da Instituição</option>
+        </select>
+      </div>
+
+      <div class="md:col-span-3">
+        <button type="button" onclick="carregarDadosRelatorioAws()" class="w-full py-2.5 px-4 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-sm inline-flex items-center justify-center gap-2 transition">
+          <i class="ph-bold ph-arrows-clockwise" id="icone-sync-relatorio"></i>
+          <span>Atualizar Dados AWS</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Resumo Executivo do Relatório Gerado (Padrão Pastel Index) -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div class="bg-pastelBlue/60 border border-pastelBlue p-6 rounded-3xl shadow-sm">
+        <span class="text-xs font-bold uppercase text-brandBlue block">Registros no Relatório</span>
+        <span id="rel-kpi-1" class="text-2xl font-extrabold text-brandBlue mt-1 block">--</span>
+      </div>
+      <div class="bg-pastelGreen/60 border border-pastelGreen p-6 rounded-3xl shadow-sm">
+        <span class="text-xs font-bold uppercase text-emerald-900 block">Volume Total Auditado</span>
+        <span id="rel-kpi-2" class="text-2xl font-extrabold text-emerald-900 mt-1 block">--</span>
+      </div>
+      <div class="bg-pastelYellow/60 border border-pastelYellow p-6 rounded-3xl shadow-sm">
+        <span class="text-xs font-bold uppercase text-yellow-900 block">Emitido por / Data Hora</span>
+        <span id="rel-kpi-3" class="text-sm font-bold text-yellow-900 mt-2 block">casadacrianca@adm</span>
+      </div>
+    </section>
+
+    <!-- Tabela Dinâmica do Relatório -->
+    <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+      <div class="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h2 id="titulo-tabela-relatorio" class="text-lg font-bold text-brandBlue">Posição Completa de Estoque FEFO</h2>
+          <p class="text-xs text-slate-500 font-medium">Dados extraídos em tempo real do banco de dados AWS DynamoDB.</p>
+        </div>
+        <span class="text-xs font-bold text-emerald-900 bg-pastelGreen px-3.5 py-1.5 rounded-xl border border-emerald-200">Documento Auditável</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead id="thead-relatorio" class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase text-brandBlue"></thead>
+          <tbody id="tbody-relatorio" class="divide-y divide-slate-100 text-xs font-medium text-slate-800">
+            <tr><td class="p-10 text-center text-brandBlue font-semibold">Sincronizando dados com a AWS...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <script src="../../public/js/admin.js"></script>
+  <script>
+    let dadosAwsRelatorio = null;
+    let linhasExportacaoCsv = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderizarSidebarAdmin('relatorios');
+      carregarDadosRelatorioAws();
+    });
+
+    async function carregarDadosRelatorioAws() {
+      const icone = document.getElementById('icone-sync-relatorio');
+      if (icone) icone.classList.add('animate-spin');
+
+      try {
+        dadosAwsRelatorio = await carregarDadosEstoqueAws();
+        const selPrateleira = document.getElementById('relatorio-prateleira');
+        const atual = selPrateleira.value || 'TODAS';
+        selPrateleira.innerHTML = `<option value="TODAS">Todos os Compartimentos (${dadosAwsRelatorio.locaisReconciliados.length})</option>` +
+          dadosAwsRelatorio.locaisReconciliados.map((l) => `<option value="${l.nome}">${l.nome}</option>`).join('');
+        selPrateleira.value = atual;
+
+        renderizarRelatorioSelecionado();
+      } catch (e) {
+        console.error('Erro ao gerar relatório AWS:', e);
+      } finally {
+        if (icone) icone.classList.remove('animate-spin');
+      }
+    }
+
+    function renderizarRelatorioSelecionado() {
+      if (!dadosAwsRelatorio) return;
+      const tipo = document.getElementById('tipo-relatorio').value;
+      const prateleiraFiltro = document.getElementById('relatorio-prateleira').value;
+      const agoraStr = new Date().toLocaleString('pt-BR');
+      document.getElementById('rel-kpi-3').textContent = `casadacrianca@adm • ${agoraStr}`;
+
+      const thead = document.getElementById('thead-relatorio');
+      const tbody = document.getElementById('tbody-relatorio');
+      const tituloEl = document.getElementById('titulo-tabela-relatorio');
+
+      if (tipo === 'INVENTARIO_FEFO' || tipo === 'RISCO_PERDAS') {
+        let lotes = dadosAwsRelatorio.lotes.filter((l) => prateleiraFiltro === 'TODAS' || l.localArmazenamento === prateleiraFiltro);
+        if (tipo === 'RISCO_PERDAS') {
+          lotes = lotes.filter((l) => l.diasRestantes <= 30);
+          tituloEl.textContent = 'Relatório de Risco de Perdas e Lotes Críticos (Vencimento <= 30 dias)';
+        } else {
+          tituloEl.textContent = 'Posição Completa de Estoque e Validades FEFO (tb_lotesProdutos)';
+        }
+
+        const somaUnidades = lotes.reduce((acc, l) => acc + l.quantidadeAtual, 0);
+        document.getElementById('rel-kpi-1').textContent = `${lotes.length} lotes listados`;
+        document.getElementById('rel-kpi-2').textContent = `${somaUnidades} pacotes totais`;
+
+        thead.innerHTML = `
+          <tr>
+            <th class="p-4">Código Lote</th>
+            <th class="p-4">Código EAN</th>
+            <th class="p-4">Produto</th>
+            <th class="p-4">Compartimento (AWS)</th>
+            <th class="p-4 text-center">Saldo</th>
+            <th class="p-4">Validade</th>
+            <th class="p-4">Situação FEFO</th>
+          </tr>
+        `;
+
+        linhasExportacaoCsv = [
+          ['Codigo Lote', 'Codigo EAN', 'Produto', 'Marca', 'Categoria', 'Compartimento AWS', 'Saldo Atual', 'Data Validade', 'Dias Restantes', 'Status FEFO'],
+          ...lotes.map((l) => [
+            l.codigoLote, l.codigoBarras, l.nomeProduto, l.marca, l.categoria, l.localArmazenamento,
+            l.quantidadeAtual, l.dataValidadeFormatada, l.diasRestantes, l.statusFefo.rotulo
+          ])
+        ];
+
+        tbody.innerHTML = lotes.length === 0
+          ? `<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum registro encontrado para este filtro.</td></tr>`
+          : lotes.map((l) => `
+            <tr class="hover:bg-slate-50">
+              <td class="p-4 font-bold text-brandBlue">${l.codigoLote}</td>
+              <td class="p-4 text-slate-600">${l.codigoBarras}</td>
+              <td class="p-4 font-bold text-brandBlue">${l.nomeProduto}</td>
+              <td class="p-4">${l.localArmazenamento}</td>
+              <td class="p-4 text-center font-bold text-brandBlue">${l.quantidadeAtual}</td>
+              <td class="p-4">${l.dataValidadeFormatada}</td>
+              <td class="p-4"><span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${l.statusFefo.classeBadge}">${l.statusFefo.rotulo}</span></td>
+            </tr>
+          `).join('');
+      } else if (tipo === 'MOVIMENTACOES') {
+        tituloEl.textContent = 'Trilha de Auditoria de Movimentações (tb_movimentacoes AWS)';
+        const movs = dadosAwsRelatorio.movimentacoes.filter((m) => prateleiraFiltro === 'TODAS' || m.localArmazenamento.includes(prateleiraFiltro));
+        const somaMov = movs.reduce((acc, m) => acc + m.quantidade, 0);
+
+        document.getElementById('rel-kpi-1').textContent = `${movs.length} operações auditadas`;
+        document.getElementById('rel-kpi-2').textContent = `${somaMov} pacotes movimentados`;
+
+        thead.innerHTML = `
+          <tr>
+            <th class="p-4">ID Operação</th>
+            <th class="p-4">Operação</th>
+            <th class="p-4">Produto / Lote</th>
+            <th class="p-4">Compartimento</th>
+            <th class="p-4 text-center">Qtd</th>
+            <th class="p-4">Justificativa / Motivo</th>
+            <th class="p-4">Responsável / Data</th>
+          </tr>
+        `;
+
+        linhasExportacaoCsv = [
+          ['ID Operacao', 'Operacao', 'Produto', 'Lote', 'Compartimento', 'Quantidade', 'Motivo', 'Responsavel', 'Data Hora'],
+          ...movs.map((m) => [m.id, m.tipo, m.nomeProduto, m.codigoLote, m.localArmazenamento, m.quantidade, m.motivo, m.responsavel, m.dataHora])
+        ];
+
+        tbody.innerHTML = movs.length === 0
+          ? `<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhuma movimentação encontrada para este filtro.</td></tr>`
+          : movs.map((m) => `
+            <tr class="hover:bg-slate-50">
+              <td class="p-4 font-bold text-brandBlue">${m.id}</td>
+              <td class="p-4"><span class="px-2.5 py-1 rounded-lg bg-pastelBlue text-brandBlue font-bold text-[11px]">${m.tipo}</span></td>
+              <td class="p-4 font-bold text-brandBlue">${m.nomeProduto} <span class="text-slate-400 font-normal">(${m.codigoLote})</span></td>
+              <td class="p-4">${m.localArmazenamento}</td>
+              <td class="p-4 text-center font-bold text-brandBlue">${m.quantidade}</td>
+              <td class="p-4 text-slate-600">${m.motivo}</td>
+              <td class="p-4 text-slate-600">${m.responsavel} <br><span class="text-[10px] text-slate-400">${m.dataHoraFormatada}</span></td>
+            </tr>
+          `).join('');
+      } else if (tipo === 'BALANCO_MINIMO') {
+        tituloEl.textContent = 'Balanço de Segurança: Saldo Atual vs. Estoque Mínimo';
+        const prods = dadosAwsRelatorio.produtosAgrupados;
+        const criticos = prods.filter((p) => p.quantidadeTotal < p.estoqueMinimo).length;
+
+        document.getElementById('rel-kpi-1').textContent = `${prods.length} produtos analisados`;
+        document.getElementById('rel-kpi-2').textContent = `${criticos} abaixo do mínimo`;
+
+        thead.innerHTML = `
+          <tr>
+            <th class="p-4">Produto</th>
+            <th class="p-4">Categoria</th>
+            <th class="p-4 text-center">Lotes Ativos</th>
+            <th class="p-4 text-center">Saldo Total (AWS)</th>
+            <th class="p-4 text-center">Meta Mínima</th>
+            <th class="p-4">Situação de Abastecimento</th>
+          </tr>
+        `;
+
+        linhasExportacaoCsv = [
+          ['Produto', 'Categoria', 'Lotes Ativos', 'Saldo Total', 'Meta Minima', 'Situacao'],
+          ...prods.map((p) => [
+            p.nomeProduto, p.categoria, p.lotesCount, p.quantidadeTotal, p.estoqueMinimo,
+            p.quantidadeTotal < p.estoqueMinimo ? 'ABAIXO DO MINIMO (CRITICO)' : 'ABASTECIDO (REGULAR)'
+          ])
+        ];
+
+        tbody.innerHTML = prods.map((p) => {
+          const critico = p.quantidadeTotal < p.estoqueMinimo;
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="p-4 font-bold text-brandBlue">${p.nomeProduto}</td>
+              <td class="p-4">${p.categoria}</td>
+              <td class="p-4 text-center">${p.lotesCount} lote(s)</td>
+              <td class="p-4 text-center font-bold text-brandBlue">${p.quantidadeTotal}</td>
+              <td class="p-4 text-center">${p.estoqueMinimo}</td>
+              <td class="p-4">
+                <span class="px-3 py-1 rounded-lg text-xs font-bold ${critico ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-pastelGreen text-emerald-900'}">
+                  ${critico ? `Estoque Crítico (Faltam ${p.estoqueMinimo - p.quantidadeTotal})` : 'Abastecido'}
+                </span>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    function exportarRelatorioCsv() {
+      if (!linhasExportacaoCsv || linhasExportacaoCsv.length === 0) {
+        alert('Aguarde o carregamento dos dados antes de exportar.');
+        return;
+      }
+      const tipo = document.getElementById('tipo-relatorio').value.toLowerCase();
+      const conteudoCsv = '\uFEFF' + linhasExportacaoCsv.map((linha) =>
+        linha.map((celula) => `"${String(celula ?? '').replace(/"/g, '""')}"`).join(';')
+      ).join('\r\n');
+
+      const blob = new Blob([conteudoCsv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `relatorio_${tipo}_casadacrianca_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+  </script>
 </body>
 </html>

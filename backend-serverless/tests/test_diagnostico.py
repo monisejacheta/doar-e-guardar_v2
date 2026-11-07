@@ -4,6 +4,7 @@ import pytest
 from src.services.dora_ia import (
     funcaoProcessarComandoLinguagemNaturalDora,
     funcaoSugerirReceitasAntidesperdicioDora,
+    funcaoPredizerConsumoEstoqueDora,
 )
 from src.handlers.diagnostico_handler import (
     funcaoVerificarDisponibilidadeServicosAws,
@@ -16,6 +17,7 @@ from src.handlers.configuracoes_handler import (
 )
 from src.handlers.relatorios_handler import funcaoEnviarRelatorioCompletoEmail
 from src.services.mensageria import funcaoDispararComunicadoLgpd
+from src.database.firebase_client import funcaoAutenticarCredenciaisFirebase
 
 
 def test_dora_classificacao_intencao_receita():
@@ -37,6 +39,19 @@ def test_dora_sugestao_receita_fefo():
     assert "Arroz Doce" in resultado["receita"]["titulo"]
     assert "https://" in resultado["receita"]["fonte_url"]
     assert len(resultado["receita"]["ingredientes_estoque"]) > 0
+
+
+def test_dora_predicao_consumo_ml():
+    assert funcaoProcessarComandoLinguagemNaturalDora("Qual a previsão de consumo do estoque?") == "predicao_consumo"
+    lotes = [
+        {"nome_produto": "Arroz Tipo 1", "categoria": "Grãos", "quantidade_atual_pacote": 18, "local_descricao": "Armário A - Prateleira 1"},
+        {"nome_produto": "Leite Integral UHT", "categoria": "Laticínios", "quantidade_atual_pacote": 11, "local_descricao": "Geladeira 1 - Prateleira Central"},
+    ]
+    resultado = funcaoPredizerConsumoEstoqueDora(lotes)
+    assert resultado["sucesso"] is True
+    assert resultado["intencao"] == "predicao_consumo"
+    assert len(resultado["predicoes"]) == 2
+    assert resultado["predicoes"][0]["dias_autonomia"] >= 1
 
 
 def test_health_check_servicos_aws():
@@ -114,3 +129,14 @@ def test_relatorios_e_mensageria_lgpd():
     assert res_msg["total_enviados"] == 1
     assert res_msg["total_bloqueados_lgpd"] == 1
     assert "SAIR" in res_msg["mensagem_formatada"]
+
+
+def test_autenticacao_administrador_institucional():
+    res_admin = funcaoAutenticarCredenciaisFirebase("casadacrianca@adm", "casadacriancaadm")
+    assert res_admin["sucesso"] is True
+    assert res_admin["role"] == "administrador"
+    assert res_admin["email"] == "casadacrianca@adm"
+
+    res_senha_errada = funcaoAutenticarCredenciaisFirebase("casadacrianca@adm", "senhaerrada")
+    assert res_senha_errada["sucesso"] is False
+

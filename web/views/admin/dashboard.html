@@ -3,153 +3,378 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Administrativa | Casa da Criança</title>
+  <title>Dashboard Administrativo | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navegação Administrativa Superior -->
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
-      </div>
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
+  <div id="sidebar-admin-container"></div>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-8">
+
+    <!-- Cabeçalho Principal (Padrão Index) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./dashboard.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Dashboard</a>
-      <a href="./moderacao-campanhas.html" class="hover:text-green-300">Moderar Campanhas</a>
-      <a href="./locais-armazenamento.html" class="hover:text-green-300">Armazenamento</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
-      </a>
-    </div>
-  </nav>
-
-  <main class="flex-grow max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
-    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Visão Geral do Inventário</h1>
-        <p class="text-xs sm:text-sm text-gray-600 mt-0.5">
-          Métricas operacionais consolidadas a partir do aplicativo móvel institucional.
+        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          AWS DynamoDB Conectado (13 Tabelas Ativas)
+        </div>
+        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+          <i class="ph-fill ph-chart-pie-slice text-3xl text-brandBlue"></i>
+          Visão Geral da Instituição
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
+          Acompanhe o saldo real dos lotes FEFO, a ocupação dos armários e geladeiras e as campanhas aguardando curadoria.
         </p>
       </div>
-      <div class="text-xs font-semibold text-gray-500 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm">
-        Sincronia AWS Lambda: <span class="text-brandGreen font-bold">Online (118ms)</span>
+      
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <button type="button" onclick="atualizarDashboardCompleto()" class="inline-flex items-center justify-center gap-2 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-5 py-3 rounded-xl transition border border-blue-200 text-sm">
+          <i id="icone-sync-aws" class="ph-bold ph-arrows-clockwise text-lg"></i> Sincronizar AWS
+        </button>
+        <a href="./consulta-avancada.html" class="inline-flex items-center justify-center gap-2 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-6 py-3 rounded-xl transition shadow-sm border border-emerald-200 text-sm">
+          <i class="ph-bold ph-plus-circle text-lg text-emerald-700"></i> Operar Estoque / Lotes
+        </a>
       </div>
     </div>
 
-    <!-- Cards de Indicadores Chave (KPIs) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-        <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">Estoque Total</span>
-        <div class="text-3xl font-extrabold text-brandBlue mt-2">1.420</div>
-        <p class="text-xs text-gray-500 mt-1">Pacotes e latas cadastrados</p>
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl border border-red-200 shadow-sm">
-        <span class="text-xs font-bold text-red-600 uppercase tracking-wider">Estoque Crítico</span>
-        <div class="text-3xl font-extrabold text-stateError mt-2">3 itens</div>
-        <p class="text-xs text-red-500 mt-1">Abaixo da cota mínima (leite, óleo)</p>
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl border border-amber-200 shadow-sm">
-        <span class="text-xs font-bold text-amber-600 uppercase tracking-wider">Validade Próxima (FEFO)</span>
-        <div class="text-3xl font-extrabold text-accentAmber mt-2">2 lotes</div>
-        <p class="text-xs text-amber-600 mt-1">Vencem em menos de 7 dias</p>
-      </div>
-
-      <div class="bg-white p-5 rounded-2xl border border-emerald-200 shadow-sm">
-        <span class="text-xs font-bold text-brandGreen uppercase tracking-wider">Fila de Campanhas</span>
-        <div class="text-3xl font-extrabold text-brandGreen mt-2">1 pendente</div>
-        <p class="text-xs text-gray-500 mt-1">Aguardando moderação técnica</p>
-      </div>
-    </div>
-
-    <!-- Atalhos Rápidos Operacionais -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <a href="./moderacao-campanhas.html" class="p-4 bg-white rounded-xl border border-gray-200 hover:border-brandGreen shadow-sm flex items-center justify-between group transition">
-        <div>
-          <h2 class="text-sm font-bold text-gray-800 group-hover:text-brandGreen">Moderar Campanhas da Comunidade</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Aprovar ou justificar reprovações</p>
-        </div>
-        <span class="text-xl">📋</span>
-      </a>
-
-      <a href="./locais-armazenamento.html" class="p-4 bg-white rounded-xl border border-gray-200 hover:border-brandBlue shadow-sm flex items-center justify-between group transition">
-        <div>
-          <h2 class="text-sm font-bold text-gray-800 group-hover:text-brandBlue">Gerenciar Armários e Geladeiras</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Controle de prateleiras e gavetas</p>
-        </div>
-        <span class="text-xl">🚪</span>
-      </a>
-
-      <div onclick="alert('Exportação de relatório em PDF disparada pelo backend serverless!')" class="p-4 bg-white rounded-xl border border-gray-200 hover:border-brandBlue shadow-sm flex items-center justify-between group cursor-pointer transition">
-        <div>
-          <h2 class="text-sm font-bold text-gray-800 group-hover:text-brandBlue">Gerar Relatório de Estoque (PDF)</h2>
-          <p class="text-xs text-gray-500 mt-0.5">Balanço FEFO com gráficos</p>
-        </div>
-        <span class="text-xl">📄</span>
-      </div>
-    </div>
-
-    <!-- Atividades e Movimentações Recentes -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-      <h2 class="text-base font-bold text-brandBlue border-b pb-2">Registro Recente de Movimentações (Auditoria)</h2>
-      <div class="space-y-3 text-xs">
-        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-center">
-          <div>
-            <span class="font-bold text-brandBlue">Entrada de Lote:</span> Leite Integral UHT (24 pacotes) no Armário A
-            <p class="text-gray-500 mt-0.5">Operador: Daniel Soares • 20/10/2026 às 15:30</p>
+    <!-- Indicadores Executivos (KPIs no padrão de cores pastel do Index) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <div class="bg-pastelBlue/60 border border-pastelBlue p-6 rounded-3xl flex flex-col justify-between shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wide text-brandBlue">Volume em Estoque</span>
+          <div class="w-12 h-12 bg-white text-brandBlue rounded-full flex items-center justify-center text-2xl shadow-sm">
+            <i class="ph-fill ph-package"></i>
           </div>
-          <span class="bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full">Entrada</span>
         </div>
-
-        <div class="p-3 bg-red-50 rounded-xl border border-red-200 flex justify-between items-center">
-          <div>
-            <span class="font-bold text-stateError">Baixa com Trava PERDA:</span> Iogurte Natural (2 un) por vencimento
-            <p class="text-gray-500 mt-0.5">Operadora: Laura Brianti • Justificativa: Lote atingiu a validade máxima</p>
-          </div>
-          <span class="bg-red-100 text-red-700 font-bold px-2.5 py-1 rounded-full">Descarte</span>
+        <div class="mt-4">
+          <h3 id="kpi-total-unidades" class="text-3xl font-extrabold text-brandBlue">--</h3>
+          <p id="kpi-total-lotes" class="text-xs font-semibold text-slate-600 mt-1">Consultando tb_lotesProdutos...</p>
         </div>
+      </div>
 
-        <div class="p-3 bg-gray-50 rounded-xl border border-gray-200 flex justify-between items-center">
-          <div>
-            <span class="font-bold text-gray-800">Transferência Interna:</span> Arroz Agulhinha (10 pacotes) da Despensa para Geladeira
-            <p class="text-gray-500 mt-0.5">Operador: Juliano Mancini • Transação atômica confirmada</p>
+      <div class="bg-red-50/80 border border-red-200 p-6 rounded-3xl flex flex-col justify-between shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wide text-red-800">Estoque Crítico (Mínimo)</span>
+          <div class="w-12 h-12 bg-white text-red-600 rounded-full flex items-center justify-center text-2xl shadow-sm">
+            <i class="ph-fill ph-warning-circle"></i>
           </div>
-          <span class="bg-blue-100 text-brandBlue font-bold px-2.5 py-1 rounded-full">Transferência</span>
+        </div>
+        <div class="mt-4">
+          <h3 id="kpi-abaixo-minimo" class="text-3xl font-extrabold text-red-700">--</h3>
+          <p id="kpi-abaixo-minimo-desc" class="text-xs font-semibold text-slate-600 mt-1">Produtos abaixo da meta mínima</p>
+        </div>
+      </div>
+
+      <div class="bg-pastelYellow/70 border border-pastelYellow p-6 rounded-3xl flex flex-col justify-between shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wide text-yellow-900">Alerta FEFO (&le; 30 dias)</span>
+          <div class="w-12 h-12 bg-white text-yellow-700 rounded-full flex items-center justify-center text-2xl shadow-sm">
+            <i class="ph-fill ph-clock-countdown"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <h3 id="kpi-fefo-alerta" class="text-3xl font-extrabold text-yellow-900">--</h3>
+          <p id="kpi-fefo-vencidos" class="text-xs font-semibold text-slate-600 mt-1">Verificando validades...</p>
+        </div>
+      </div>
+
+      <div class="bg-pastelGreen/60 border border-pastelGreen p-6 rounded-3xl flex flex-col justify-between shadow-sm">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wide text-emerald-900">Campanhas Pendentes</span>
+          <div class="w-12 h-12 bg-white text-emerald-700 rounded-full flex items-center justify-center text-2xl shadow-sm">
+            <i class="ph-fill ph-megaphone"></i>
+          </div>
+        </div>
+        <div class="mt-4">
+          <h3 id="kpi-campanhas-pendentes" class="text-3xl font-extrabold text-emerald-900">--</h3>
+          <a href="./moderacao-campanhas.html" class="text-xs font-bold text-emerald-800 hover:underline mt-1 inline-flex items-center gap-1">
+            Ir para moderação <i class="ph-bold ph-arrow-right"></i>
+          </a>
         </div>
       </div>
     </div>
+
+    <!-- Grade Central: Ocupação por Prateleira + Reposição Prioritária -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Distribuição nas Prateleiras (tb_locaisArmazenamento) -->
+      <section class="lg:col-span-7 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div>
+              <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+                <i class="ph-fill ph-archive-box text-xl text-brandBlue"></i>
+                Ocupação Real por Armário e Geladeira
+              </h2>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Sincronizado com <code>tb_locaisArmazenamento</code> e <code>tb_lotesProdutos</code>.</p>
+            </div>
+            <a href="./locais-armazenamento.html" class="text-xs font-bold text-brandBlue bg-pastelBlue px-4 py-2 rounded-xl hover:bg-blue-100 transition self-start">
+              Gerenciar Locais
+            </a>
+          </div>
+
+          <div id="lista-ocupacao-prateleiras" class="space-y-3">
+            <p class="text-sm font-medium text-slate-500 py-4">Consultando compartimentos na AWS...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reposição Prioritária (Estoque Crítico) -->
+      <section class="lg:col-span-5 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div>
+              <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+                <i class="ph-fill ph-bell-ringing text-xl text-red-600"></i>
+                Reposição Prioritária
+              </h2>
+              <p class="text-xs text-slate-500 font-medium mt-0.5">Produtos com saldo abaixo da meta mínima de segurança.</p>
+            </div>
+            <a href="./mensageria.html" class="text-xs font-bold text-emerald-900 bg-pastelGreen px-4 py-2 rounded-xl hover:bg-[#b5ead5] transition self-start">
+              Notificar Doadores
+            </a>
+          </div>
+
+          <div id="lista-produtos-criticos" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+            <p class="text-sm font-medium text-slate-500 py-4">Calculando balanço de estoque mínimo...</p>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Grade Inferior: Prioridade FEFO + Trilha de Auditoria -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Prioridade de Consumo FEFO -->
+      <section class="lg:col-span-7 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+              <i class="ph-fill ph-calendar-check text-xl text-brandBlue"></i>
+              Prioridade de Consumo FEFO
+            </h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Lotes ordenados pelo vencimento mais próximo (Primeiro que Vence, Primeiro que Sai).</p>
+          </div>
+          <a href="./consulta-avancada.html" class="text-xs font-bold text-brandBlue bg-pastelBlue px-4 py-2 rounded-xl hover:bg-blue-100 transition self-start">
+            Ver Todos os Lotes
+          </a>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead>
+              <tr class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase text-brandBlue">
+                <th class="py-3.5 px-4">Produto / Lote</th>
+                <th class="py-3.5 px-4">Compartimento</th>
+                <th class="py-3.5 px-4 text-center">Saldo</th>
+                <th class="py-3.5 px-4">Validade</th>
+                <th class="py-3.5 px-4">Status FEFO</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-fefo-dashboard" class="divide-y divide-slate-100 text-xs font-medium text-slate-700">
+              <tr>
+                <td colspan="5" class="py-8 text-center text-slate-500">Carregando lotes FEFO da AWS...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Trilha de Auditoria e Movimentações (tb_movimentacoes) -->
+      <section class="lg:col-span-5 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+              <i class="ph-fill ph-clock-counter-clockwise text-xl text-brandBlue"></i>
+              Últimas Movimentações
+            </h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Registros de <code>tb_movimentacoes</code> na AWS.</p>
+          </div>
+          <a href="./relatorios.html" class="text-xs font-bold text-brandBlue hover:underline">Ver Relatório</a>
+        </div>
+
+        <div id="lista-movimentacoes-dashboard" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+          <p class="text-sm font-medium text-slate-500 py-4">Consultando histórico de movimentações...</p>
+        </div>
+      </section>
+
+    </div>
+
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <script src="../../public/js/admin.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      renderizarSidebarAdmin('dashboard');
+      atualizarDashboardCompleto();
+    });
+
+    async function atualizarDashboardCompleto() {
+      const iconeSync = document.getElementById('icone-sync-aws');
+      if (iconeSync) iconeSync.classList.add('animate-spin');
+
+      try {
+        const [dadosEstoque, campanhas] = await Promise.all([
+          carregarDadosEstoqueAws(),
+          carregarCampanhasReconciliadas()
+        ]);
+
+        const { lotes, movimentacoes, locaisReconciliados, produtosAbaixoMinimo, metricas } = dadosEstoque;
+        const campanhasPendentes = campanhas.filter((c) => c.status === 'pendente');
+
+        // Atualiza KPIs
+        document.getElementById('kpi-total-unidades').textContent = `${metricas.totalUnidades} pcts`;
+        document.getElementById('kpi-total-lotes').textContent = `${metricas.totalLotesAtivos} lotes ativos em ${metricas.totalLocaisAtivos} compartimentos`;
+
+        document.getElementById('kpi-abaixo-minimo').textContent = `${metricas.qtdAbaixoMinimo} itens`;
+        document.getElementById('kpi-abaixo-minimo-desc').textContent = metricas.qtdAbaixoMinimo > 0
+          ? 'Abaixo da meta mínima de segurança'
+          : 'Todos os produtos abastecidos';
+
+        const totalRiscoFefo = metricas.qtdVencendo30d + metricas.qtdVencidos;
+        document.getElementById('kpi-fefo-alerta').textContent = `${totalRiscoFefo} lotes`;
+        document.getElementById('kpi-fefo-vencidos').textContent = `${metricas.qtdVencendo30d} vencendo em 30d • ${metricas.qtdVencidos} vencidos`;
+
+        document.getElementById('kpi-campanhas-pendentes').textContent = `${campanhasPendentes.length}`;
+
+        // Renderiza Ocupação por Prateleira
+        const containerPrateleiras = document.getElementById('lista-ocupacao-prateleiras');
+        const maiorUnidades = Math.max(...locaisReconciliados.map((l) => l.unidadesTotais), 40);
+        containerPrateleiras.innerHTML = locaisReconciliados.map((loc) => {
+          const perc = Math.min(100, Math.round((loc.unidadesTotais / maiorUnidades) * 100));
+          const icone = loc.tipo === 'geladeira' ? 'ph-thermometer-cold text-brandBlue' : 'ph-archive-box text-brandBlue';
+          const alertaBadge = loc.itensCriticosFefo > 0
+            ? `<span class="px-2.5 py-0.5 rounded-lg bg-pastelYellow text-yellow-900 font-bold text-[11px] border border-yellow-200">${loc.itensCriticosFefo} FEFO próximo</span>`
+            : `<span class="px-2.5 py-0.5 rounded-lg bg-pastelGreen text-emerald-900 font-bold text-[11px]">FEFO Regular</span>`;
+
+          return `
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <i class="ph-fill ${icone} text-lg"></i>
+                  <span class="text-sm font-bold text-brandBlue">${loc.nome}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  ${alertaBadge}
+                  <span class="text-xs font-bold text-slate-700">${loc.lotesAtivos} lotes (${loc.unidadesTotais} pcts)</span>
+                </div>
+              </div>
+              <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                <div class="h-full bg-brandBlue rounded-full transition-all" style="width: ${Math.max(perc, loc.lotesAtivos > 0 ? 10 : 0)}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        // Renderiza Produtos Abaixo do Mínimo
+        const containerCriticos = document.getElementById('lista-produtos-criticos');
+        if (produtosAbaixoMinimo.length === 0) {
+          containerCriticos.innerHTML = `
+            <div class="p-5 rounded-2xl bg-pastelGreen/60 border border-pastelGreen text-emerald-900 text-xs font-semibold flex items-center gap-3">
+              <i class="ph-fill ph-check-circle text-2xl text-emerald-700"></i>
+              <span>Todos os produtos cadastrados estão com saldo igual ou superior ao estoque mínimo!</span>
+            </div>
+          `;
+        } else {
+          containerCriticos.innerHTML = produtosAbaixoMinimo.map((prod) => {
+            const deficit = Math.max(1, prod.estoqueMinimo - prod.quantidadeTotal);
+            return `
+              <div class="p-4 rounded-2xl bg-red-50/70 border border-red-200 flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-bold text-brandBlue">${prod.nomeProduto}</p>
+                  <p class="text-xs font-medium text-slate-600">Saldo atual: <strong class="text-red-700">${prod.quantidadeTotal}</strong> • Meta mínima: ${prod.estoqueMinimo}</p>
+                </div>
+                <span class="px-3 py-1.5 rounded-xl bg-red-600 text-white font-bold text-xs shrink-0">
+                  Faltam ${deficit}
+                </span>
+              </div>
+            `;
+          }).join('');
+        }
+
+        // Renderiza Tabela FEFO
+        const tbodyFefo = document.getElementById('tabela-fefo-dashboard');
+        const topLotes = lotes.slice(0, 7);
+        if (topLotes.length === 0) {
+          tbodyFefo.innerHTML = `<tr><td colspan="5" class="py-8 text-center text-slate-500">Nenhum lote ativo no momento.</td></tr>`;
+        } else {
+          tbodyFefo.innerHTML = topLotes.map((lote) => `
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3.5 px-4">
+                <p class="font-bold text-brandBlue text-sm">${lote.nomeProduto}</p>
+                <p class="text-[11px] text-slate-500">Lote: ${lote.codigoLote} • EAN: ${lote.codigoBarras}</p>
+              </td>
+              <td class="py-3.5 px-4 font-semibold text-slate-700">${lote.localArmazenamento}</td>
+              <td class="py-3.5 px-4 text-center font-bold text-brandBlue text-sm">${lote.quantidadeAtual}</td>
+              <td class="py-3.5 px-4 font-semibold">${lote.dataValidadeFormatada}</td>
+              <td class="py-3.5 px-4">
+                <span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${lote.statusFefo.classeBadge}">
+                  ${lote.statusFefo.rotulo}
+                </span>
+              </td>
+            </tr>
+          `).join('');
+        }
+
+        // Renderiza Movimentações Recentes
+        const containerMovs = document.getElementById('lista-movimentacoes-dashboard');
+        if (movimentacoes.length === 0) {
+          containerMovs.innerHTML = `<p class="text-xs font-medium text-slate-500 py-4">Nenhuma movimentação recente encontrada.</p>`;
+        } else {
+          containerMovs.innerHTML = movimentacoes.slice(0, 8).map((mov) => {
+            let corBadge = 'bg-pastelGreen text-emerald-900';
+            if (mov.tipo.includes('SAÍDA') || mov.tipo.includes('SAIDA') || mov.tipo.includes('BAIXA')) corBadge = 'bg-red-100 text-red-800';
+            if (mov.tipo.includes('MOVIMENTA') || mov.tipo.includes('TRANSFER')) corBadge = 'bg-pastelBlue text-brandBlue';
+            if (mov.tipo.includes('AJUSTE')) corBadge = 'bg-pastelYellow text-yellow-900';
+
+            return `
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-start justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-md text-[10px] font-bold ${corBadge}">${mov.tipo}</span>
+                    <span class="text-xs font-bold text-brandBlue">${mov.nomeProduto}</span>
+                  </div>
+                  <p class="text-[11px] font-medium text-slate-600 mt-1">${mov.localArmazenamento} • ${mov.motivo}</p>
+                </div>
+                <span class="text-xs font-bold text-brandBlue shrink-0">${mov.quantidade} pcts</span>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (erro) {
+        console.error('Erro ao atualizar dashboard administrativo:', erro);
+      } finally {
+        if (iconeSync) iconeSync.classList.remove('animate-spin');
+      }
+    }
+  </script>
 </body>
 </html>

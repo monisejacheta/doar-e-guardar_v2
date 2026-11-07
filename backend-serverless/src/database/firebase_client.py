@@ -123,6 +123,19 @@ def funcaoAutenticarCredenciaisFirebase(
     if not senha_limpa or len(senha_limpa) < 6:
         return {"sucesso": False, "mensagem": "A senha deve possuir no mínimo 6 caracteres."}
 
+    # 0. Credencial homologada do Administrador Institucional (Casa da Criança)
+    admin_email = os.getenv("ADMIN_INSTITUTIONAL_EMAIL", "casadacrianca@adm").strip().lower()
+    admin_senha = os.getenv("ADMIN_INSTITUTIONAL_PASSWORD", "casadacriancaadm").strip()
+    if email_limpo == admin_email and senha_limpa == admin_senha:
+        return {
+            "sucesso": True,
+            "uid": "adm_casadacrianca_oficial",
+            "email": admin_email,
+            "nome": "Administrador Casa da Criança",
+            "token": "token_sessao_admin_casadacrianca",
+            "role": "administrador",
+        }
+
     # 1. Se o frontend já obteve o JWT via signInWithEmailAndPassword no Firebase Client SDK
     if id_token and id_token.strip():
         return funcaoValidarTokenFirebase(id_token, {"email": email_limpo})

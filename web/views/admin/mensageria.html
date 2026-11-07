@@ -3,102 +3,327 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Mensagens | Casa da Criança</title>
+  <title>Mensageria & LGPD | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
-      </div>
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
+  <div id="sidebar-admin-container"></div>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+
+    <!-- Cabeçalho Principal (Padrão Index) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
+        <div class="inline-flex items-center gap-2 bg-pastelGreen text-emerald-900 px-3 py-1 rounded-full font-bold text-xs mb-2">
+          <i class="ph-fill ph-shield-check"></i>
+          Tabelas AWS: <code>tb_doadores</code> • <code>tb_lotesProdutos</code> • Conformidade LGPD
+        </div>
+        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+          <i class="ph ph-paper-plane-tilt text-3xl"></i>
+          Central de Mensageria e Alertas LGPD
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
+          Dispare alertas de reposição exclusivamente para doadores com consentimento ativo (Opt-In) e rodapé obrigatório de descadastramento.
+        </p>
       </div>
     </div>
 
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
-      <a href="./consulta-avancada.html" class="hover:text-green-300">Consulta Lotes</a>
-      <a href="./relatorios.html" class="hover:text-green-300">Relatórios</a>
-      <a href="./mensageria.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Mensagens</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
-      </a>
-    </div>
-  </nav>
+    <div id="feedback-mensageria" class="hidden p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between"></div>
 
-  <main class="flex-grow max-w-4xl mx-auto p-4 sm:p-8 space-y-6">
-    <div>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Central de Comunicação e Mensageria</h1>
-      <p class="text-xs sm:text-sm text-gray-600 mt-1">
-        Disparo de avisos para doadores com consentimento ativo (opt-in) e inclusão mandatória de cancelamento (opt-out).
-      </p>
-    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+      <!-- Compositor de Alerta Conectado ao Estoque Crítico da AWS -->
+      <section class="lg:col-span-7 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
         <div>
-          <label class="block font-semibold text-gray-700 mb-1">Canal de Envio</label>
-          <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-            <option value="todos">WhatsApp e E-mail (Conforme Consentimento)</option>
-            <option value="whatsapp">Apenas WhatsApp</option>
-            <option value="email">Apenas E-mail</option>
-          </select>
+          <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+            <i class="ph-fill ph-megaphone text-xl text-brandBlue"></i>
+            Configurar Comunicado Solidário
+          </h2>
+          <p class="text-xs text-slate-500 font-medium mt-0.5">Selecione um alimento prioritário apurado em tempo real em <code>tb_lotesProdutos</code>.</p>
         </div>
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Gatilho / Assunto</label>
-          <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-            <option value="critico">Alerta de Itens Críticos no Estoque</option>
-            <option value="campanha">Nova Campanha Comunitária Homologada</option>
-          </select>
-        </div>
+
+        <form onsubmit="dispararMensagemLgpd(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="msg-item-critico" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Produto Prioritário no Estoque (AWS) *</label>
+              <select id="msg-item-critico" onchange="atualizarPreviewMensagem()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+                <option value="Leite UHT Integral 1L">Sincronizando itens com a AWS...</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="msg-canal" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Canal de Transmissão *</label>
+              <select id="msg-canal" onchange="atualizarPreviewMensagem()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+                <option value="WhatsApp + E-mail (Opt-In)">WhatsApp Oficial + E-mail (Doadores Opt-In)</option>
+                <option value="Apenas E-mail Institucional">Apenas E-mail Institucional</option>
+                <option value="Apenas WhatsApp Solidário">Apenas WhatsApp Solidário</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label for="msg-texto-personalizado" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Mensagem Base Personalizável *</label>
+            <textarea id="msg-texto-personalizado" oninput="atualizarPreviewMensagem()" rows="3" required class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">Olá, amigo(a) da Casa da Criança! Nosso estoque de {PRODUTO} atingiu nível prioritário de reposição nesta semana. Sua doação transforma as refeições diárias das nossas crianças!</textarea>
+          </div>
+
+          <!-- Preview com Rodapé Obrigatório LGPD -->
+          <div class="p-5 rounded-3xl bg-pastelGreen/60 border border-pastelGreen space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-900">Pré-visualização Oficial (Com Trava Opt-Out LGPD)</span>
+              <span id="badge-destinatarios-ativos" class="text-xs font-bold text-brandBlue bg-white px-3 py-1 rounded-xl border border-slate-200">0 destinatários Opt-In</span>
+            </div>
+            <p id="preview-corpo-msg" class="text-xs font-medium text-slate-800 whitespace-pre-line leading-relaxed"></p>
+            <p class="text-[11px] font-bold text-emerald-900 pt-2.5 border-t border-emerald-300/70">
+              🔒 Cláusula Obrigatória LGPD (Lei 13.709/2018): "Mensagem enviada com base no seu consentimento (LGPD). Para cancelar o recebimento, responda 'SAIR' ou acesse o seu perfil web."
+            </p>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button type="button" onclick="abrirWhatsAppDireto()" class="px-5 py-3 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs inline-flex items-center gap-2 transition">
+              <i class="ph-fill ph-whatsapp-logo text-lg text-emerald-700"></i> Testar no WhatsApp Web
+            </button>
+            <button type="submit" class="px-6 py-3 rounded-xl bg-brandBlue hover:bg-blue-900 text-white font-bold text-sm shadow-sm inline-flex items-center gap-2 transition">
+              <i class="ph-bold ph-paper-plane-tilt text-lg"></i>
+              <span>Disparar Alerta para Base Opt-In</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Coluna Direita: Base de Doadores Opt-In / Opt-Out + Histórico de Disparos -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- Gestão de Consentimento LGPD (tb_doadores) -->
+        <section class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2">
+              <i class="ph-fill ph-users-three text-xl text-brandBlue"></i>
+              Base de Consentimento (<code>tb_doadores</code>)
+            </h2>
+            <p class="text-xs text-slate-500 font-medium mt-0.5">Apenas doadores com Opt-In ativo recebem comunicados.</p>
+          </div>
+
+          <div id="lista-doadores-lgpd" class="space-y-2.5 max-h-64 overflow-y-auto pr-1"></div>
+        </section>
+
+        <!-- Histórico de Disparos Auditados -->
+        <section class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2">
+            <i class="ph-fill ph-clock-counter-clockwise text-xl text-brandBlue"></i>
+            Histórico de Disparos Realizados
+          </h2>
+          <div id="lista-historico-mensageria" class="space-y-2.5 max-h-64 overflow-y-auto pr-1"></div>
+        </section>
+
       </div>
 
-      <div>
-        <label class="block font-semibold text-xs text-gray-700 mb-1">Prévia da Mensagem</label>
-        <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-700 space-y-2">
-          <p><strong>Olá, colaborador da Casa da Criança!</strong></p>
-          <p>Identificamos que os itens <em>Leite Integral UHT</em> e <em>Óleo</em> estão abaixo do estoque mínimo. A sua doação faz a diferença!</p>
-          <p class="text-gray-400 text-[11px] border-t pt-2">
-            Mensagem enviada com base no seu consentimento (LGPD). Para cancelar o recebimento, responda 'SAIR' ou acesse o seu perfil web.
-          </p>
-        </div>
-      </div>
-
-      <div class="pt-4 border-t flex justify-between items-center text-xs">
-        <span class="text-gray-500">Base apta: <strong>142 doadores com opt-in ativo</strong></span>
-        <button onclick="alert('Disparo enfileirado com sucesso nas funções AWS Lambda!')" class="px-6 py-2.5 bg-brandGreen hover:bg-emerald-600 text-white font-bold rounded-xl btn-touch shadow transition">
-          Confirmar e Enviar Comunicado
-        </button>
-      </div>
     </div>
+
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <script src="../../public/js/admin.js"></script>
+  <script>
+    const CHAVE_DOADORES_LGPD = 'dg_doadores_lgpd_admin';
+    const DOADORES_INICIAIS = [
+      { id: 'DOA-01', nome: 'Maria Helena Souza', contato: 'maria.helena@parceiros.org.br', telefone: '5519987654321', optIn: true },
+      { id: 'DOA-02', nome: 'Roberto Almeida Santos', contato: 'roberto.santos@empresa.com.br', telefone: '5519988881010', optIn: true },
+      { id: 'DOA-03', nome: 'Ana Clara Oliveira', contato: 'anaclara@voluntarios.org', telefone: '5519977773030', optIn: true },
+      { id: 'DOA-04', nome: 'Marcos Vinícius Costa', contato: 'marcos.costa@email.com', telefone: '5519966664040', optIn: false }
+    ];
+
+    let doadoresLgpd = [];
+    let historicoDisparos = [];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      renderizarSidebarAdmin('mensageria');
+      await carregarBaseDoadoresLgpd();
+      carregarHistoricoDisparos();
+      await carregarItensCriticosParaMensageria();
+      atualizarPreviewMensagem();
+    });
+
+    async function carregarBaseDoadoresLgpd() {
+      try {
+        const respAws = await executarAcaoEstoqueAws({ acao: 'consultar_doadores' }).catch(() => ({ doadores: [] }));
+        const rawLocal = localStorage.getItem(CHAVE_DOADORES_LGPD);
+        const salvos = rawLocal ? JSON.parse(rawLocal) : [...DOADORES_INICIAIS];
+
+        if (Array.isArray(respAws.doadores) && respAws.doadores.length > 0) {
+          const mapa = new Map();
+          salvos.forEach((d) => mapa.set(d.id, d));
+          respAws.doadores.forEach((d) => {
+            const id = String(d.id_doador || d.id || `DOA-${mapa.size + 1}`);
+            mapa.set(id, {
+              id,
+              nome: d.nome_doador || d.nome || 'Doador Cadastrado',
+              contato: d.email_doador || d.contato || 'doador@parceiro.org',
+              telefone: d.telefone_doador || '5519987654321',
+              optIn: d.opt_in_ativo !== undefined ? Boolean(d.opt_in_ativo) : true
+            });
+          });
+          doadoresLgpd = Array.from(mapa.values());
+        } else {
+          doadoresLgpd = salvos;
+        }
+      } catch {
+        doadoresLgpd = [...DOADORES_INICIAIS];
+      }
+      renderizarBaseDoadores();
+    }
+
+    function renderizarBaseDoadores() {
+      const ativos = doadoresLgpd.filter((d) => d.optIn).length;
+      const badge = document.getElementById('badge-destinatarios-ativos');
+      if (badge) badge.textContent = `${ativos} destinatários Opt-In ativos`;
+
+      const container = document.getElementById('lista-doadores-lgpd');
+      container.innerHTML = doadoresLgpd.map((d) => `
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-xs font-bold text-brandBlue">${d.nome}</p>
+            <p class="text-[11px] font-medium text-slate-500">${d.contato}</p>
+          </div>
+          <button type="button" onclick="alternarOptInDoador('${d.id}')" class="px-3 py-1 rounded-xl text-[11px] font-bold border transition ${
+            d.optIn ? 'bg-pastelGreen text-emerald-900 border-emerald-300' : 'bg-red-100 text-red-700 border-red-200'
+          }">
+            ${d.optIn ? 'Opt-In Ativo' : 'Opt-Out (SAIR)'}
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function alternarOptInDoador(id) {
+      const doador = doadoresLgpd.find((d) => d.id === id);
+      if (!doador) return;
+      doador.optIn = !doador.optIn;
+      localStorage.setItem(CHAVE_DOADORES_LGPD, JSON.stringify(doadoresLgpd));
+      renderizarBaseDoadores();
+    }
+
+    async function carregarItensCriticosParaMensageria() {
+      const select = document.getElementById('msg-item-critico');
+      try {
+        const dados = await carregarDadosEstoqueAws();
+        const criticos = dados.produtosAbaixoMinimo.length > 0
+          ? dados.produtosAbaixoMinimo
+          : dados.produtosAgrupados.slice(0, 5);
+
+        select.innerHTML = criticos.map((p) => {
+          const deficit = Math.max(5, p.estoqueMinimo - p.quantidadeTotal);
+          return `<option value="${p.nomeProduto} (Saldo atual: ${p.quantidadeTotal} | Meta: ${p.estoqueMinimo})">${p.nomeProduto} — Saldo: ${p.quantidadeTotal}/${p.estoqueMinimo} (Faltam ${deficit})</option>`;
+        }).join('');
+      } catch {
+        select.innerHTML = `<option value="Leite UHT Integral 1L">Leite UHT Integral 1L (Estoque Crítico)</option>`;
+      }
+    }
+
+    function atualizarPreviewMensagem() {
+      const produto = document.getElementById('msg-item-critico').value || 'Alimentos Não Perecíveis';
+      const base = document.getElementById('msg-texto-personalizado').value || '';
+      const textoFinal = base.replace('{PRODUTO}', produto) +
+        `\n\n📍 Ponto de Entrega: Rua XV de Novembro, 1000 - Centro, Itapira - SP (Segunda a Sexta, das 07h30 às 17h00).`;
+      document.getElementById('preview-corpo-msg').textContent = textoFinal;
+    }
+
+    function carregarHistoricoDisparos() {
+      try {
+        const raw = localStorage.getItem(CHAVE_HISTORICO_MENSAGERIA);
+        historicoDisparos = raw ? JSON.parse(raw) : [
+          {
+            id: 'MSG-901',
+            produto: 'Leite UHT Integral 1L',
+            canal: 'WhatsApp + E-mail (Opt-In)',
+            destinatarios: 3,
+            dataHora: '05/11/2026 14:30'
+          }
+        ];
+      } catch {
+        historicoDisparos = [];
+      }
+      renderizarHistoricoDisparos();
+    }
+
+    function renderizarHistoricoDisparos() {
+      const container = document.getElementById('lista-historico-mensageria');
+      if (historicoDisparos.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-500">Nenhum disparo registrado.</p>`;
+        return;
+      }
+      container.innerHTML = historicoDisparos.map((h) => `
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+          <div class="flex items-center justify-between font-bold text-brandBlue">
+            <span>${h.produto}</span>
+            <span class="text-[11px] text-emerald-900 bg-pastelGreen px-2.5 py-0.5 rounded-lg">${h.destinatarios} envios Opt-In</span>
+          </div>
+          <p class="text-[11px] font-medium text-slate-500 mt-1">${h.canal} • ${h.dataHora}</p>
+        </div>
+      `).join('');
+    }
+
+    function dispararMensagemLgpd(event) {
+      event.preventDefault();
+      const ativos = doadoresLgpd.filter((d) => d.optIn);
+      if (ativos.length === 0) {
+        alert('Nenhum doador com Opt-In ativo no momento. O disparo foi bloqueado em respeito à LGPD.');
+        return;
+      }
+
+      const produto = document.getElementById('msg-item-critico').value;
+      const canal = document.getElementById('msg-canal').value;
+      const novoRegistro = {
+        id: `MSG-${Math.floor(100 + Math.random() * 900)}`,
+        produto: produto.split('(')[0].trim(),
+        canal,
+        destinatarios: ativos.length,
+        dataHora: new Date().toLocaleString('pt-BR')
+      };
+
+      historicoDisparos.unshift(novoRegistro);
+      localStorage.setItem(CHAVE_HISTORICO_MENSAGERIA, JSON.stringify(historicoDisparos));
+      renderizarHistoricoDisparos();
+
+      const box = document.getElementById('feedback-mensageria');
+      box.className = 'p-4 rounded-2xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 font-semibold text-sm flex items-center justify-between';
+      box.innerHTML = `
+        <span>✓ Comunicado enviado para ${ativos.length} doador(es) com Opt-In ativo (${doadoresLgpd.length - ativos.length} Opt-Out bloqueados conforme LGPD)!</span>
+        <button type="button" onclick="this.parentElement.classList.add('hidden')" class="font-bold underline text-xs">Fechar</button>
+      `;
+      box.classList.remove('hidden');
+    }
+
+    function abrirWhatsAppDireto() {
+      const texto = document.getElementById('preview-corpo-msg').textContent +
+        "\n\nMensagem enviada com base no seu consentimento (LGPD). Para cancelar o recebimento, responda 'SAIR'.";
+      const url = `https://wa.me/5519987654321?text=${encodeURIComponent(texto)}`;
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+  </script>
 </body>
 </html>

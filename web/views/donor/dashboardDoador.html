@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Administrativa | Casa da Criança</title>
+  <title>Painel do Doador | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
             pastelBlue: '#E6F0FA',
             pastelGreen: '#D1F0E4',
-            pastelYellow: '#FFF4D6'
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
+            brandBlue: '#1E3A8A',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
@@ -27,44 +29,62 @@
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-slate-50 text-neutralDark flex h-screen overflow-hidden font-sans relative">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa (Movida para a esquerda) -->
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
   <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
     <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
-      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
-        <i class="ph ph-package text-3xl"></i>
+      <button onclick="realizarLogout()" class="absolute top-4 right-4 text-slate-500 hover:text-red-500 transition" aria-label="Sair da conta" title="Sair da conta">
+        <i class="ph ph-sign-out text-2xl"></i>
+      </button>
+      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border-2 border-white overflow-hidden">
+        <img id="avatar-doador" src="../../public/assets/avatarPublico02.png" alt="Avatar Doador" class="w-full h-full object-cover">
       </div>
-      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
-      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
+      <h2 id="sidebar-nome-doador" class="text-lg font-bold text-brandBlue">Doador</h2>
+      <div class="inline-flex items-center gap-1 mt-1 px-3 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
+        <i class="ph-fill ph-heart"></i>
+        <span>Doador Parceiro</span>
+      </div>
     </div>
 
-    <!-- Navegação do Doador -->
-    <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
-      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
-        <i class="ph ph-squares-four text-xl"></i> Dashboard
+    <!-- Navegação do Doador (Idêntica ao Index) -->
+    <nav class="flex-1 px-4 py-5 space-y-2.5 overflow-y-auto">
+      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
+      <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-house text-lg"></i> Início
       </a>
-      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-magnifying-glass text-xl"></i> Estoque Transparente
+      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-book-open text-lg"></i> Nossa História
       </a>
-      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-megaphone text-xl"></i> Criar Campanha
+      <a href="../../index.html#como-doar" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
       </a>
-      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
+
+      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
+      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
+        <i class="ph ph-squares-four text-lg"></i> Dashboard Doador
       </a>
-      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-user-gear text-xl"></i> Configurações
+      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-package text-lg"></i> Estoque Transparente
+      </a>
+      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-megaphone text-lg"></i> Propor Campanha
+      </a>
+      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-folder-star text-lg"></i> Minhas Campanhas
+      </a>
+      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-user-gear text-lg"></i> Meu Perfil & LGPD
       </a>
     </nav>
 
     <!-- Área Inferior da Navbar -->
     <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
-      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
-        <i class="ph ph-moon text-xl"></i> Contraste
+      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm text-sm">
+        <i class="ph ph-moon text-xl"></i> Alto Contraste
       </button>
 
-      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
+      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm text-sm">
         <i class="ph ph-sign-out text-xl"></i> Sair da Conta
       </button>
     </div>
@@ -81,7 +101,7 @@
           Bem-vindo, <span id="nome-usuario-header">Doador</span>!
         </h1>
         <p class="text-sm text-slate-600 mt-2 max-w-2xl">
-          Acompanhe suas campanhas de arrecadação ativas e explore como seu apoio transforma as refeições das nossas crianças.
+          Acompanhe suas campanhas de arrecadação ativas na nuvem AWS e explore como seu apoio transforma as refeições das nossas crianças.
         </p>
       </div>
       
@@ -92,29 +112,29 @@
       </div>
     </div>
 
-    <!-- Resumo de Campanhas -->
+    <!-- Resumo de Campanhas Conectado à AWS -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div class="bg-pastelBlue/40 border border-pastelBlue p-6 rounded-3xl flex flex-col justify-center items-center text-center shadow-sm">
+      <div class="bg-pastelBlue/60 border border-pastelBlue p-6 rounded-3xl flex flex-col justify-center items-center text-center shadow-sm">
         <div class="w-14 h-14 bg-white text-brandBlue rounded-full flex items-center justify-center text-2xl shadow-sm mb-3">
           <i class="ph-fill ph-megaphone"></i>
         </div>
-        <h3 class="text-3xl font-bold text-brandBlue">0</h3>
+        <h3 id="doador-camp-ativas" class="text-3xl font-extrabold text-brandBlue">0</h3>
         <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mt-1">Campanhas Ativas</p>
       </div>
 
-      <div class="bg-pastelYellow/40 border border-pastelYellow p-6 rounded-3xl flex flex-col justify-center items-center text-center shadow-sm">
+      <div class="bg-pastelYellow/70 border border-pastelYellow p-6 rounded-3xl flex flex-col justify-center items-center text-center shadow-sm">
         <div class="w-14 h-14 bg-white text-yellow-700 rounded-full flex items-center justify-center text-2xl shadow-sm mb-3">
           <i class="ph-fill ph-hourglass-medium"></i>
         </div>
-        <h3 class="text-3xl font-bold text-yellow-800">0</h3>
+        <h3 id="doador-camp-pendentes" class="text-3xl font-extrabold text-yellow-800">0</h3>
         <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mt-1">Aguardando Moderação</p>
       </div>
 
-      <div class="bg-pastelGreen/40 border border-pastelGreen p-6 rounded-3xl flex flex-col justify-center items-center text-center shadow-sm">
+      <div class="bg-pastelGreen/60 border border-pastelGreen p-6 rounded-3xl flex flex-col justify-center items-center text-center shadow-sm">
         <div class="w-14 h-14 bg-white text-emerald-700 rounded-full flex items-center justify-center text-2xl shadow-sm mb-3">
           <i class="ph-fill ph-check-circle"></i>
         </div>
-        <h3 class="text-3xl font-bold text-emerald-900">0</h3>
+        <h3 id="doador-camp-concluidas" class="text-3xl font-extrabold text-emerald-900">0</h3>
         <p class="text-xs font-semibold text-slate-600 uppercase tracking-wide mt-1">Campanhas Concluídas</p>
       </div>
     </div>
@@ -155,11 +175,21 @@
             <p class="text-xs text-slate-500 mt-1">Gerencie seus dados e consentimentos LGPD.</p>
           </div>
         </a>
+
+        <a href="../../index.html#como-doar" class="group flex items-center gap-4 p-5 rounded-2xl border border-slate-200 hover:border-brandBlue hover:bg-blue-50 transition">
+          <div class="w-12 h-12 bg-pastelGreen text-emerald-800 rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+            <i class="ph-fill ph-map-pin"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-brandBlue">Como e Onde Entregar</h3>
+            <p class="text-xs text-slate-500 mt-1">Confira horários, endereço físico, chave PIX e mapa interativo.</p>
+          </div>
+        </a>
       </div>
     </div>
   </main>
 
-  <!-- Firebase Auth Modular -->
+  <!-- Firebase Auth Modular + AWS Metrics -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -177,13 +207,41 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        document.getElementById('nome-usuario-header').textContent = user.displayName || user.email.split('@')[0];
+        const nome = user.displayName || user.email.split('@')[0];
+        document.getElementById('nome-usuario-header').textContent = nome;
+        document.getElementById('sidebar-nome-doador').textContent = nome;
+        if (user.photoURL) document.getElementById('avatar-doador').src = user.photoURL;
+        await carregarMetricasCampanhasAws(user.uid);
       } else {
         window.location.href = '../../index.html';
       }
     });
+
+    async function carregarMetricasCampanhasAws(uid) {
+      try {
+        const resp = await fetch('https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ acao: 'consultar_campanhas' })
+        });
+        const dados = await resp.json();
+        const lista = Array.isArray(dados.campanhas) ? dados.campanhas : [];
+        const minhas = lista.filter((c) => !c.id_doador_responsavel || c.id_doador_responsavel === uid);
+        const alvo = minhas.length > 0 ? minhas : lista;
+
+        const ativas = alvo.filter((c) => String(c.status_campanha || '').toLowerCase().includes('aprov')).length;
+        const pendentes = alvo.filter((c) => String(c.status_campanha || '').toLowerCase().includes('pendente')).length;
+        const concluidas = alvo.filter((c) => String(c.status_campanha || '').toLowerCase().includes('encerr')).length;
+
+        document.getElementById('doador-camp-ativas').textContent = ativas;
+        document.getElementById('doador-camp-pendentes').textContent = pendentes;
+        document.getElementById('doador-camp-concluidas').textContent = concluidas;
+      } catch (e) {
+        console.warn('Erro ao consultar métricas de campanhas:', e);
+      }
+    }
 
     window.realizarLogout = async () => {
       try {

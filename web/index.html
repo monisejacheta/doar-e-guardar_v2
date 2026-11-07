@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Casa da Criança | Bem-vindo</title>
+  <title>Casa da Criança | Doar & Guardar</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -30,6 +30,7 @@
   <link rel="stylesheet" href="./public/css/styles.css">
   <script src="./public/js/accessibility.js" defer></script>
   <script src="./public/js/carousel.js" defer></script>
+  <script src="./public/js/estoque-publico.js" defer></script>
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
@@ -38,11 +39,11 @@
     <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
       <!-- Botão de Logout no canto superior direito (oculto por padrão) -->
       <button id="btn-logout-corner" class="hidden absolute top-4 right-4 text-slate-500 hover:text-red-500 transition" aria-label="Sair da conta" title="Sair da conta">
-         <i class="ph ph-sign-out text-2xl"></i>
+        <i class="ph ph-sign-out text-2xl"></i>
       </button>
 
       <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm overflow-hidden border-2 border-white">
-        <img id="avatar-visitante" src="" alt="Avatar Público" class="w-full h-full object-cover">
+        <img id="avatar-visitante" src="" alt="Avatar do Usuário" class="w-full h-full object-cover">
       </div>
       <h2 class="text-lg font-bold text-brandBlue" id="nome-usuario">Visitante</h2>
       <div id="nivel-acesso" class="inline-flex items-center gap-1 mt-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
@@ -53,46 +54,85 @@
 
     <!-- NAVEGAÇÃO PÚBLICA (Padrão) -->
     <nav id="menu-publico" class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
-      <a href="#" onclick="irParaSlide(0)" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+      <a href="#inicio" data-slide-nav="0" onclick="irParaSlide(0); return false;" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
         <i class="ph ph-house text-xl"></i> Início
       </a>
-      <a href="#" onclick="irParaSlide(1)" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+      <a href="#nossa-historia" data-slide-nav="1" onclick="irParaSlide(1); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
         <i class="ph ph-book-open text-xl"></i> Nossa História
       </a>
-      <a href="./views/public/como-onde-doar.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+      <a href="#como-doar" data-slide-nav="2" onclick="irParaSlide(2); return false;" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
         <i class="ph ph-map-pin text-xl"></i> Como e Onde Doar
       </a>
     </nav>
 
-    <!-- NAVEGAÇÃO DOADOR (Oculta até o login) -->
-    <nav id="menu-doador" class="hidden flex-1 px-4 py-6 space-y-3 overflow-y-auto">
-      <a href="#" onclick="irParaSlide(0)" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+    <!-- NAVEGAÇÃO DOADOR (Oculta até login como Doador) -->
+    <nav id="menu-doador" class="hidden flex-1 px-4 py-6 space-y-2.5 overflow-y-auto">
+      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
+      <a href="#inicio" data-slide-nav="0" onclick="irParaSlide(0); return false;" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
         <i class="ph ph-house text-xl"></i> Início
       </a>
-      <!-- Links adicionados conforme solicitação -->
-      <a href="./views/donor/dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-squares-four text-xl"></i> Dashboard Doador
+      <a href="#nossa-historia" data-slide-nav="1" onclick="irParaSlide(1); return false;" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-book-open text-xl"></i> Nossa História
       </a>
-      <a href="./views/public/como-onde-doar.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+      <a href="#como-doar" data-slide-nav="2" onclick="irParaSlide(2); return false;" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
         <i class="ph ph-map-pin text-xl"></i> Como e Onde Doar
       </a>
-      <a href="./views/donor/campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-megaphone text-xl"></i> Campanhas Ativas
+
+      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
+      <a href="./views/donor/dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-squares-four text-xl"></i> Dashboard Doador
       </a>
-      <a href="./views/donor/minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+      <a href="./views/donor/campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-megaphone text-xl"></i> Propor Campanha
+      </a>
+      <a href="./views/donor/minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
         <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
       </a>
-      <a href="./views/donor/estoque.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-package text-xl"></i> Estoque Atual
+      <a href="./views/donor/estoque.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-package text-xl"></i> Estoque Transparente
       </a>
-      <a href="./views/donor/configuracoes.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-user-gear text-xl"></i> Meu Perfil
+      <a href="./views/donor/configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-user-gear text-xl"></i> Meu Perfil & LGPD
+      </a>
+    </nav>
+
+    <!-- NAVEGAÇÃO ADMINISTRADOR (Oculta até login com casadacrianca@adm) -->
+    <nav id="menu-admin" class="hidden flex-1 px-4 py-5 space-y-2 overflow-y-auto">
+      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Páginas Públicas</p>
+      <a href="#inicio" data-slide-nav="0" onclick="irParaSlide(0); return false;" class="flex items-center gap-3 px-4 py-2 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
+        <i class="ph ph-house text-lg"></i> Início
+      </a>
+      <a href="#nossa-historia" data-slide-nav="1" onclick="irParaSlide(1); return false;" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-book-open text-lg"></i> Nossa História
+      </a>
+      <a href="#como-doar" data-slide-nav="2" onclick="irParaSlide(2); return false;" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
+      </a>
+
+      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-indigo-900/80">Painel Administrativo</p>
+      <a href="./views/admin/dashboard.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-brandBlue text-white shadow-sm font-semibold transition hover:bg-blue-900 text-sm">
+        <i class="ph ph-chart-pie-slice text-lg"></i> Dashboard Admin
+      </a>
+      <a href="./views/admin/consulta-avancada.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-Barcode text-lg"></i> Estoque e Lotes
+      </a>
+      <a href="./views/admin/moderacao-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-SEAL-check text-lg"></i> Moderar Campanhas
+      </a>
+      <a href="./views/admin/locais-armazenamento.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-archive-box text-lg"></i> Armários e Geladeiras
+      </a>
+      <a href="./views/admin/relatorios.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-file-pdf text-lg"></i> Central de Relatórios
+      </a>
+      <a href="./views/admin/mensageria.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-paper-plane-tilt text-lg"></i> Mensageria & LGPD
       </a>
     </nav>
 
     <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
       <button onclick="abrirModal('modal-configuracoes')" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
-        <i class="ph ph-gear text-xl"></i> Configurações
+        <i class="ph ph-gear text-xl"></i> Acessibilidade
       </button>
 
       <!-- Botões de Login (Visitante) -->
@@ -104,16 +144,15 @@
     </div>
   </aside>
 
-  <!-- Área Principal (Carrossel Tela Cheia) -->
+  <!-- Área Principal (Carrossel Tela Cheia Unificado com 3 Slides) -->
   <main class="flex-1 relative overflow-hidden bg-slate-50">
     <div id="carousel-container" class="flex w-full h-full transition-transform duration-500 ease-in-out">
       
-      <!-- SLIDE 1: Boas-vindas -->
+      <!-- SLIDE 0: Boas-vindas -->
       <section class="min-w-full h-full flex flex-col items-center justify-center p-8 text-center relative">
-        <!-- Background Isolado com 50% de Opacidade e Sem Blur -->
         <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundCarrossel01.jpg');"></div>
         
-        <div class="max-w-3xl z-10 bg-white/60 p-8 rounded-3xl backdrop-blur-sm shadow-sm">
+        <div class="max-w-3xl z-10 bg-white/75 p-8 lg:p-12 rounded-3xl backdrop-blur-sm shadow-sm border border-white/60">
           <i class="ph ph-package text-6xl text-brandBlue mb-4"></i>
           <h1 class="text-4xl lg:text-6xl font-extrabold text-brandBlue mb-6 leading-tight">
             Nutrindo o futuro das nossas crianças.
@@ -121,43 +160,204 @@
           <p class="text-lg lg:text-xl text-slate-800 mb-10 leading-relaxed max-w-2xl mx-auto font-medium">
             Cada pequeno gesto nos ajuda a construir uma história mais feliz. Aqui na Casa da Criança, transformamos carinho em refeições diárias e muito acolhimento.
           </p>
-          <a href="./views/public/como-onde-doar.html" class="inline-flex items-center gap-3 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-10 py-4 rounded-2xl text-xl shadow-sm transition-transform transform hover:-translate-y-1 border border-emerald-200">
-            <i class="ph-fill ph-heart text-2xl text-emerald-700"></i> Quero Doar
-          </a>
+          <div class="flex flex-wrap justify-center gap-4">
+            <button onclick="irParaSlide(2)" class="inline-flex items-center gap-3 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-10 py-4 rounded-2xl text-xl shadow-sm transition-transform transform hover:-translate-y-1 border border-emerald-200">
+              <i class="ph-fill ph-heart text-2xl text-emerald-700"></i> Quero Doar Agora
+            </button>
+            <button onclick="irParaSlide(1)" class="inline-flex items-center gap-3 bg-white hover:bg-blue-50 text-brandBlue font-bold px-8 py-4 rounded-2xl text-lg shadow-sm transition border border-blue-200">
+              <i class="ph ph-book-open text-2xl"></i> Conhecer Nossa História
+            </button>
+          </div>
         </div>
       </section>
 
-      <!-- SLIDE 2: Institucional -->
-      <section class="min-w-full h-full overflow-y-auto p-8 lg:p-16 flex items-center relative">
-        <!-- Background Isolado com 50% de Opacidade e Sem Blur -->
+      <!-- SLIDE 1: Nossa História (Institucional) -->
+      <section class="min-w-full h-full overflow-y-auto p-8 lg:p-16 pb-28 flex items-center relative">
         <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundCarrossel02.jpg');"></div>
         
-        <div class="max-w-5xl mx-auto w-full z-10 bg-white/70 p-10 rounded-[2.5rem] backdrop-blur-md shadow-sm">
-          <div class="text-center mb-12">
-            <i class="ph ph-clock-counter-clockwise text-4xl text-brandBlue mb-4"></i>
-            <h3 class="text-3xl font-bold text-brandBlue mb-4">A Nossa História</h3>
-            <p class="text-lg text-slate-800 font-medium leading-relaxed max-w-3xl mx-auto">
+        <div class="max-w-5xl mx-auto w-full z-10 bg-white/80 p-8 lg:p-10 rounded-[2.5rem] backdrop-blur-md shadow-sm border border-white/60">
+          <div class="text-center mb-10">
+            <i class="ph ph-clock-counter-clockwise text-4xl text-brandBlue mb-3"></i>
+            <h2 class="text-3xl font-bold text-brandBlue mb-4">A Nossa História</h2>
+            <p class="text-base lg:text-lg text-slate-800 font-medium leading-relaxed max-w-3xl mx-auto">
               Fundada em julho de 1945 pela Sra. Celencina Caldas Sarkis com a linda proposta de acolher crianças carentes, a Casa da Criança acompanhou as mudanças da sociedade ao longo das décadas. Hoje, investimos constantemente em novas metodologias para atender com excelência crianças de 06 a 14 anos.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="bg-pastelBlue/90 p-8 rounded-3xl border border-pastelBlue text-center shadow-sm">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-pastelBlue/90 p-7 rounded-3xl border border-pastelBlue text-center shadow-sm">
               <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-brandBlue shadow-sm"><i class="ph ph-target text-2xl"></i></div>
-              <h4 class="text-xl font-bold text-brandBlue mb-3">Nossa Missão</h4>
-              <p class="text-slate-700 font-medium">Educar crianças através da moralidade, para que se tornem cidadãos plenos e conscientes.</p>
+              <h3 class="text-xl font-bold text-brandBlue mb-2">Nossa Missão</h3>
+              <p class="text-slate-700 font-medium text-sm">Educar crianças através da moralidade, para que se tornem cidadãos plenos e conscientes.</p>
             </div>
 
-            <div class="bg-pastelGreen/90 p-8 rounded-3xl border border-pastelGreen text-center shadow-sm">
+            <div class="bg-pastelGreen/90 p-7 rounded-3xl border border-pastelGreen text-center shadow-sm">
               <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700 shadow-sm"><i class="ph ph-binoculars text-2xl"></i></div>
-              <h4 class="text-xl font-bold text-emerald-900 mb-3">Nossa Visão</h4>
-              <p class="text-slate-700 font-medium">Formar pessoas críticas, autônomas e perfeitamente capazes de transformar a sociedade.</p>
+              <h3 class="text-xl font-bold text-emerald-900 mb-2">Nossa Visão</h3>
+              <p class="text-slate-700 font-medium text-sm">Formar pessoas críticas, autônomas e perfeitamente capazes de transformar a sociedade.</p>
             </div>
 
-            <div class="bg-pastelYellow/90 p-8 rounded-3xl border border-pastelYellow text-center shadow-sm">
+            <div class="bg-pastelYellow/90 p-7 rounded-3xl border border-pastelYellow text-center shadow-sm">
               <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-700 shadow-sm"><i class="ph ph-hands-clapping text-2xl"></i></div>
-              <h4 class="text-xl font-bold text-yellow-900 mb-3">Nossos Valores</h4>
-              <p class="text-slate-700 font-medium">Acolhimento com carinho, responsabilidade social, transparência e respeito pelo desenvolvimento.</p>
+              <h3 class="text-xl font-bold text-yellow-900 mb-2">Nossos Valores</h3>
+              <p class="text-slate-700 font-medium text-sm">Acolhimento com carinho, responsabilidade social, transparência e respeito pelo desenvolvimento.</p>
+            </div>
+          </div>
+
+          <div class="mt-8 text-center">
+            <button onclick="irParaSlide(2)" class="inline-flex items-center gap-2 bg-brandBlue hover:bg-blue-900 text-white font-bold px-8 py-3.5 rounded-2xl text-sm shadow transition">
+              <i class="ph-fill ph-map-pin text-lg"></i> Ver Como e Onde Doar
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Como e Onde Doar (Unificado no Index!) -->
+      <section class="min-w-full h-full overflow-y-auto p-6 lg:p-12 pb-28 relative scroll-smooth">
+        <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundDoacao.jpg'); pointer-events: none;"></div>
+        
+        <div class="relative z-10 max-w-5xl mx-auto space-y-6 bg-white/85 p-6 lg:p-10 rounded-[2.5rem] backdrop-blur-md shadow-sm border border-white/60">
+          <!-- Cabeçalho da Seção -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-3xl sm:text-4xl font-extrabold text-brandBlue mb-1">
+                Como e Onde Doar
+              </h2>
+              <p class="text-sm sm:text-base text-slate-800 font-medium">
+                Descubra como entregar sua contribuição presencialmente e conheça os itens que mais precisamos hoje.
+              </p>
+            </div>
+            <button onclick="abrirModal('modal-login')" class="inline-flex items-center justify-center gap-2 bg-brandBlue text-white font-bold px-5 py-3 rounded-xl text-sm hover:bg-blue-900 transition shadow-sm flex-shrink-0">
+              <i class="ph-fill ph-megaphone text-lg"></i> Criar Campanha Solidária
+            </button>
+          </div>
+
+          <!-- Banner de Destaque Acolhedor -->
+          <div class="bg-pastelGreen/90 border border-pastelGreen p-5 rounded-3xl flex items-start gap-4 shadow-sm">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-emerald-700 shadow-sm flex-shrink-0">
+              <i class="ph-fill ph-heart text-2xl"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-emerald-900 text-base sm:text-lg mb-1">Toda doação faz a diferença!</h3>
+              <p class="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+                Os alimentos indicados abaixo são consultados em tempo real no nosso estoque na nuvem AWS. <strong class="text-emerald-900">Qualquer alimento, leite ou mantimento em boas condições de consumo é bem-vindo e recebido com imensa gratidão!</strong>
+              </p>
+            </div>
+          </div>
+
+          <!-- Seção Expansível: Itens Críticos em Tempo Real (AWS DynamoDB) -->
+          <div class="bg-white/95 border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+            <button onclick="toggleItensCriticos()" class="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition text-left">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-pastelYellow/80 text-yellow-800 rounded-xl flex items-center justify-center">
+                  <i class="ph ph-package text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-base sm:text-lg font-bold text-brandBlue">Alimentos Prioritários no Estoque (Tempo Real)</h3>
+                  <p class="text-xs text-slate-600 font-medium">Clique para consultar os itens monitorados agora na nossa despensa</p>
+                </div>
+              </div>
+              <i id="icone-expandir" class="ph ph-caret-down text-2xl text-slate-500 transition-transform duration-300"></i>
+            </button>
+
+            <div id="container-itens-criticos" class="hidden border-t border-slate-200 bg-slate-50/80">
+              <div class="p-5">
+                <div id="loading-criticos" class="flex flex-col items-center justify-center py-6 text-brandBlue">
+                  <i class="ph ph-spinner-gap text-3xl animate-spin mb-2"></i>
+                  <p class="text-sm font-semibold">Consultando saldo real do estoque na AWS...</p>
+                </div>
+                
+                <ul id="lista-itens-criticos" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Itens injetados por estoque-publico.js -->
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contatos, PIX e Mapa de Localização -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Contatos, Horários e PIX -->
+            <div class="bg-pastelBlue/90 border border-pastelBlue p-6 sm:p-7 rounded-3xl shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-center gap-3 mb-5">
+                  <div class="w-10 h-10 bg-white text-brandBlue rounded-xl flex items-center justify-center shadow-sm">
+                    <i class="ph ph-phone-call text-xl"></i>
+                  </div>
+                  <h3 class="text-xl font-bold text-brandBlue">Fale Conosco</h3>
+                </div>
+                
+                <div class="space-y-4 text-sm font-medium text-slate-800">
+                  <div class="flex items-center gap-3">
+                    <i class="ph-fill ph-whatsapp-logo text-2xl text-emerald-700"></i>
+                    <span>(19) 98765-4321 <span class="text-xs text-slate-600 ml-1">(WhatsApp)</span></span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <i class="ph-fill ph-phone text-2xl text-slate-600"></i>
+                    <span>(19) 3863-0000</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <i class="ph-fill ph-envelope-simple text-2xl text-slate-600"></i>
+                    <span>doacoes@casadacrianca.org.br</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <i class="ph-fill ph-clock text-2xl text-slate-600"></i>
+                    <span>Segunda a Sexta, das 07h30 às 17h00</span>
+                  </div>
+                </div>
+
+                <!-- Doações Financeiras / PIX -->
+                <div class="mt-6 p-5 bg-white rounded-2xl border border-blue-200 shadow-sm">
+                  <div class="flex items-center gap-2 mb-3">
+                    <i class="ph-fill ph-currency-circle-dollar text-xl text-brandBlue"></i>
+                    <h4 class="text-sm font-bold text-brandBlue">Doações Financeiras (PIX e Conta)</h4>
+                  </div>
+                  
+                  <div class="space-y-3">
+                    <div class="flex flex-col gap-1">
+                      <span class="text-xs font-semibold text-slate-500">Chave PIX Oficial (CNPJ)</span>
+                      <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                        <code class="text-sm font-bold text-slate-800">51.123.456/0001-78</code>
+                        <button onclick="copiarPixIndex(this)" class="text-xs bg-brandBlue text-white px-3 py-1.5 rounded-md font-semibold hover:bg-blue-900 transition">
+                          Copiar PIX
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1">
+                      <span class="text-xs font-semibold text-slate-500">Conta Bancária (Banco do Brasil)</span>
+                      <div class="text-xs sm:text-sm font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p>Agência: <span class="font-bold">0000-0</span> • Conta Corrente: <span class="font-bold">00000-0</span></p>
+                        <p>Favorecido: <span class="font-bold">Casa da Criança de Itapira</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Localização Física (Mapa Integrado) -->
+            <div class="bg-white/95 border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-pastelBlue text-brandBlue rounded-xl flex items-center justify-center">
+                  <i class="ph-fill ph-map-pin text-xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-brandBlue">Onde Entregar</h3>
+                  <p class="text-xs text-slate-600 font-medium">Rua XV de Novembro, 1000 - Centro, Itapira - SP, 13970-000</p>
+                </div>
+              </div>
+              
+              <div class="w-full flex-grow min-h-[280px] rounded-2xl overflow-hidden border border-slate-200">
+                <iframe
+                  title="Localização da Casa da Criança no Google Maps"
+                  width="100%"
+                  height="100%"
+                  style="border:0; min-height: 280px;"
+                  loading="lazy"
+                  allowfullscreen
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14742.66228308477!2d-46.82916!3d-22.43472!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c8e76c245a4a99%3A0x6b77242e88a38!2sItapira%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1697800000000">
+                </iframe>
+              </div>
             </div>
           </div>
         </div>
@@ -165,18 +365,25 @@
 
     </div>
 
-    <!-- Controles do Carrossel -->
-    <div class="absolute bottom-10 left-0 right-0 flex justify-center gap-6 z-10">
-      <button onclick="moverSlide(-1)" class="w-12 h-12 bg-white text-brandBlue rounded-full shadow-md flex items-center justify-center hover:bg-blue-50 transition border border-blue-100">
-        <i class="ph ph-caret-left text-2xl"></i>
+    <!-- Controles Inferiores do Carrossel (Setas + Indicadores) -->
+    <div class="absolute bottom-6 left-0 right-0 flex items-center justify-center gap-5 z-20 pointer-events-none">
+      <button onclick="moverSlide(-1)" aria-label="Slide anterior" class="pointer-events-auto w-11 h-11 bg-white/95 text-brandBlue rounded-full shadow-md flex items-center justify-center hover:bg-blue-50 transition border border-blue-100">
+        <i class="ph-bold ph-caret-left text-xl"></i>
       </button>
-      <button onclick="moverSlide(1)" class="w-12 h-12 bg-white text-brandBlue rounded-full shadow-md flex items-center justify-center hover:bg-blue-50 transition border border-blue-100">
-        <i class="ph ph-caret-right text-2xl"></i>
+
+      <div class="pointer-events-auto flex items-center gap-2.5 bg-brandBlue/20 backdrop-blur-md px-4 py-2 rounded-full">
+        <button id="carousel-dot-0" onclick="irParaSlide(0)" aria-label="Ir para Início" class="w-8 h-3 rounded-full bg-brandBlue transition-all duration-300 shadow-sm"></button>
+        <button id="carousel-dot-1" onclick="irParaSlide(1)" aria-label="Ir para Nossa História" class="w-3 h-3 rounded-full bg-white/80 hover:bg-white border border-blue-200 transition-all duration-300"></button>
+        <button id="carousel-dot-2" onclick="irParaSlide(2)" aria-label="Ir para Como e Onde Doar" class="w-3 h-3 rounded-full bg-white/80 hover:bg-white border border-blue-200 transition-all duration-300"></button>
+      </div>
+
+      <button onclick="moverSlide(1)" aria-label="Próximo slide" class="pointer-events-auto w-11 h-11 bg-white/95 text-brandBlue rounded-full shadow-md flex items-center justify-center hover:bg-blue-50 transition border border-blue-100">
+        <i class="ph-bold ph-caret-right text-xl"></i>
       </button>
     </div>
   </main>
 
-  <!-- MODAL DE LOGIN -->
+  <!-- MODAL DE LOGIN (Doador Google/E-mail e Administrador casadacrianca@adm) -->
   <div id="modal-login" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
       <button onclick="fecharModal('modal-login')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
@@ -184,34 +391,39 @@
       </button>
       <div class="text-center mb-6">
         <i class="ph ph-door-open text-4xl text-brandBlue mb-2"></i>
-        <h3 class="text-2xl font-bold text-brandBlue">Bem-vindo de volta!</h3>
-        <p class="text-slate-500 mt-2">Acesse para acompanhar campanhas e organizar o estoque da instituição.</p>
+        <h3 class="text-2xl font-bold text-brandBlue">Acesso à Plataforma</h3>
+        <p class="text-slate-500 text-sm mt-1">Entre como Doador ou acesse o Painel Administrativo institucional.</p>
       </div>
+
       <button onclick="window.realizarLoginGoogle()" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl transition mb-4">
-        <i class="ph ph-google-logo text-xl text-red-500"></i> Continuar com o Google
+        <i class="ph ph-google-logo text-xl text-red-500"></i> Continuar com o Google (Doador)
       </button>
+
       <div class="flex items-center gap-4 my-4">
         <hr class="flex-1 border-slate-200">
-        <span class="text-slate-400 text-sm">ou com e-mail</span>
+        <span class="text-slate-400 text-xs font-semibold uppercase">ou e-mail e senha</span>
         <hr class="flex-1 border-slate-200">
       </div>
-      <form onsubmit="window.realizarLoginCredenciais(event)">
+
+      <div id="login-erro-msg" class="hidden mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold text-center"></div>
+
+      <form onsubmit="window.realizarLoginCredenciais(event)" novalidate>
         <div class="mb-4">
-          <label class="block text-sm font-semibold text-slate-700 mb-1">E-mail</label>
-          <input id="login-email" type="email" required placeholder="seuemail@exemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+          <label class="block text-sm font-semibold text-slate-700 mb-1">E-mail de Acesso</label>
+          <input id="login-email" type="text" required placeholder="Ex: casadacrianca@adm ou seu e-mail" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition text-sm">
         </div>
         <div class="mb-6">
           <label class="block text-sm font-semibold text-slate-700 mb-1">Senha</label>
-          <input id="login-senha" type="password" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+          <input id="login-senha" type="password" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition text-sm">
         </div>
-        <button type="submit" class="w-full bg-brandBlue text-white font-bold py-3 rounded-xl hover:bg-blue-900 transition">
+        <button type="submit" class="w-full bg-brandBlue text-white font-bold py-3.5 rounded-xl hover:bg-blue-900 transition shadow-sm">
           Entrar na Plataforma
         </button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL DE CONFIGURAÇÕES -->
+  <!-- MODAL DE CONFIGURAÇÕES E ACESSIBILIDADE -->
   <div id="modal-configuracoes" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
     <div class="bg-white rounded-3xl shadow-xl max-w-sm w-full p-8 relative transform scale-95 transition-transform duration-300">
       <button onclick="fecharModal('modal-configuracoes')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
@@ -219,17 +431,17 @@
       </button>
       <div class="text-center mb-6">
         <i class="ph ph-sliders text-4xl text-brandBlue mb-2"></i>
-        <h3 class="text-2xl font-bold text-brandBlue">Configurações</h3>
-        <p class="text-slate-500 mt-2">Ajuste a visualização do site para a sua necessidade.</p>
+        <h3 class="text-2xl font-bold text-brandBlue">Acessibilidade</h3>
+        <p class="text-slate-500 text-sm mt-1">Ajuste a visualização do portal para a sua necessidade.</p>
       </div>
       <div class="space-y-4">
         <div class="p-4 bg-pastelBlue/30 rounded-2xl border border-pastelBlue">
-          <p class="text-sm font-bold text-brandBlue mb-3">Recursos de Acessibilidade</p>
-          <button onclick="alternarAltoContraste()" class="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-blue-900 hover:bg-blue-50 transition mb-2 shadow-sm border border-slate-100">
-            <i class="ph ph-moon text-xl"></i> Modo Alto Contraste
+          <p class="text-sm font-bold text-brandBlue mb-3">Recursos Visuais</p>
+          <button onclick="alternarAltoContraste()" class="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-blue-900 hover:bg-blue-50 transition mb-2 shadow-sm border border-slate-100 font-semibold text-sm">
+            <i class="ph ph-moon text-xl"></i> Alternar Alto Contraste
           </button>
-          <button onclick="alternarTamanhoFonte()" class="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-blue-900 hover:bg-blue-50 transition shadow-sm border border-slate-100">
-            <i class="ph ph-text-aa text-xl"></i> Aumentar Letra
+          <button onclick="alternarTamanhoFonte()" class="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-blue-900 hover:bg-blue-50 transition shadow-sm border border-slate-100 font-semibold text-sm">
+            <i class="ph ph-text-aa text-xl"></i> Aumentar / Ajustar Fonte
           </button>
         </div>
       </div>
@@ -242,23 +454,36 @@
   <script>
     window.fecharModal = function(id) {
       const modal = document.getElementById(id);
+      if (!modal) return;
       const modalBox = modal.querySelector('div');
       modal.classList.add('opacity-0');
-      modalBox.classList.add('scale-95');
+      if (modalBox) modalBox.classList.add('scale-95');
       setTimeout(() => {
         modal.classList.add('hidden');
       }, 300);
-    }
+    };
 
-    function abrirModal(id) {
+    window.abrirModal = function(id) {
       const modal = document.getElementById(id);
+      if (!modal) return;
       const modalBox = modal.querySelector('div');
       modal.classList.remove('hidden');
       setTimeout(() => {
         modal.classList.remove('opacity-0');
-        modalBox.classList.remove('scale-95');
+        if (modalBox) modalBox.classList.remove('scale-95');
       }, 10);
-    }
+    };
+
+    window.copiarPixIndex = function(btn) {
+      navigator.clipboard.writeText('51.123.456/0001-78');
+      const original = btn.textContent;
+      btn.textContent = 'Copiado! ✓';
+      btn.classList.add('bg-emerald-700');
+      setTimeout(() => {
+        btn.textContent = original;
+        btn.classList.remove('bg-emerald-700');
+      }, 2000);
+    };
 
     document.addEventListener("DOMContentLoaded", () => {
       const randomID = Math.floor(Math.random() * 9) + 1; 

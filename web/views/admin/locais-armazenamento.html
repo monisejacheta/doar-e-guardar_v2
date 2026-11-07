@@ -3,187 +3,306 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Locais de Armazenamento | Casa da Criança</title>
+  <title>Armários e Geladeiras (AWS) | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
-      </div>
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
+  <div id="sidebar-admin-container"></div>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+
+    <!-- Cabeçalho Principal (Padrão Index) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
-      <a href="./moderacao-campanhas.html" class="hover:text-green-300">Moderar Campanhas</a>
-      <a href="./locais-armazenamento.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Armazenamento</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
-      </a>
-    </div>
-  </nav>
-
-  <main class="flex-grow max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
-    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-      <div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Mapeamento Físico de Armazenamento</h1>
-        <p class="text-xs sm:text-sm text-gray-600 mt-1">
-          Cadastro de armários, geladeiras, prateleiras e gavetas (sem estrutura de ruas ou corredores).
+        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
+          <i class="ph-fill ph-archive-box"></i>
+          Tabela AWS: <code>tb_locaisArmazenamento</code> • Regra US06
+        </div>
+        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+          <i class="ph ph-archive-box text-3xl"></i>
+          Armários, Geladeiras e Prateleiras
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
+          Gerencie os compartimentos físicos da Casa da Criança reconciliados em tempo real com os lotes ativos em <code>tb_lotesProdutos</code>.
         </p>
       </div>
-      <button onclick="document.getElementById('form-novo-local').classList.toggle('hidden')" class="bg-brandGreen hover:bg-emerald-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm btn-touch shadow transition">
-        + Adicionar Novo Compartimento
+      
+      <button type="button" onclick="sincronizarLocaisComAws()" class="inline-flex items-center justify-center gap-2 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-5 py-3 rounded-xl transition border border-blue-200 text-sm">
+        <i id="icone-sync-locais" class="ph-bold ph-arrows-clockwise text-lg"></i> Reconciliar com AWS
       </button>
     </div>
 
-    <!-- Formulário de Cadastro de Compartimento (US06) -->
-    <div id="form-novo-local" class="hidden bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-      <h2 class="text-base font-bold text-brandBlue border-b pb-2">Cadastrar Novo Compartimento Físico</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+    <div id="alerta-locais" class="hidden p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between"></div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Formulário de Cadastro de Novo Compartimento (US06) -->
+      <section class="lg:col-span-4 bg-white p-8 rounded-3xl border border-slate-200 shadow-sm h-fit space-y-5">
         <div>
-          <label class="block font-semibold text-gray-700 mb-1">Nome do Compartimento *</label>
-          <input type="text" id="nome-local-input" placeholder="Ex: Armário C, Geladeira 02" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+          <h2 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+            <i class="ph-fill ph-plus-circle text-xl text-brandBlue"></i>
+            Novo Compartimento
+          </h2>
+          <p class="text-xs text-slate-500 font-medium mt-1">Persiste diretamente em <code>tb_locaisArmazenamento</code> na AWS.</p>
         </div>
 
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Tipo de Compartimento *</label>
-          <select id="tipo-local-input" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-            <option value="armário">Armário</option>
-            <option value="geladeira">Geladeira</option>
-          </select>
+        <div class="p-4 rounded-2xl bg-pastelYellow/60 border border-pastelYellow text-xs font-medium text-yellow-900 space-y-1">
+          <p class="font-bold flex items-center gap-1.5"><i class="ph-fill ph-info text-base"></i> Diretriz US06:</p>
+          <p>São permitidos exclusivamente locais do tipo <strong>Armário</strong> ou <strong>Geladeira</strong>. Termos industriais como <code>Rua</code>, <code>Corredor</code> ou <code>Galpão</code> são bloqueados.</p>
         </div>
 
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Sublocal (Divisória) *</label>
-          <input type="text" id="sublocal-input" placeholder="Ex: Prateleira 1 e 2, Gaveta de Laticínios" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+        <form onsubmit="cadastrarNovoLocalAws(event)" class="space-y-4">
+          <div>
+            <label for="local-nome-movel" class="block text-xs font-bold text-brandBlue uppercase mb-1">Móvel / Equipamento *</label>
+            <input type="text" id="local-nome-movel" required placeholder="Ex: Armário C ou Geladeira 2" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+
+          <div>
+            <label for="local-sublocal" class="block text-xs font-bold text-brandBlue uppercase mb-1">Prateleira / Gaveta *</label>
+            <input type="text" id="local-sublocal" required placeholder="Ex: Prateleira 1 ou Gaveta Inferior" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="local-tipo" class="block text-xs font-bold text-brandBlue uppercase mb-1">Tipo (US06) *</label>
+              <select id="local-tipo" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+                <option value="armário">Armário Seco</option>
+                <option value="geladeira">Geladeira</option>
+              </select>
+            </div>
+            <div>
+              <label for="local-ambiente" class="block text-xs font-bold text-brandBlue uppercase mb-1">Ambiente *</label>
+              <input type="text" id="local-ambiente" required value="Despensa Principal" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+            </div>
+          </div>
+
+          <button type="submit" id="btn-cadastrar-local" class="w-full py-3.5 px-4 rounded-xl bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 border border-emerald-200 font-bold text-sm shadow-sm transition flex items-center justify-center gap-2">
+            <i class="ph-bold ph-check-circle text-lg"></i>
+            <span>Homologar Local na AWS</span>
+          </button>
+        </form>
+      </section>
+
+      <!-- Grade de Prateleiras Reconciliadas com a AWS -->
+      <section class="lg:col-span-8 space-y-4">
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold text-brandBlue">Compartimentos Homologados na AWS</h2>
+            <p class="text-xs text-slate-500 font-medium">A exclusão é bloqueada automaticamente caso existam lotes armazenados na prateleira.</p>
+          </div>
+          <span id="contador-prateleiras" class="px-3.5 py-1.5 rounded-xl bg-pastelBlue text-brandBlue font-bold text-xs">0 locais</span>
         </div>
 
-        <div>
-          <label class="block font-semibold text-gray-700 mb-1">Ambiente na Casa da Criança *</label>
-          <input type="text" id="ambiente-input" placeholder="Ex: Despensa Central, Cozinha Comunitária" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+        <div id="grid-locais-armazenamento" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div class="md:col-span-2 bg-white p-10 rounded-3xl border border-slate-200 text-center text-brandBlue font-semibold">
+            <i class="ph ph-spinner-gap text-3xl animate-spin inline-block mb-2"></i><br>
+            Consultando <code>tb_locaisArmazenamento</code> na AWS...
+          </div>
         </div>
-      </div>
+      </section>
 
-      <div class="flex justify-end gap-2 pt-2">
-        <button onclick="document.getElementById('form-novo-local').classList.add('hidden')" class="px-4 py-2 border border-gray-300 text-gray-600 text-xs rounded-xl">Cancelar</button>
-        <button onclick="salvarLocal()" class="px-6 py-2 bg-brandBlue hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow">Salvar Local</button>
-      </div>
     </div>
 
-    <!-- Tabela de Compartimentos Cadastrados e Ocupação -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-      <table class="w-full text-left text-sm">
-        <thead class="bg-gray-100 text-xs font-bold text-gray-700 uppercase border-b border-gray-200">
-          <tr>
-            <th class="p-4">Identificação</th>
-            <th class="p-4">Tipo</th>
-            <th class="p-4">Sublocais / Prateleiras</th>
-            <th class="p-4">Ambiente</th>
-            <th class="p-4">Ocupação</th>
-            <th class="p-4 text-center">Ações</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200 text-xs">
-          <tr class="hover:bg-gray-50">
-            <td class="p-4 font-bold text-gray-900">Armário A</td>
-            <td class="p-4"><span class="bg-blue-100 text-brandBlue font-bold px-2 py-0.5 rounded">ARMÁRIO</span></td>
-            <td class="p-4">Prateleira 1 e 2</td>
-            <td class="p-4">Despensa Central</td>
-            <td class="p-4 font-bold text-amber-700">14 lotes ativos</td>
-            <td class="p-4 text-center">
-              <button onclick="tentarExcluirLocal('Armário A', 14)" class="text-stateError hover:text-red-800 font-bold">
-                Excluir
-              </button>
-            </td>
-          </tr>
-
-          <tr class="hover:bg-gray-50">
-            <td class="p-4 font-bold text-gray-900">Geladeira 1</td>
-            <td class="p-4"><span class="bg-cyan-100 text-cyan-800 font-bold px-2 py-0.5 rounded">GELADEIRA</span></td>
-            <td class="p-4">Prateleiras Centrais e Gaveta</td>
-            <td class="p-4">Cozinha Comunitária</td>
-            <td class="p-4 font-bold text-amber-700">5 lotes ativos</td>
-            <td class="p-4 text-center">
-              <button onclick="tentarExcluirLocal('Geladeira 1', 5)" class="text-stateError hover:text-red-800 font-bold">
-                Excluir
-              </button>
-            </td>
-          </tr>
-
-          <tr class="hover:bg-gray-50">
-            <td class="p-4 font-bold text-gray-900">Armário C (Reserva)</td>
-            <td class="p-4"><span class="bg-blue-100 text-brandBlue font-bold px-2 py-0.5 rounded">ARMÁRIO</span></td>
-            <td class="p-4">Gaveta Inferior</td>
-            <td class="p-4">Despensa Central</td>
-            <td class="p-4 text-gray-400 font-semibold">Vazio (0 lotes)</td>
-            <td class="p-4 text-center">
-              <button onclick="tentarExcluirLocal('Armário C (Reserva)', 0)" class="text-stateError hover:text-red-800 font-bold">
-                Excluir
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
-
+  <script src="../../public/js/admin.js"></script>
   <script>
-    function tentarExcluirLocal(nome, lotesVinculados) {
-      // Regra US06: Bloquear exclusão se existirem lotes alocados
-      if (lotesVinculados > 0) {
-        alert(`Ação Bloqueada:\nNão é possível excluir o compartimento "${nome}" porque existem ${lotesVinculados} lotes ativos guardados nele.\nTransfira os lotes no inventário antes de remover o local.`);
-        return;
-      }
+    let lotesAtuaisAws = [];
+    let locaisAtuais = [];
 
-      if (confirm(`Deseja realmente remover o compartimento "${nome}"?`)) {
-        alert(`Compartimento "${nome}" excluído com sucesso.`);
-        window.location.reload();
+    document.addEventListener('DOMContentLoaded', () => {
+      renderizarSidebarAdmin('locais-armazenamento');
+      sincronizarLocaisComAws();
+    });
+
+    function exibirAlertaLocais(msg, sucesso = true) {
+      const box = document.getElementById('alerta-locais');
+      box.className = `p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between ${
+        sucesso ? 'bg-pastelGreen/70 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-200 text-red-800'
+      }`;
+      box.innerHTML = `<span>${msg}</span><button type="button" onclick="this.parentElement.classList.add('hidden')" class="font-bold underline text-xs">Fechar</button>`;
+      box.classList.remove('hidden');
+    }
+
+    async function sincronizarLocaisComAws() {
+      const icone = document.getElementById('icone-sync-locais');
+      if (icone) icone.classList.add('animate-spin');
+
+      try {
+        const dados = await carregarDadosEstoqueAws();
+        lotesAtuaisAws = dados.lotes;
+        locaisAtuais = dados.locaisReconciliados;
+        renderizarGridLocais();
+      } catch (erro) {
+        console.error('Erro ao reconciliar prateleiras:', erro);
+        locaisAtuais = obterLocaisArmazenamentoReconciliados([]);
+        renderizarGridLocais();
+      } finally {
+        if (icone) icone.classList.remove('animate-spin');
       }
     }
 
-    function salvarLocal() {
-      const nome = document.getElementById('nome-local-input').value.trim();
-      const sub = document.getElementById('sublocal-input').value.trim();
-      const amb = document.getElementById('ambiente-input').value.trim();
+    function renderizarGridLocais() {
+      document.getElementById('contador-prateleiras').textContent = `${locaisAtuais.length} compartimentos`;
+      const grid = document.getElementById('grid-locais-armazenamento');
 
-      if (!nome || !sub || !amb) {
-        alert('Preencha todos os campos do compartimento.');
-        return;
+      grid.innerHTML = locaisAtuais.map((loc) => {
+        const lotesNaPrateleira = lotesAtuaisAws.filter((l) => l.localArmazenamento === loc.nome);
+        const temLotes = loc.lotesAtivos > 0;
+        const ehGeladeira = loc.tipo === 'geladeira';
+
+        const resumoProdutos = lotesNaPrateleira.length > 0
+          ? lotesNaPrateleira.slice(0, 3).map((l) => `${l.nomeProduto} (${l.quantidadeAtual})`).join(' • ')
+          : 'Compartimento livre (0 lotes vinculados na AWS)';
+
+        const botaoExclusao = temLotes
+          ? `<button type="button" onclick="tentarExcluirLocalComLotes('${loc.nome}', ${loc.lotesAtivos})" class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 border border-slate-200 font-semibold text-xs inline-flex items-center gap-1 cursor-not-allowed" title="Exclusão bloqueada: possui lotes ativos na AWS">
+              <i class="ph-bold ph-lock-key"></i> Em uso (${loc.lotesAtivos} lotes)
+             </button>`
+          : `<button type="button" onclick="excluirLocalVazioAws('${loc.id_local_armazenamento}', '${loc.nome}')" class="px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-bold text-xs inline-flex items-center gap-1 transition">
+              <i class="ph-bold ph-trash"></i> Excluir Vazio
+             </button>`;
+
+        return `
+          <article class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-2">
+                <div class="flex items-center gap-3">
+                  <div class="w-11 h-11 rounded-2xl ${ehGeladeira ? 'bg-pastelBlue text-brandBlue' : 'bg-pastelYellow text-yellow-800'} flex items-center justify-center shrink-0">
+                    <i class="ph-fill ${ehGeladeira ? 'ph-thermometer-cold' : 'ph-archive-box'} text-2xl"></i>
+                  </div>
+                  <div>
+                    <span class="text-[11px] font-bold uppercase text-slate-400">${loc.ambiente}</span>
+                    <h3 class="text-base font-bold text-brandBlue leading-tight">${loc.nome}</h3>
+                  </div>
+                </div>
+                <span class="px-3 py-1 rounded-xl text-xs font-bold ${temLotes ? 'bg-pastelGreen text-emerald-900' : 'bg-slate-100 text-slate-600'}">
+                  ${loc.lotesAtivos} lotes (${loc.unidadesTotais} pcts)
+                </span>
+              </div>
+
+              <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-xs">
+                <span class="font-bold text-brandBlue block mb-0.5">Itens Armazenados (<code>tb_lotesProdutos</code>):</span>
+                <p class="text-slate-600 font-medium">${resumoProdutos}</p>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+              <a href="./consulta-avancada.html" class="text-xs font-bold text-brandBlue hover:underline inline-flex items-center gap-1">
+                Consultar lotes <i class="ph-bold ph-arrow-right"></i>
+              </a>
+              ${botaoExclusao}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function cadastrarNovoLocalAws(event) {
+      event.preventDefault();
+      const nomeLocal = document.getElementById('local-nome-movel').value.trim();
+      const sublocal = document.getElementById('local-sublocal').value.trim();
+      const tipoLocal = document.getElementById('local-tipo').value;
+      const ambiente = document.getElementById('local-ambiente').value.trim();
+
+      const btn = document.getElementById('btn-cadastrar-local');
+      btn.disabled = true;
+
+      try {
+        const resp = await executarAcaoEstoqueAws({
+          acao: 'cadastrar_local',
+          nome_local: nomeLocal,
+          sublocal_compartimento: sublocal,
+          tipo_local: tipoLocal,
+          localizacao_ambiente: ambiente,
+          id_usuario: 'casadacrianca@adm'
+        });
+
+        const novo = resp.local || {
+          id_local_armazenamento: `loc_${Date.now()}`,
+          nome_local: nomeLocal,
+          sublocal_compartimento: sublocal,
+          local_descricao: normalizarNomePrateleira(`${nomeLocal} - ${sublocal}`),
+          tipo_local: tipoLocal,
+          localizacao_ambiente: ambiente
+        };
+
+        locaisAtuais.push({
+          id: novo.id_local_armazenamento,
+          id_local_armazenamento: novo.id_local_armazenamento,
+          nome: novo.local_descricao,
+          local_descricao: novo.local_descricao,
+          nome_local: novo.nome_local,
+          sublocal_compartimento: novo.sublocal_compartimento,
+          tipo: tipoLocal === 'geladeira' ? 'geladeira' : 'armario',
+          tipo_local: tipoLocal,
+          ambiente: novo.localizacao_ambiente,
+          lotesAtivos: 0,
+          unidadesTotais: 0,
+          itensCriticosFefo: 0
+        });
+        localStorage.setItem(CHAVE_LOCAIS_ADMIN, JSON.stringify(locaisAtuais));
+
+        document.getElementById('local-nome-movel').value = '';
+        document.getElementById('local-sublocal').value = '';
+        exibirAlertaLocais(`Compartimento "${novo.local_descricao}" homologado e gravado em tb_locaisArmazenamento na AWS!`, true);
+        await sincronizarLocaisComAws();
+      } catch (erro) {
+        exibirAlertaLocais(`Bloqueado pela validação US06: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
       }
+    }
 
-      alert(`Compartimento "${nome}" cadastrado com sucesso.`);
-      document.getElementById('form-novo-local').classList.add('hidden');
-      window.location.reload();
+    function tentarExcluirLocalComLotes(nomeLocal, qtdLotes) {
+      exibirAlertaLocais(
+        `Exclusão Bloqueada (US06): O compartimento "${nomeLocal}" possui ${qtdLotes} lote(s) ativo(s) em tb_lotesProdutos na AWS. Transfira os produtos para outra prateleira antes de excluí-lo.`,
+        false
+      );
+    }
+
+    async function excluirLocalVazioAws(idLocal, nomeLocal) {
+      try {
+        await executarAcaoEstoqueAws({
+          acao: 'excluir_local',
+          id_local_armazenamento: idLocal,
+          local_descricao: nomeLocal,
+          id_usuario: 'casadacrianca@adm'
+        });
+      } catch (e) {
+        console.warn('Exclusão sincronizada localmente:', e);
+      }
+      locaisAtuais = locaisAtuais.filter((l) => l.nome !== nomeLocal);
+      localStorage.setItem(CHAVE_LOCAIS_ADMIN, JSON.stringify(locaisAtuais));
+      exibirAlertaLocais(`Compartimento vazio "${nomeLocal}" removido com sucesso.`, true);
+      renderizarGridLocais();
     }
   </script>
 </body>

@@ -3,129 +3,699 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consulta Avançada de Estoque | Casa da Criança</title>
+  <title>Estoque e Lotes (AWS) | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
-      </div>
-      <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
-      </div>
-    </div>
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
+  <div id="sidebar-admin-container"></div>
 
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
-      <a href="./consulta-avancada.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Consulta Lotes</a>
-      <a href="./relatorios.html" class="hover:text-green-300">Relatórios</a>
-      <a href="./mensageria.html" class="hover:text-green-300">Mensagens</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
-      </a>
-    </div>
-  </nav>
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
 
-  <main class="flex-grow max-w-6xl mx-auto p-4 sm:p-8 space-y-6">
-    <div>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Consulta Avançada de Estoque e Lotes</h1>
-      <p class="text-xs sm:text-sm text-gray-600 mt-1">
-        Rastreabilidade analítica com localização física de armários/geladeiras e priorização FEFO.
-      </p>
-    </div>
-
-    <!-- Filtros de Pesquisa -->
-    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+    <!-- Cabeçalho Principal (Padrão Index) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <label class="block font-semibold text-gray-700 mb-1">Código de Barras ou Lote</label>
-        <input type="text" placeholder="Ex: 7891000100103 ou LOTE-A1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
+          <i class="ph-fill ph-database"></i>
+          Tabelas AWS: <code>tb_lotesProdutos</code> • <code>tb_produtos</code> • <code>tb_movimentacoes</code>
+        </div>
+        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+          <i class="ph ph-barcode text-3xl"></i>
+          Consulta Avançada e Gestão de Lotes
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
+          Pesquise lotes ativos em tempo real, cadastre novas entradas via leitor EAN, realize baixas FEFO, transferências entre prateleiras ou ajustes de auditoria.
+        </p>
       </div>
-      <div>
-        <label class="block font-semibold text-gray-700 mb-1">Local Físico</label>
-        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-          <option value="">Todos os compartimentos</option>
-          <option value="armario_a">Armário A (Despensa)</option>
-          <option value="geladeira_1">Geladeira 1 (Cozinha)</option>
-        </select>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700 mb-1">Janela de Validade (FEFO)</label>
-        <select class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
-          <option value="">Todas as validades</option>
-          <option value="critico">Vencimento em menos de 7 dias</option>
-          <option value="vencidos">Lotes Vencidos</option>
-        </select>
-      </div>
-      <div class="flex items-end">
-        <button class="w-full bg-brandBlue hover:bg-blue-900 text-white font-bold py-2 rounded-lg btn-touch transition">
-          Aplicar Filtros
+      
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <button type="button" onclick="carregarTabelaLotesAws()" class="inline-flex items-center justify-center gap-2 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-5 py-3 rounded-xl transition border border-blue-200 text-sm">
+          <i id="icone-refresh-lotes" class="ph-bold ph-arrows-clockwise text-lg"></i> Atualizar AWS
+        </button>
+        <button type="button" onclick="abrirModal('modal-entrada-lote')" class="inline-flex items-center justify-center gap-2 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-6 py-3 rounded-xl transition shadow-sm border border-emerald-200 text-sm">
+          <i class="ph-bold ph-plus-circle text-lg text-emerald-700"></i> Nova Entrada de Lote
         </button>
       </div>
     </div>
 
-    <!-- Tabela de Lotes Detalhada -->
-    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden text-xs">
+    <!-- Barra de Filtros Avançados -->
+    <section class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div class="md:col-span-5">
+          <label for="busca-termo" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Buscar por Produto, Código EAN ou Lote</label>
+          <div class="relative">
+            <i class="ph ph-magnifying-glass absolute left-3.5 top-3 text-slate-400 text-lg"></i>
+            <input type="text" id="busca-termo" oninput="aplicarFiltrosLotes()" placeholder="Ex: Arroz, Leite, 7891000100103, LOTE..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
+          </div>
+        </div>
+
+        <div class="md:col-span-3">
+          <label for="filtro-prateleira" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Compartimento (AWS)</label>
+          <select id="filtro-prateleira" onchange="aplicarFiltrosLotes()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
+            <option value="TODAS">Todos os Compartimentos</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="filtro-status-fefo" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Status FEFO</label>
+          <select id="filtro-status-fefo" onchange="aplicarFiltrosLotes()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
+            <option value="TODOS">Todos os Status</option>
+            <option value="seguro">Regular (&gt; 30 dias)</option>
+            <option value="atencao">Atenção (16 a 30 dias)</option>
+            <option value="critico">Urgente (&le; 15 dias)</option>
+            <option value="vencido">Vencidos (Bloqueados)</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2 flex items-end">
+          <button type="button" onclick="limparFiltrosLotes()" class="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm transition">
+            Limpar Filtros
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 text-xs font-semibold text-slate-600">
+        <span id="contador-resultados-lotes">Sincronizando lotes com a AWS...</span>
+        <span class="text-brandBlue">Ordenação Automática: <strong>FEFO Estrito</strong> (menor validade no topo)</span>
+      </div>
+    </section>
+
+    <!-- Feedback de Operação -->
+    <div id="feedback-operacao-estoque" class="hidden p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between"></div>
+
+    <!-- Tabela Dinâmica AWS -->
+    <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
       <div class="overflow-x-auto">
-        <table class="w-full text-left">
-          <thead class="bg-gray-100 text-gray-700 font-bold uppercase border-b border-gray-200">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+          <thead class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-brandBlue uppercase">
             <tr>
-              <th class="p-3">Produto</th>
-              <th class="p-3">Lote</th>
-              <th class="p-3">Compartimento Físico</th>
-              <th class="p-3">Validade</th>
-              <th class="p-3">Saldo</th>
-              <th class="p-3">Status</th>
+              <th class="p-5">Código Lote / EAN</th>
+              <th class="p-5">Produto / Categoria</th>
+              <th class="p-5">Compartimento (AWS)</th>
+              <th class="p-5 text-center">Saldo Atual</th>
+              <th class="p-5">Validade FEFO</th>
+              <th class="p-5">Situação</th>
+              <th class="p-5 text-right">Operações</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200">
-            <tr class="hover:bg-gray-50">
-              <td class="p-3 font-semibold text-gray-900">Leite Integral UHT 1L (Líder)</td>
-              <td class="p-3 font-mono">LOTE-2026-A1</td>
-              <td class="p-3">Geladeira 1 • Prateleira Central</td>
-              <td class="p-3 font-bold text-stateError">24/10/2026</td>
-              <td class="p-3 font-bold">6 pacotes</td>
-              <td class="p-3"><span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded">Prioridade FEFO</span></td>
-            </tr>
-            <tr class="hover:bg-gray-50">
-              <td class="p-3 font-semibold text-gray-900">Arroz Agulhinha 5kg (Camil)</td>
-              <td class="p-3 font-mono">LOTE-AR-09</td>
-              <td class="p-3">Armário A • Prateleira 2</td>
-              <td class="p-3 text-gray-600">15/04/2027</td>
-              <td class="p-3 font-bold">48 pacotes</td>
-              <td class="p-3"><span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">Regular</span></td>
+          <tbody id="tbody-consulta-lotes" class="divide-y divide-slate-100 text-xs font-medium text-slate-800">
+            <tr>
+              <td colspan="7" class="p-10 text-center text-brandBlue font-semibold">
+                <i class="ph ph-spinner-gap text-3xl animate-spin inline-block mb-2"></i><br>
+                Consultando lotes reais em <code>tb_lotesProdutos</code> na AWS...
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
+
   </main>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <!-- MODAL 1: NOVA ENTRADA DE LOTE (COM CONSULTA EAN REAL NAS 3 APIS + TB_PRODUTOS) -->
+  <div id="modal-entrada-lote" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-8 relative transform scale-95 transition-transform duration-300 max-h-[92vh] overflow-y-auto">
+      <button type="button" onclick="fecharModal('modal-entrada-lote')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-brandBlue">Registrar Entrada de Lote</h3>
+        <p class="text-slate-500 text-xs mt-1">Persiste em <code>tb_lotesProdutos</code>, <code>tb_produtos</code> e <code>tb_movimentacoes</code> na AWS.</p>
+      </div>
+
+      <form onsubmit="submeterEntradaLoteAws(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Código de Barras (EAN-8 a EAN-14) *</label>
+          <div class="flex gap-2">
+            <input type="text" id="entrada-ean" required placeholder="Ex: 7891000100103" class="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+            <button type="button" onclick="consultarEanNaAws()" class="px-4 py-2.5 rounded-xl bg-brandBlue hover:bg-blue-900 text-white font-bold text-xs inline-flex items-center gap-1.5 shrink-0 transition">
+              <i class="ph-bold ph-barcode text-base"></i> Consultar EAN
+            </button>
+          </div>
+          <p id="status-busca-ean" class="text-[11px] font-medium text-slate-500 mt-1">Consulte o código de barras nas 3 APIs homologadas ou catálogo AWS.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Nome do Produto *</label>
+            <input type="text" id="entrada-nome" required placeholder="Ex: Leite UHT Integral 1L" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Marca</label>
+            <input type="text" id="entrada-marca" placeholder="Ex: Ninho / Camil" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Código do Lote *</label>
+            <input type="text" id="entrada-codigo-lote" required placeholder="Ex: LOTE-2026-A1" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Categoria *</label>
+            <select id="entrada-categoria" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+              <option value="Grãos e Cereais">Grãos e Cereais</option>
+              <option value="Laticínios">Laticínios</option>
+              <option value="Enlatados e Conservas">Enlatados e Conservas</option>
+              <option value="Massas e Farináceos">Massas e Farináceos</option>
+              <option value="Óleos e Temperos">Óleos e Temperos</option>
+              <option value="Bebidas e Matinais">Bebidas e Matinais</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Quantidade (Pacotes) *</label>
+            <input type="number" id="entrada-quantidade" required min="1" step="1" value="10" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Data de Validade *</label>
+            <input type="date" id="entrada-validade" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Compartimento Físico (AWS) *</label>
+          <select id="entrada-prateleira" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue"></select>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-entrada-lote')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
+          <button type="submit" id="btn-salvar-entrada" class="px-6 py-2.5 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-200 hover:bg-[#b5ead5] font-bold text-sm shadow-sm transition">
+            Gravar Entrada na AWS
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: BAIXA / DESCARTE DE LOTE (COM TRAVA PERDA) -->
+  <div id="modal-baixa-lote" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-baixa-lote')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-brandBlue">Baixa / Saída de Estoque</h3>
+        <p id="subtitulo-baixa-lote" class="text-slate-600 text-xs font-semibold mt-1"></p>
+      </div>
+
+      <form onsubmit="submeterBaixaLoteAws(event)" class="space-y-4">
+        <input type="hidden" id="baixa-id-lote">
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Motivo da Saída (<code>tb_motivosSaidas</code>) *</label>
+          <select id="baixa-motivo" onchange="alternarTravaPerdaBaixa()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+            <option value="Consumo Diário Cozinha">Consumo Diário na Cozinha / Refeitório</option>
+            <option value="Descarte por Vencimento (Perda)">Descarte por Vencimento (Perda FEFO)</option>
+            <option value="Descarte por Avaria (Perda)">Descarte por Avaria na Embalagem</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Quantidade a Retirar *</label>
+          <input type="number" id="baixa-quantidade" required min="1" step="1" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Observação / Justificativa *</label>
+          <input type="text" id="baixa-justificativa" required placeholder="Ex: Preparo do almoço das crianças" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div id="bloco-trava-perda" class="hidden p-4 rounded-2xl bg-red-50 border border-red-200 space-y-2">
+          <p class="text-xs font-bold text-red-800">TRAVA DE SEGURANÇA (US07): Para autorizar descarte por perda ou vencimento, digite exatamente <code class="bg-red-200 px-1.5 py-0.5 rounded">PERDA</code> em maiúsculas:</p>
+          <input type="text" id="baixa-confirmacao-perda" placeholder="Digite PERDA" class="w-full px-3.5 py-2 rounded-xl border border-red-300 text-sm font-bold text-red-900 bg-white">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-baixa-lote')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
+          <button type="submit" id="btn-confirmar-baixa" class="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-sm transition">
+            Confirmar Baixa na AWS
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: TRANSFERÊNCIA INTERNA ENTRE PRATELEIRAS -->
+  <div id="modal-transferencia-lote" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-transferencia-lote')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-brandBlue">Transferência de Prateleira</h3>
+        <p id="subtitulo-transf-lote" class="text-slate-600 text-xs font-semibold mt-1"></p>
+      </div>
+
+      <form onsubmit="submeterTransferenciaAws(event)" class="space-y-4">
+        <input type="hidden" id="transf-id-lote">
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Compartimento de Origem</label>
+          <input type="text" id="transf-origem" readonly class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm font-semibold text-slate-600">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Compartimento de Destino (AWS) *</label>
+          <select id="transf-destino" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue"></select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Quantidade a Transferir *</label>
+          <input type="number" id="transf-quantidade" required min="1" step="1" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-transferencia-lote')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
+          <button type="submit" id="btn-confirmar-transf" class="px-6 py-2.5 rounded-xl bg-brandBlue hover:bg-blue-900 text-white font-bold text-sm shadow-sm transition">
+            Transferir na AWS
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: AJUSTE FÍSICO DE AUDITORIA -->
+  <div id="modal-ajuste-lote" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-ajuste-lote')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-brandBlue">Ajuste Físico de Auditoria</h3>
+        <p id="subtitulo-ajuste-lote" class="text-slate-600 text-xs font-semibold mt-1"></p>
+      </div>
+
+      <form onsubmit="submeterAjusteAws(event)" class="space-y-4">
+        <input type="hidden" id="ajuste-id-lote">
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Nova Quantidade Contada na Prateleira *</label>
+          <input type="number" id="ajuste-nova-qtd" required min="0" step="1" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Justificativa de Auditoria (<code>tb_logsAuditorias</code>) *</label>
+          <textarea id="ajuste-justificativa" required rows="3" placeholder="Informe o motivo da reconciliação de inventário físico..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-ajuste-lote')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
+          <button type="submit" id="btn-confirmar-ajuste" class="px-6 py-2.5 rounded-xl bg-brandBlue hover:bg-blue-900 text-white font-bold text-sm shadow-sm transition">
+            Gravar Ajuste Auditado
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../public/js/admin.js"></script>
+  <script>
+    let lotesCacheAws = [];
+    let locaisCacheAws = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderizarSidebarAdmin('consulta-avancada');
+      const dtPadrao = new Date();
+      dtPadrao.setDate(dtPadrao.getDate() + 90);
+      document.getElementById('entrada-validade').value = dtPadrao.toISOString().split('T')[0];
+      document.getElementById('entrada-codigo-lote').value = `LOTE-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 899)}`;
+
+      carregarTabelaLotesAws();
+    });
+
+    function exibirFeedbackEstoque(mensagem, sucesso = true) {
+      const box = document.getElementById('feedback-operacao-estoque');
+      box.className = `p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between ${
+        sucesso ? 'bg-pastelGreen/70 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-200 text-red-800'
+      }`;
+      box.innerHTML = `
+        <span>${mensagem}</span>
+        <button type="button" onclick="this.parentElement.classList.add('hidden')" class="font-bold underline ml-4 text-xs">Fechar</button>
+      `;
+      box.classList.remove('hidden');
+    }
+
+    async function carregarTabelaLotesAws() {
+      const icone = document.getElementById('icone-refresh-lotes');
+      if (icone) icone.classList.add('animate-spin');
+
+      try {
+        const dados = await carregarDadosEstoqueAws();
+        lotesCacheAws = dados.lotes;
+        locaisCacheAws = dados.locaisReconciliados;
+
+        popularSelectsPrateleiras();
+        aplicarFiltrosLotes();
+      } catch (erro) {
+        console.error('Erro ao carregar lotes AWS:', erro);
+        exibirFeedbackEstoque(`Falha ao consultar AWS: ${erro.message}`, false);
+      } finally {
+        if (icone) icone.classList.remove('animate-spin');
+      }
+    }
+
+    function popularSelectsPrateleiras() {
+      const selectFiltro = document.getElementById('filtro-prateleira');
+      const valorAtual = selectFiltro.value || 'TODAS';
+      selectFiltro.innerHTML = `<option value="TODAS">Todos os Compartimentos (${locaisCacheAws.length})</option>` +
+        locaisCacheAws.map((l) => `<option value="${l.nome}">${l.nome} (${l.lotesAtivos} lotes)</option>`).join('');
+      selectFiltro.value = valorAtual;
+
+      const opcoesLocais = locaisCacheAws.map((l) => `<option value="${l.nome}">${l.nome}</option>`).join('');
+      document.getElementById('entrada-prateleira').innerHTML = opcoesLocais;
+      document.getElementById('transf-destino').innerHTML = opcoesLocais;
+    }
+
+    function aplicarFiltrosLotes() {
+      const termo = (document.getElementById('busca-termo').value || '').trim().toLowerCase();
+      const prateleira = document.getElementById('filtro-prateleira').value;
+      const statusFefo = document.getElementById('filtro-status-fefo').value;
+
+      const filtrados = lotesCacheAws.filter((lote) => {
+        const matchTermo = !termo ||
+          lote.nomeProduto.toLowerCase().includes(termo) ||
+          String(lote.codigoBarras).toLowerCase().includes(termo) ||
+          String(lote.codigoLote).toLowerCase().includes(termo) ||
+          String(lote.id).toLowerCase().includes(termo);
+        const matchPrateleira = prateleira === 'TODAS' || lote.localArmazenamento === prateleira;
+        const matchStatus = statusFefo === 'TODOS' || lote.statusFefo.codigo === statusFefo;
+        return matchTermo && matchPrateleira && matchStatus;
+      });
+
+      document.getElementById('contador-resultados-lotes').textContent =
+        `Exibindo ${filtrados.length} de ${lotesCacheAws.length} lotes ativos em tb_lotesProdutos (AWS)`;
+
+      const tbody = document.getElementById('tbody-consulta-lotes');
+      if (filtrados.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500 font-medium">Nenhum lote encontrado para os filtros selecionados.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtrados.map((lote) => {
+        const loteJson = encodeURIComponent(JSON.stringify(lote));
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-5">
+              <span class="font-bold text-brandBlue block text-sm">${lote.codigoLote}</span>
+              <span class="text-xs text-slate-500">EAN: ${lote.codigoBarras}</span>
+            </td>
+            <td class="p-5">
+              <span class="font-bold text-brandBlue block text-sm">${lote.nomeProduto}</span>
+              <span class="text-xs text-slate-500">${lote.marca} • ${lote.categoria} (Mín: ${lote.estoqueMinimo})</span>
+            </td>
+            <td class="p-5">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-pastelBlue/70 text-brandBlue font-semibold text-xs">
+                <i class="ph-fill ph-archive-box"></i>
+                ${lote.localArmazenamento}
+              </span>
+            </td>
+            <td class="p-5 text-center font-extrabold text-base text-brandBlue">
+              ${lote.quantidadeAtual} <span class="text-xs font-normal text-slate-500">${lote.unidadeMedida}</span>
+            </td>
+            <td class="p-5 font-semibold text-slate-700">
+              ${lote.dataValidadeFormatada}
+            </td>
+            <td class="p-5">
+              <span class="px-3 py-1 rounded-lg text-xs font-bold border ${lote.statusFefo.classeBadge}">
+                ${lote.statusFefo.rotulo}
+              </span>
+            </td>
+            <td class="p-5 text-right space-x-1.5">
+              <button type="button" onclick="abrirModalTransferencia('${loteJson}')" class="px-3 py-1.5 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs transition" title="Transferir Prateleira">
+                <i class="ph-bold ph-arrows-left-right"></i> Mover
+              </button>
+              <button type="button" onclick="abrirModalAjuste('${loteJson}')" class="px-3 py-1.5 rounded-xl bg-pastelYellow hover:bg-yellow-200 text-yellow-900 font-bold text-xs transition" title="Ajuste Físico de Auditoria">
+                <i class="ph-bold ph-sliders-horizontal"></i> Ajuste
+              </button>
+              <button type="button" onclick="abrirModalBaixa('${loteJson}')" class="px-3 py-1.5 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs transition" title="Dar Baixa ou Descarte">
+                <i class="ph-bold ph-minus-circle"></i> Baixa
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function limparFiltrosLotes() {
+      document.getElementById('busca-termo').value = '';
+      document.getElementById('filtro-prateleira').value = 'TODAS';
+      document.getElementById('filtro-status-fefo').value = 'TODOS';
+      aplicarFiltrosLotes();
+    }
+
+    async function consultarEanNaAws() {
+      const ean = (document.getElementById('entrada-ean').value || '').trim();
+      const statusEl = document.getElementById('status-busca-ean');
+      if (!ean) {
+        statusEl.textContent = 'Informe os dígitos numéricos do código de barras EAN antes de consultar.';
+        statusEl.className = 'text-[11px] font-bold text-red-600 mt-1';
+        return;
+      }
+      statusEl.textContent = 'Consultando tb_produtos e as 3 APIs de código de barras em cascata na AWS...';
+      statusEl.className = 'text-[11px] font-bold text-brandBlue mt-1';
+
+      try {
+        const resp = await executarAcaoEstoqueAws({ acao: 'verificar_produto', codigo_barras: ean });
+        const prod = resp.produto;
+        if (prod && (prod.nome_produto || prod.nomeProduto)) {
+          document.getElementById('entrada-nome').value = prod.nome_produto || prod.nomeProduto;
+          document.getElementById('entrada-marca').value = prod.marca_produto || prod.marca || '';
+          if (prod.categoria) document.getElementById('entrada-categoria').value = prod.categoria;
+          statusEl.textContent = `✓ Produto localizado (${prod.origem || 'Catálogo AWS'}): ${prod.nome_produto || prod.nomeProduto}`;
+          statusEl.className = 'text-[11px] font-bold text-emerald-700 mt-1';
+        } else {
+          statusEl.textContent = resp.mensagem || 'EAN não encontrado nas APIs externas. Preencha os dados manualmente.';
+          statusEl.className = 'text-[11px] font-bold text-amber-700 mt-1';
+        }
+      } catch (e) {
+        statusEl.textContent = `Aviso: ${e.message}. Preencha os dados manualmente.`;
+        statusEl.className = 'text-[11px] font-bold text-amber-700 mt-1';
+      }
+    }
+
+    async function submeterEntradaLoteAws(event) {
+      event.preventDefault();
+      const btn = document.getElementById('btn-salvar-entrada');
+      btn.disabled = true;
+      btn.textContent = 'Gravando na AWS...';
+
+      try {
+        const localEscolhido = document.getElementById('entrada-prateleira').value;
+        const payload = {
+          acao: 'entrada_lote',
+          id_usuario: 'casadacrianca@adm',
+          lote: {
+            codigo_barra_produto: document.getElementById('entrada-ean').value.trim(),
+            nome_produto: document.getElementById('entrada-nome').value.trim(),
+            marca_produto: document.getElementById('entrada-marca').value.trim() || 'Institucional',
+            numero_codigo_lote: document.getElementById('entrada-codigo-lote').value.trim(),
+            categoria: document.getElementById('entrada-categoria').value,
+            quantidade_inicial_pacote: Number(document.getElementById('entrada-quantidade').value),
+            unidade_medida_pacote: 'pacotes',
+            data_validade_lote: document.getElementById('entrada-validade').value,
+            local_descricao: localEscolhido,
+            id_local_armazenamento: localEscolhido
+          }
+        };
+        await executarAcaoEstoqueAws(payload);
+        fecharModal('modal-entrada-lote');
+        exibirFeedbackEstoque(`Lote "${payload.lote.numero_codigo_lote}" (${payload.lote.nome_produto}) gravado com sucesso em ${localEscolhido}!`, true);
+        await carregarTabelaLotesAws();
+      } catch (erro) {
+        exibirFeedbackEstoque(`Erro ao registrar entrada: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Gravar Entrada na AWS';
+      }
+    }
+
+    function abrirModalBaixa(loteEncoded) {
+      const lote = JSON.parse(decodeURIComponent(loteEncoded));
+      document.getElementById('baixa-id-lote').value = lote.id_lote_produto || lote.id;
+      document.getElementById('subtitulo-baixa-lote').textContent = `${lote.nomeProduto} (${lote.codigoLote}) • Disponível: ${lote.quantidadeAtual} ${lote.unidadeMedida}`;
+      const inputQtd = document.getElementById('baixa-quantidade');
+      inputQtd.max = lote.quantidadeAtual;
+      inputQtd.value = 1;
+
+      if (lote.diasRestantes < 0) {
+        document.getElementById('baixa-motivo').value = 'Descarte por Vencimento (Perda)';
+        document.getElementById('baixa-justificativa').value = 'Descarte de lote vencido conforme regra FEFO';
+      } else {
+        document.getElementById('baixa-motivo').value = 'Consumo Diário Cozinha';
+        document.getElementById('baixa-justificativa').value = 'Preparo de refeições na cozinha institucional';
+      }
+      document.getElementById('baixa-confirmacao-perda').value = '';
+      alternarTravaPerdaBaixa();
+      abrirModal('modal-baixa-lote');
+    }
+
+    function alternarTravaPerdaBaixa() {
+      const motivo = document.getElementById('baixa-motivo').value.toLowerCase();
+      const bloco = document.getElementById('bloco-trava-perda');
+      if (motivo.includes('perda') || motivo.includes('descarte')) {
+        bloco.classList.remove('hidden');
+      } else {
+        bloco.classList.add('hidden');
+      }
+    }
+
+    async function submeterBaixaLoteAws(event) {
+      event.preventDefault();
+      const idLote = document.getElementById('baixa-id-lote').value;
+      const motivoSaida = document.getElementById('baixa-motivo').value;
+      const quantidade = Number(document.getElementById('baixa-quantidade').value);
+      const justificativa = document.getElementById('baixa-justificativa').value.trim();
+      const palavraConfirmacao = document.getElementById('baixa-confirmacao-perda').value.trim();
+
+      const ehDescarte = motivoSaida.toLowerCase().includes('perda') || motivoSaida.toLowerCase().includes('descarte');
+      if (ehDescarte && palavraConfirmacao !== 'PERDA') {
+        alert('Trava de segurança ativa: Digite exatamente PERDA em letras maiúsculas para confirmar o descarte.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirmar-baixa');
+      btn.disabled = true;
+      btn.textContent = 'Processando...';
+
+      try {
+        await executarAcaoEstoqueAws({
+          acao: 'saida_produto',
+          id_lote_produto: idLote,
+          quantidade,
+          motivo_saida: motivoSaida,
+          justificativa,
+          palavra_confirmacao: palavraConfirmacao,
+          id_usuario: 'casadacrianca@adm'
+        });
+        fecharModal('modal-baixa-lote');
+        exibirFeedbackEstoque(`Saída de ${quantidade} pacote(s) homologada e gravada em tb_movimentacoes na AWS!`, true);
+        await carregarTabelaLotesAws();
+      } catch (erro) {
+        exibirFeedbackEstoque(`Erro na baixa: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Baixa na AWS';
+      }
+    }
+
+    function abrirModalTransferencia(loteEncoded) {
+      const lote = JSON.parse(decodeURIComponent(loteEncoded));
+      document.getElementById('transf-id-lote').value = lote.id_lote_produto || lote.id;
+      document.getElementById('subtitulo-transf-lote').textContent = `${lote.nomeProduto} (${lote.codigoLote}) • Saldo: ${lote.quantidadeAtual}`;
+      document.getElementById('transf-origem').value = lote.localArmazenamento;
+      document.getElementById('transf-quantidade').max = lote.quantidadeAtual;
+      document.getElementById('transf-quantidade').value = lote.quantidadeAtual;
+
+      const selectDestino = document.getElementById('transf-destino');
+      const outra = locaisCacheAws.find((l) => l.nome !== lote.localArmazenamento);
+      if (outra) selectDestino.value = outra.nome;
+
+      abrirModal('modal-transferencia-lote');
+    }
+
+    async function submeterTransferenciaAws(event) {
+      event.preventDefault();
+      const idLote = document.getElementById('transf-id-lote').value;
+      const origem = document.getElementById('transf-origem').value;
+      const destino = document.getElementById('transf-destino').value;
+      const quantidade = Number(document.getElementById('transf-quantidade').value);
+
+      if (origem === destino) {
+        alert('Escolha um compartimento de destino diferente do compartimento de origem.');
+        return;
+      }
+
+      const btn = document.getElementById('btn-confirmar-transf');
+      btn.disabled = true;
+      btn.textContent = 'Transferindo...';
+
+      try {
+        await executarAcaoEstoqueAws({
+          acao: 'transferir_lote',
+          id_lote_produto: idLote,
+          quantidade,
+          local_destino: destino,
+          id_usuario: 'casadacrianca@adm',
+          confirmacao_divisao_lote: true
+        });
+        fecharModal('modal-transferencia-lote');
+        exibirFeedbackEstoque(`Transferência de ${quantidade} pacote(s) para "${destino}" concluída na AWS!`, true);
+        await carregarTabelaLotesAws();
+      } catch (erro) {
+        exibirFeedbackEstoque(`Erro ao transferir lote: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Transferir na AWS';
+      }
+    }
+
+    function abrirModalAjuste(loteEncoded) {
+      const lote = JSON.parse(decodeURIComponent(loteEncoded));
+      document.getElementById('ajuste-id-lote').value = lote.id_lote_produto || lote.id;
+      document.getElementById('subtitulo-ajuste-lote').textContent = `${lote.nomeProduto} (${lote.codigoLote}) • Saldo no sistema: ${lote.quantidadeAtual}`;
+      document.getElementById('ajuste-nova-qtd').value = lote.quantidadeAtual;
+      document.getElementById('ajuste-justificativa').value = '';
+      abrirModal('modal-ajuste-lote');
+    }
+
+    async function submeterAjusteAws(event) {
+      event.preventDefault();
+      const idLote = document.getElementById('ajuste-id-lote').value;
+      const novaQuantidade = Number(document.getElementById('ajuste-nova-qtd').value);
+      const justificativa = document.getElementById('ajuste-justificativa').value.trim();
+
+      const btn = document.getElementById('btn-confirmar-ajuste');
+      btn.disabled = true;
+      btn.textContent = 'Salvando...';
+
+      try {
+        await executarAcaoEstoqueAws({
+          acao: 'ajustar_estoque',
+          id_lote_produto: idLote,
+          nova_quantidade: novaQuantidade,
+          justificativa,
+          id_usuario: 'casadacrianca@adm'
+        });
+        fecharModal('modal-ajuste-lote');
+        exibirFeedbackEstoque(`Ajuste físico do lote ${idLote} para ${novaQuantidade} pacotes auditado e gravado na AWS!`, true);
+        await carregarTabelaLotesAws();
+      } catch (erro) {
+        exibirFeedbackEstoque(`Erro no ajuste: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Gravar Ajuste Auditado';
+      }
+    }
+  </script>
 </body>
 </html>

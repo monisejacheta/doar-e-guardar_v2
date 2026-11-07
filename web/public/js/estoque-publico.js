@@ -1,5 +1,6 @@
-// Variável de controle para não recarregar os dados na AWS desnecessariamente
+// web/public/js/estoque-publico.js
 let dadosCarregados = false;
+const API_AWS_ESTOQUE_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
 
 function escaparHtml(texto) {
   const div = document.createElement('div');
@@ -10,6 +11,7 @@ function escaparHtml(texto) {
 function toggleItensCriticos() {
   const container = document.getElementById('container-itens-criticos');
   const icone = document.getElementById('icone-expandir');
+  if (!container || !icone) return;
 
   if (container.classList.contains('hidden')) {
     container.classList.remove('hidden');
@@ -27,11 +29,10 @@ function toggleItensCriticos() {
 async function buscarItensCriticosAws() {
   const loadingDiv = document.getElementById('loading-criticos');
   const listaUl = document.getElementById('lista-itens-criticos');
-
-  const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
+  if (!loadingDiv || !listaUl) return;
 
   try {
-    const resposta = await fetch(API_AWS_URL, {
+    const resposta = await fetch(API_AWS_ESTOQUE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,13 +43,30 @@ async function buscarItensCriticosAws() {
     const dados = await resposta.json();
 
     if (dados.sucesso && Array.isArray(dados.lotes)) {
-      const itensCriticos = dados.lotes.filter((lote) => {
-        const saldo = parseInt(lote.quantidade_atual_pacote, 10);
-        const minimo = parseInt(lote.estoque_minimo_pacote, 10);
-        return saldo < minimo;
+      // Agrupa por produto para verificar o saldo total vs estoque mínimo
+      const agrupado = {};
+      dados.lotes.forEach((lote) => {
+        const qtd = parseInt(lote.quantidade_atual_pacote, 10) || 0;
+        if (qtd <= 0) return;
+        const chave = (lote.nome_produto || 'Item').trim();
+        if (!agrupado[chave]) {
+          agrupado[chave] = {
+            nome_produto: chave,
+            marca_produto: lote.marca_produto || 'Diversas Marcas',
+            categoria: lote.categoria || 'Alimentos',
+            quantidade_atual_pacote: 0,
+            estoque_minimo_pacote: parseInt(lote.estoque_minimo_pacote, 10) || 10,
+          };
+        }
+        agrupado[chave].quantidade_atual_pacote += qtd;
       });
 
-      renderizarListaCriticos(itensCriticos);
+      const todosProdutos = Object.values(agrupado);
+      const itensCriticos = todosProdutos.filter(
+        (prod) => prod.quantidade_atual_pacote < prod.estoque_minimo_pacote
+      );
+
+      renderizarListaCriticos(itensCriticos, todosProdutos);
     } else {
       throw new Error('Formato de dados inesperado');
     }
@@ -67,11 +85,14 @@ async function buscarItensCriticosAws() {
   }
 }
 
-function renderizarListaCriticos(itens) {
+function renderizarListaCriticos(itens, todosProdutos = []) {
   const listaUl = document.getElementById('lista-itens-criticos');
+  if (!listaUl) return;
   listaUl.innerHTML = '';
 
-  if (itens.length === 0) {
+  const listaExibicao = itens.length > 0 ? itens : todosProdutos.slice(0, 4);
+
+  if (listaExibicao.length === 0) {
     listaUl.innerHTML = `
       <div class="col-span-1 sm:col-span-2 p-6 bg-emerald-50 border border-emerald-200 rounded-2xl text-center text-emerald-800">
         <i class="ph-fill ph-check-circle text-3xl mb-2 text-emerald-600"></i>
@@ -82,7 +103,7 @@ function renderizarListaCriticos(itens) {
     return;
   }
 
-  itens.forEach((item) => {
+  listaExibicao.forEach((item) => {
     const li = document.createElement('li');
     li.className =
       'bg-white border border-slate-200 p-4 rounded-2xl flex items-center justify-between gap-3 shadow-sm hover:border-brandBlue transition';
@@ -90,23 +111,29 @@ function renderizarListaCriticos(itens) {
     const nomeSeguro = escaparHtml(item.nome_produto);
     const marcaSegura = escaparHtml(item.marca_produto || 'Diversas Marcas');
     const categoriaSegura = escaparHtml(item.categoria || 'Geral');
+    const ehCritico = item.quantidade_atual_pacote < item.estoque_minimo_pacote;
 
     li.innerHTML = `
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 bg-pastelYellow/40 rounded-full flex items-center justify-center flex-shrink-0 text-yellow-700">
-          <i class="ph ph-warning text-xl"></i>
+        <div class="w-10 h-10 ${ehCritico ? 'bg-pastelYellow/60 text-yellow-800' : 'bg-pastelBlue text-brandBlue'} rounded-full flex items-center justify-center flex-shrink-0">
+          <i class="ph ${ehCritico ? 'ph-warning' : 'ph-package'} text-xl"></i>
         </div>
         <div>
           <p class="font-bold text-slate-800 text-sm">${nomeSeguro}</p>
-          <p class="text-xs text-slate-500">${marcaSegura} • ${categoriaSegura}</p>
+          <p class="text-xs text-slate-500">${marcaSegura} • ${categoriaSegura} (${item.quantidade_atual_pacote} pcts atuais)</p>
         </div>
       </div>
       <div class="text-right">
-        <span class="block text-xs font-bold text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
-          Faltam itens
+        <span class="block text-xs font-bold ${
+          ehCritico ? 'text-yellow-800 bg-yellow-100' : 'text-brandBlue bg-blue-100'
+        } px-2.5 py-1 rounded-lg">
+          ${ehCritico ? 'Prioritário' : 'Bem-vindo'}
         </span>
       </div>
     `;
     listaUl.appendChild(li);
   });
 }
+
+window.toggleItensCriticos = toggleItensCriticos;
+window.buscarItensCriticosAws = buscarItensCriticosAws;

@@ -42,21 +42,33 @@
     </div>
 
     <!-- Navegação do Doador -->
-    <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
-      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-squares-four text-xl"></i> Dashboard
+    <nav class="flex-1 px-4 py-5 space-y-2.5 overflow-y-auto">
+      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
+      <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-house text-lg"></i> Início
       </a>
-      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
-        <i class="ph ph-magnifying-glass text-xl"></i> Estoque Transparente
+      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-book-open text-lg"></i> Nossa História
       </a>
-      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-megaphone text-xl"></i> Criar Campanha
+      <a href="../../index.html#como-doar" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
       </a>
-      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
+
+      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
+      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-squares-four text-lg"></i> Dashboard Doador
       </a>
-      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
-        <i class="ph ph-user-gear text-xl"></i> Configurações
+      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
+        <i class="ph ph-package text-lg"></i> Estoque Transparente
+      </a>
+      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-megaphone text-lg"></i> Propor Campanha
+      </a>
+      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-folder-star text-lg"></i> Minhas Campanhas
+      </a>
+      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
+        <i class="ph ph-user-gear text-lg"></i> Meu Perfil & LGPD
       </a>
     </nav>
 
@@ -234,7 +246,7 @@
             const qtdClass = critico ? 'text-red-600 font-bold' : 'text-slate-800 font-medium';
 
             return `
-            <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="window.location.href='./stock-details.html?produto=${prod.ean || prod.nome}'">
+            <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="window.location.href='./campanhas.html?item=' + encodeURIComponent(prod.nome)">
                 <td class="p-5">
                 <p class="font-bold text-brandBlue text-sm hover:underline">${prod.nome}</p>
                 <p class="text-xs text-slate-500">Marca: ${prod.marca}</p>

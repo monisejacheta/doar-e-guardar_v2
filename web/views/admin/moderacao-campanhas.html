@@ -4,160 +4,425 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Moderação de Campanhas | Casa da Criança</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
             brandBlue: '#1E3A8A',
-            brandGreen: '#10B981',
-            accentAmber: '#F59E0B',
-            stateError: '#DC2626',
-            neutralDark: '#111827',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
           }
         }
       }
     }
   </script>
+  
   <link rel="stylesheet" href="../../public/css/styles.css">
   <script src="../../public/js/accessibility.js" defer></script>
 </head>
-<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
-        🏠
-      </div>
+  <!-- Navbar Lateral Fixa (Padrão Index) -->
+  <div id="sidebar-admin-container"></div>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+
+    <!-- Cabeçalho Principal (Padrão Index) -->
+    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
       <div>
-        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
-        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
-      </div>
-    </div>
-
-    <div class="flex items-center gap-4 text-sm font-semibold">
-      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
-      <a href="./moderacao-campanhas.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Moderar Campanhas</a>
-      <a href="./locais-armazenamento.html" class="hover:text-green-300">Armazenamento</a>
-      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
-        🌓 Contraste
-      </button>
-      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
-        Sair
-      </a>
-    </div>
-  </nav>
-
-  <main class="flex-grow max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
-    <div>
-      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Moderação de Campanhas Comunitárias</h1>
-      <p class="text-xs sm:text-sm text-gray-600 mt-1">
-        Avalie a viabilidade física e operacional das arrecadações propostas por doadores da sociedade civil.
-      </p>
-    </div>
-
-    <!-- Fila de Campanhas Pendentes de Análise (US05) -->
-    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <h2 class="text-base font-bold text-brandBlue">Fila de Análise Pendente (1 proposta aguardando)</h2>
-        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
-          Status: Pendente de Análise
-        </span>
-      </div>
-
-      <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-3">
-        <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-2">
-          <div>
-            <h3 class="font-bold text-base text-gray-800">Campanha de Óleo e Macarrão Comunitária</h3>
-            <p class="text-xs text-gray-600 mt-0.5">
-              Proponente: <strong>Monise Jacheta</strong> • Submetida em: 18/10/2026
-            </p>
-            <p class="text-xs text-gray-600">
-              Vigência proposta: <strong>25/10/2026 até 15/11/2026</strong> • Ponto de Coleta: Igreja Matriz
-            </p>
-          </div>
+        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
+          <i class="ph-fill ph-seal-check"></i>
+          Tabelas AWS: <code>tb_campanhasDoacoes</code> • <code>tb_itensCampanhas</code>
         </div>
-
-        <div class="text-xs text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
-          <strong>Metas de Itens Solicitados:</strong>
-          <ul class="list-disc list-inside mt-1 text-gray-600">
-            <li>Óleo de Soja (900ml) - Meta: 80 unidades</li>
-            <li>Macarrão Espaguete (500g) - Meta: 120 pacotes</li>
-          </ul>
-        </div>
-
-        <!-- Ações de Homologação da Equipe -->
-        <div class="flex flex-wrap justify-end gap-3 pt-2">
-          <button onclick="abrirModalReprovar('Campanha de Óleo e Macarrão Comunitária')" class="bg-red-50 hover:bg-red-100 text-stateError border border-red-200 font-bold px-4 py-2 rounded-xl text-xs btn-touch transition">
-            ✕ Reprovar com Justificativa
-          </button>
-          <button onclick="aprovarCampanha('Campanha de Óleo e Macarrão Comunitária')" class="bg-brandGreen hover:bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl text-xs btn-touch shadow transition">
-            ✓ Aprovar e Publicar na Web
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Modal de Reprovação com Justificativa Obrigatória (US05) -->
-    <div id="modal-reprovacao" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-xl border border-gray-200 space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="font-bold text-base text-stateError">Parecer Técnico de Reprovação</h3>
-          <button onclick="fecharModalReprovar()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">×</button>
-        </div>
-        <p class="text-xs text-gray-600">
-          Conforme a regra US05, é <strong>obrigatório</strong> detalhar a justificativa técnica que será enviada diretamente ao proponente por E-mail e WhatsApp.
+        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
+          <i class="ph ph-megaphone text-3xl"></i>
+          Moderação de Campanhas Solidárias
+        </h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
+          Analise propostas enviadas por doadores parceiros, aprove arrecadações alinhadas ao estoque ou emita parecer técnico justificativo.
         </p>
+      </div>
+      
+      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <button type="button" onclick="carregarTelaModeracao()" class="inline-flex items-center justify-center gap-2 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-5 py-3 rounded-xl transition border border-blue-200 text-sm">
+          <i class="ph-bold ph-arrows-clockwise text-lg"></i> Atualizar Fila AWS
+        </button>
+        <button type="button" onclick="abrirModal('modal-nova-campanha-admin')" class="inline-flex items-center justify-center gap-2 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-6 py-3 rounded-xl transition shadow-sm border border-emerald-200 text-sm">
+          <i class="ph-bold ph-plus-circle text-lg text-emerald-700"></i> Criar Campanha Institucional
+        </button>
+      </div>
+    </div>
 
+    <!-- Resumo de Contadores por Status (Padrão Index Pastel) -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-5">
+      <button type="button" onclick="filtrarStatusCampanha('pendente')" id="tab-status-pendente" class="p-6 rounded-3xl bg-pastelYellow/60 border border-pastelYellow shadow-sm text-left transition hover:shadow-md">
+        <span class="text-xs font-bold uppercase text-yellow-900 block">Aguardando Análise</span>
+        <span id="count-pendente" class="text-3xl font-extrabold text-yellow-900 mt-1 block">0</span>
+      </button>
+
+      <button type="button" onclick="filtrarStatusCampanha('aprovada')" id="tab-status-aprovada" class="p-6 rounded-3xl bg-pastelGreen/60 border border-pastelGreen shadow-sm text-left transition hover:shadow-md">
+        <span class="text-xs font-bold uppercase text-emerald-900 block">Ativas / Aprovadas</span>
+        <span id="count-aprovada" class="text-3xl font-extrabold text-emerald-900 mt-1 block">0</span>
+      </button>
+
+      <button type="button" onclick="filtrarStatusCampanha('reprovada')" id="tab-status-reprovada" class="p-6 rounded-3xl bg-red-50 border border-red-200 shadow-sm text-left transition hover:shadow-md">
+        <span class="text-xs font-bold uppercase text-red-800 block">Reprovadas (Com Parecer)</span>
+        <span id="count-reprovada" class="text-3xl font-extrabold text-red-700 mt-1 block">0</span>
+      </button>
+
+      <button type="button" onclick="filtrarStatusCampanha('TODAS')" id="tab-status-TODAS" class="p-6 rounded-3xl bg-pastelBlue/60 border-2 border-brandBlue shadow-sm text-left transition hover:shadow-md">
+        <span class="text-xs font-bold uppercase text-brandBlue block">Todas as Campanhas</span>
+        <span id="count-todas" class="text-3xl font-extrabold text-brandBlue mt-1 block">0</span>
+      </button>
+    </section>
+
+    <!-- Feedback -->
+    <div id="feedback-moderacao" class="hidden p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between"></div>
+
+    <!-- Lista de Cards de Campanhas -->
+    <section id="lista-campanhas-moderacao" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="lg:col-span-2 bg-white p-10 rounded-3xl border border-slate-200 text-center text-brandBlue font-semibold">
+        <i class="ph ph-spinner-gap text-3xl animate-spin inline-block mb-2"></i><br>
+        Consultando campanhas reais em <code>tb_campanhasDoacoes</code> na AWS...
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL DE REPROVAÇÃO COM PARECER TÉCNICO OBRIGATÓRIO (US05) -->
+  <div id="modal-reprovar-campanha" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-reprovar-campanha')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-red-700">Reprovar Campanha Solidária</h3>
+        <p id="subtitulo-reprovar-campanha" class="text-slate-600 text-xs font-semibold mt-1"></p>
+      </div>
+
+      <form onsubmit="confirmarReprovacaoCampanha(event)" class="space-y-4">
+        <input type="hidden" id="reprovar-id-campanha">
         <div>
-          <label class="block text-xs font-semibold text-gray-700 mb-1">Justificativa / Parecer da Instituição *</label>
-          <textarea id="texto-justificativa" rows="4" placeholder="Ex: Informamos que o espaço de armazenamento atual para este tipo de embalagem está lotado, sugerimos focar em..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:border-stateError focus:outline-none"></textarea>
+          <label for="reprovar-parecer" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Parecer Técnico Justificativo Obrigatório (US05) *</label>
+          <textarea id="reprovar-parecer" required minlength="10" rows="4" placeholder="Explique respeitosamente ao doador o motivo da recusa (ex: alimento fora do cardápio nutricional infantil ou item já suprido)..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-500"></textarea>
+          <p class="text-[11px] font-medium text-slate-500 mt-1">Este parecer será gravado em <code>tb_campanhasDoacoes</code> e exibido ao doador proponente.</p>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2">
-          <button onclick="fecharModalReprovar()" class="px-4 py-2 border border-gray-300 text-gray-600 text-xs rounded-xl hover:bg-gray-100">
-            Cancelar
-          </button>
-          <button onclick="confirmarReprovacao()" class="px-4 py-2 bg-stateError hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow">
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-reprovar-campanha')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-sm transition">
             Confirmar Reprovação
           </button>
         </div>
-      </div>
+      </form>
     </div>
-  </main>
+  </div>
 
-  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
-    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
-  </footer>
+  <!-- MODAL DE NOVA CAMPANHA INSTITUCIONAL -->
+  <div id="modal-nova-campanha-admin" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
 
+      <div class="mb-6">
+        <h3 class="text-2xl font-bold text-brandBlue">Lançar Campanha Institucional</h3>
+        <p class="text-slate-500 text-xs mt-1">Publica uma campanha oficial da Casa da Criança em <code>tb_campanhasDoacoes</code>.</p>
+      </div>
+
+      <form onsubmit="salvarNovaCampanhaInstitucional(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Nome da Campanha *</label>
+          <input type="text" id="nova-camp-titulo" required placeholder="Ex: Campanha Emergencial de Leite Integral e Aveia" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Alimento / Item Principal *</label>
+            <input type="text" id="nova-camp-item" required placeholder="Ex: Leite UHT Integral 1L" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Meta de Arrecadação *</label>
+            <input type="number" id="nova-camp-meta" required min="5" value="100" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Data Prevista de Término *</label>
+          <input type="date" id="nova-camp-data" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Objetivo e Ponto de Coleta *</label>
+          <textarea id="nova-camp-desc" required rows="3" placeholder="Descreva como essa arrecadação apoiará as refeições das crianças..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
+          <button type="submit" class="px-6 py-2.5 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-200 hover:bg-[#b5ead5] font-bold text-sm shadow-sm transition">
+            Publicar na AWS
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../public/js/admin.js"></script>
   <script>
-    function aprovarCampanha(nome) {
-      alert(`Campanha "${nome}" aprovada com sucesso!\n\n• Publicada automaticamente na vitrine da Tela W02.\n• Notificação transacional disparada para a proponente.`);
-      window.location.reload();
+    let campanhasCache = [];
+    let filtroStatusAtual = 'TODAS';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderizarSidebarAdmin('moderacao-campanhas');
+      const dt = new Date();
+      dt.setDate(dt.getDate() + 45);
+      document.getElementById('nova-camp-data').value = dt.toISOString().split('T')[0];
+      carregarTelaModeracao();
+    });
+
+    function mostrarFeedbackModeracao(msg, sucesso = true) {
+      const el = document.getElementById('feedback-moderacao');
+      el.className = `p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between ${
+        sucesso ? 'bg-pastelGreen/70 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-200 text-red-800'
+      }`;
+      el.innerHTML = `<span>${msg}</span><button type="button" onclick="this.parentElement.classList.add('hidden')" class="font-bold underline text-xs">Fechar</button>`;
+      el.classList.remove('hidden');
     }
 
-    function abrirModalReprovar(nome) {
-      document.getElementById('modal-reprovacao').classList.remove('hidden');
+    async function carregarTelaModeracao() {
+      campanhasCache = await carregarCampanhasReconciliadas();
+      atualizarContadoresStatus();
+      renderizarCardsCampanhas();
     }
 
-    function fecharModalReprovar() {
-      document.getElementById('modal-reprovacao').classList.add('hidden');
-      document.getElementById('texto-justificativa').value = '';
+    function atualizarContadoresStatus() {
+      const pendentes = campanhasCache.filter((c) => c.status === 'pendente').length;
+      const aprovadas = campanhasCache.filter((c) => c.status === 'aprovada').length;
+      const reprovadas = campanhasCache.filter((c) => c.status === 'reprovada').length;
+
+      document.getElementById('count-pendente').textContent = pendentes;
+      document.getElementById('count-aprovada').textContent = aprovadas;
+      document.getElementById('count-reprovada').textContent = reprovadas;
+      document.getElementById('count-todas').textContent = campanhasCache.length;
+
+      ['pendente', 'aprovada', 'reprovada', 'TODAS'].forEach((st) => {
+        const btn = document.getElementById(`tab-status-${st}`);
+        if (!btn) return;
+        if (st === filtroStatusAtual) {
+          btn.classList.add('ring-2', 'ring-brandBlue');
+        } else {
+          btn.classList.remove('ring-2', 'ring-brandBlue');
+        }
+      });
     }
 
-    function confirmarReprovacao() {
-      const justificativa = document.getElementById('texto-justificativa').value.trim();
+    function filtrarStatusCampanha(novoStatus) {
+      filtroStatusAtual = novoStatus;
+      atualizarContadoresStatus();
+      renderizarCardsCampanhas();
+    }
 
-      // Regra US05: Validação mandatória de texto explicativo
-      if (!justificativa) {
-        alert('Ação bloqueada: É obrigatório informar o parecer técnico/justificativa para reprovar a campanha.');
+    function renderizarCardsCampanhas() {
+      const container = document.getElementById('lista-campanhas-moderacao');
+      const lista = filtroStatusAtual === 'TODAS'
+        ? campanhasCache
+        : campanhasCache.filter((c) => c.status === filtroStatusAtual);
+
+      if (lista.length === 0) {
+        container.innerHTML = `
+          <div class="lg:col-span-2 bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-2 shadow-sm">
+            <i class="ph ph-folder-open text-4xl text-slate-400"></i>
+            <p class="text-lg font-bold text-brandBlue">Nenhuma campanha encontrada neste filtro.</p>
+            <p class="text-xs text-slate-500">Selecione "Todas as Campanhas" ou crie uma nova campanha institucional.</p>
+          </div>
+        `;
         return;
       }
 
-      alert('Campanha reprovada com registro oficial.\nO parecer técnico foi arquivado e notificado à proponente.');
-      fecharModalReprovar();
-      window.location.reload();
+      container.innerHTML = lista.map((camp) => {
+        const progresso = Math.min(100, Math.round(((camp.arrecadadoUnidades || 0) / Math.max(1, camp.metaUnidades)) * 100));
+        let badgeStatus = '';
+        if (camp.status === 'pendente') {
+          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-pastelYellow text-yellow-900 border border-yellow-300 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-hourglass-medium"></i> Pendente de Análise</span>`;
+        } else if (camp.status === 'aprovada') {
+          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-300 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-check-circle"></i> Aprovada e Ativa</span>`;
+        } else if (camp.status === 'reprovada') {
+          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-red-100 text-red-700 border border-red-200 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-x-circle"></i> Reprovada</span>`;
+        } else {
+          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-archive-box"></i> Encerrada</span>`;
+        }
+
+        const blocoParecer = camp.parecerTecnico ? `
+          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+            <span class="font-bold text-brandBlue block mb-0.5">Parecer Técnico da Administração:</span>
+            <p class="text-slate-600 font-medium">${camp.parecerTecnico}</p>
+          </div>
+        ` : '';
+
+        let botoesAcao = '';
+        if (camp.status === 'pendente') {
+          botoesAcao = `
+            <button type="button" onclick="aprovarCampanhaDireto('${camp.idCampanha}')" class="flex-1 py-2.5 px-4 rounded-xl bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 border border-emerald-200 font-bold text-xs inline-flex items-center justify-center gap-1.5 shadow-sm transition">
+              <i class="ph-bold ph-check-circle"></i> Aprovar e Publicar
+            </button>
+            <button type="button" onclick="abrirModalReprovacao('${camp.idCampanha}')" class="flex-1 py-2.5 px-4 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs inline-flex items-center justify-center gap-1.5 shadow-sm transition">
+              <i class="ph-bold ph-x-circle"></i> Reprovar com Parecer
+            </button>
+          `;
+        } else if (camp.status === 'aprovada') {
+          botoesAcao = `
+            <button type="button" onclick="registrarDoacaoRecebidaCampanha('${camp.idCampanha}')" class="flex-1 py-2 px-3 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs transition">
+              + Registrar Entrega (+10 un)
+            </button>
+            <button type="button" onclick="encerrarCampanhaAtiva('${camp.idCampanha}')" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
+              Encerrar Campanha
+            </button>
+          `;
+        } else {
+          botoesAcao = `
+            <button type="button" onclick="aprovarCampanhaDireto('${camp.idCampanha}')" class="py-2 px-4 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs transition">
+              Reabrir / Aprovar Campanha
+            </button>
+          `;
+        }
+
+        return `
+          <article class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="space-y-3">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">${camp.idCampanha} • Término: ${formatarDataBr(camp.dataLimite)}</span>
+                  <h3 class="text-lg font-bold text-brandBlue mt-0.5 leading-snug">${camp.titulo}</h3>
+                </div>
+                ${badgeStatus}
+              </div>
+
+              <p class="text-xs text-slate-600 font-medium leading-relaxed">${camp.descricao || 'Campanha comunitária de arrecadação de alimentos.'}</p>
+
+              <div class="p-4 rounded-2xl bg-pastelBlue/30 border border-pastelBlue space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-semibold text-slate-700">Item Foco: <strong class="text-brandBlue">${camp.itemFoco}</strong></span>
+                  <span class="font-bold text-brandBlue">${camp.arrecadadoUnidades || 0} / ${camp.metaUnidades} un (${progresso}%)</span>
+                </div>
+                <div class="w-full h-2 bg-white rounded-full overflow-hidden border border-blue-100">
+                  <div class="h-full bg-brandBlue rounded-full" style="width: ${progresso}%"></div>
+                </div>
+                <p class="text-[11px] font-medium text-slate-500">Proponente: <strong class="text-slate-700">${camp.criadorNome}</strong> (${camp.criadorEmail})</p>
+              </div>
+
+              ${blocoParecer}
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+              ${botoesAcao}
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    async function aprovarCampanhaDireto(idCampanha) {
+      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
+      if (!camp) return;
+      camp.status = 'aprovada';
+      camp.status_campanha = 'Aprovada';
+      camp.parecerTecnico = 'Aprovada pela Administração da Casa da Criança (casadacrianca@adm) por estar alinhada às necessidades nutricionais do estoque.';
+      camp.justificativa_parecer_tecnico = camp.parecerTecnico;
+      await salvarOuModerarCampanhaAdmin(camp, false);
+      mostrarFeedbackModeracao(`Campanha "${camp.titulo}" aprovada e sincronizada com tb_campanhasDoacoes na AWS!`, true);
+      await carregarTelaModeracao();
+    }
+
+    function abrirModalReprovacao(idCampanha) {
+      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
+      if (!camp) return;
+      document.getElementById('reprovar-id-campanha').value = camp.idCampanha;
+      document.getElementById('subtitulo-reprovar-campanha').textContent = camp.titulo;
+      document.getElementById('reprovar-parecer').value = '';
+      abrirModal('modal-reprovar-campanha');
+    }
+
+    async function confirmarReprovacaoCampanha(event) {
+      event.preventDefault();
+      const idCampanha = document.getElementById('reprovar-id-campanha').value;
+      const parecer = document.getElementById('reprovar-parecer').value.trim();
+      if (parecer.length < 10) {
+        alert('Informe um parecer técnico detalhado com pelo menos 10 caracteres.');
+        return;
+      }
+      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
+      if (!camp) return;
+
+      camp.status = 'reprovada';
+      camp.status_campanha = 'Reprovada';
+      camp.parecerTecnico = parecer;
+      camp.justificativa_parecer_tecnico = parecer;
+      await salvarOuModerarCampanhaAdmin(camp, false);
+      fecharModal('modal-reprovar-campanha');
+      mostrarFeedbackModeracao(`Campanha "${camp.titulo}" reprovada com parecer técnico gravado na AWS.`, true);
+      await carregarTelaModeracao();
+    }
+
+    async function registrarDoacaoRecebidaCampanha(idCampanha) {
+      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
+      if (!camp) return;
+      camp.arrecadadoUnidades = Math.min(camp.metaUnidades, Number(camp.arrecadadoUnidades || 0) + 10);
+      if (camp.arrecadadoUnidades >= camp.metaUnidades) {
+        camp.status = 'encerrada';
+        camp.status_campanha = 'Encerrada';
+        camp.parecerTecnico = 'Meta de arrecadação 100% atingida! Muito obrigado a todos os doadores.';
+        camp.justificativa_parecer_tecnico = camp.parecerTecnico;
+      }
+      await salvarOuModerarCampanhaAdmin(camp, false);
+      mostrarFeedbackModeracao(`Entrega registrada na campanha "${camp.titulo}"!`, true);
+      await carregarTelaModeracao();
+    }
+
+    async function encerrarCampanhaAtiva(idCampanha) {
+      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
+      if (!camp) return;
+      camp.status = 'encerrada';
+      camp.status_campanha = 'Encerrada';
+      camp.parecerTecnico = 'Campanha encerrada pela administração após fechamento do ciclo de arrecadação.';
+      camp.justificativa_parecer_tecnico = camp.parecerTecnico;
+      await salvarOuModerarCampanhaAdmin(camp, false);
+      mostrarFeedbackModeracao(`Campanha "${camp.titulo}" encerrada com sucesso.`, true);
+      await carregarTelaModeracao();
+    }
+
+    async function salvarNovaCampanhaInstitucional(event) {
+      event.preventDefault();
+      const nova = {
+        id_campanha_doacao: `camp_adm_${Math.floor(1000 + Math.random() * 9000)}`,
+        nome_campanha: document.getElementById('nova-camp-titulo').value.trim(),
+        itemFoco: document.getElementById('nova-camp-item').value.trim(),
+        metaUnidades: Number(document.getElementById('nova-camp-meta').value),
+        arrecadadoUnidades: 0,
+        data_inicio_campanha: new Date().toISOString().split('T')[0],
+        data_termino_campanha: document.getElementById('nova-camp-data').value,
+        objetivo_descricao_campanha: document.getElementById('nova-camp-desc').value.trim(),
+        nome_proponente: 'Administração Casa da Criança',
+        id_doador_responsavel: 'casadacrianca@adm',
+        status_campanha: 'Aprovada',
+        justificativa_parecer_tecnico: 'Campanha institucional oficial criada e homologada pela Administração.'
+      };
+
+      await salvarOuModerarCampanhaAdmin(nova, true);
+      fecharModal('modal-nova-campanha-admin');
+      mostrarFeedbackModeracao(`Campanha institucional "${nova.nome_campanha}" publicada em tb_campanhasDoacoes na AWS!`, true);
+      await carregarTelaModeracao();
     }
   </script>
 </body>
