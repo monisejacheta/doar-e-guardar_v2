@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Como e Onde Doar | Casa da Criança</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
+            brandBlue: '#1E3A8A',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="../../public/css/styles.css">
+  <script src="../../public/js/accessibility.js" defer></script>
+  <script src="../../public/js/estoque-publico.js" defer></script>
+</head>
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
+
+  <!-- Navbar Lateral Fixa -->
+  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
+    <div class="p-6 text-center border-b border-white/60 bg-white/30">
+      <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm overflow-hidden border-2 border-white">
+        <img id="avatar-visitante-doar" src="" alt="Avatar Público" class="w-full h-full object-cover">
+      </div>
+      <h2 class="text-lg font-bold text-brandBlue">Visitante</h2>
+      <div class="inline-flex items-center gap-1 mt-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+        <i class="ph ph-shield-check"></i>
+        <span>Acesso Público</span>
+      </div>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+      <a href="../../index.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-house text-xl"></i> Início
+      </a>
+      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-book-open text-xl"></i> Nossa História
+      </a>
+      <a href="#" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+        <i class="ph ph-map-pin text-xl"></i> Como e Onde Doar
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
+      <a href="../../index.html#modal-login" class="flex items-center justify-center gap-2 w-full py-3 bg-brandBlue rounded-xl text-white font-semibold hover:bg-blue-900 transition shadow-sm">
+        <i class="ph ph-sign-in text-xl"></i> Entrar / Cadastrar
+      </a>
+    </div>
+  </aside>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto relative scroll-smooth bg-transparent">
+    <!-- Background Fixo (Fixed na tela, independente do scroll) -->
+    <div class="fixed inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('../../public/assets/backgroundDoacao.jpg'); pointer-events: none;"></div>
+    
+    <div class="relative z-10 p-6 lg:p-12">
+      <div class="max-w-5xl mx-auto space-y-8 bg-white/80 p-8 rounded-[2.5rem] backdrop-blur-md shadow-sm">
+        
+        <!-- Cabeçalho da Página -->
+        <div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-brandBlue mb-2">
+            Como e Onde Doar
+          </h1>
+          <p class="text-sm sm:text-base text-slate-800 font-medium">
+            Descubra como entregar sua contribuição presencialmente e conheça os itens que mais precisamos hoje.
+          </p>
+        </div>
+
+        <!-- Banner de Destaque Acolhedor (Incentivo à Doação) -->
+        <div class="bg-pastelGreen/90 border border-pastelGreen p-6 rounded-3xl flex items-start gap-4 shadow-sm">
+          <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-emerald-700 shadow-sm flex-shrink-0">
+            <i class="ph-fill ph-heart text-2xl"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-emerald-900 text-lg mb-1">Toda doação faz a diferença!</h2>
+            <p class="text-sm text-slate-800 leading-relaxed font-medium">
+              Os alimentos indicados como críticos abaixo são sugestões baseadas no saldo atual do nosso estoque. <strong class="text-emerald-900">Qualquer alimento, leite ou mantimento em boas condições de consumo é bem-vindo e aceito com imensa gratidão.</strong>
+            </p>
+          </div>
+        </div>
+
+        <!-- Seção Expansível: Itens Críticos (DynamoDB AWS) -->
+        <div class="bg-white/90 border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+          <button onclick="toggleItensCriticos()" class="w-full flex items-center justify-between p-6 hover:bg-slate-50 transition text-left">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 bg-pastelYellow/70 text-yellow-800 rounded-xl flex items-center justify-center">
+                <i class="ph ph-package text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-brandBlue">Alimentos com Estoque Baixo (Urgentes)</h3>
+                <p class="text-xs text-slate-600 font-medium">Clique para ver os itens monitorados em tempo real na nossa base de dados</p>
+              </div>
+            </div>
+            <i id="icone-expandir" class="ph ph-caret-down text-2xl text-slate-500 transition-transform duration-300"></i>
+          </button>
+
+          <div id="container-itens-criticos" class="hidden border-t border-slate-200 bg-slate-50/80">
+            <div class="p-6">
+              <div id="loading-criticos" class="flex flex-col items-center justify-center py-8 text-brandBlue">
+                <i class="ph ph-spinner-gap text-3xl animate-spin mb-3"></i>
+                <p class="text-sm font-semibold">Buscando informações do estoque na nuvem...</p>
+              </div>
+              
+              <ul id="lista-itens-criticos" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Itens serão injetados aqui -->
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Contatos, Horários e PIX -->
+          <div class="bg-pastelBlue/90 border border-pastelBlue p-8 rounded-3xl shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-white text-brandBlue rounded-xl flex items-center justify-center shadow-sm">
+                  <i class="ph ph-phone-call text-xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-brandBlue">Fale Conosco</h3>
+              </div>
+              
+              <div class="space-y-5 text-sm font-medium text-slate-800">
+                <div class="flex items-center gap-4">
+                  <i class="ph-fill ph-whatsapp-logo text-2xl text-emerald-700"></i>
+                  <span>(19) 98765-4321 <span class="text-xs text-slate-600 ml-1">(WhatsApp)</span></span>
+                </div>
+                <div class="flex items-center gap-4">
+                  <i class="ph-fill ph-phone text-2xl text-slate-600"></i>
+                  <span>(19) 3863-0000</span>
+                </div>
+                <div class="flex items-center gap-4">
+                  <i class="ph-fill ph-envelope-simple text-2xl text-slate-600"></i>
+                  <span>doacoes@casadacrianca.org.br</span>
+                </div>
+                <div class="flex items-center gap-4">
+                  <i class="ph-fill ph-clock text-2xl text-slate-600"></i>
+                  <span>Segunda a Sexta, das 07h30 às 17h00</span>
+                </div>
+              </div>
+
+              <!-- Nova Seção: Doações Financeiras -->
+              <div class="mt-8 p-5 bg-white rounded-2xl border border-blue-200 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                  <i class="ph-fill ph-currency-circle-dollar text-xl text-brandBlue"></i>
+                  <h4 class="text-sm font-bold text-brandBlue">Doações Financeiras</h4>
+                </div>
+                
+                <div class="space-y-3">
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs font-semibold text-slate-500">Chave PIX (CNPJ)</span>
+                    <div class="flex items-center justify-between bg-slate-50 p-2 rounded-lg border border-slate-200">
+                      <code class="text-sm font-bold text-slate-800">51.123.456/0001-78</code>
+                      <button onclick="navigator.clipboard.writeText('51.123.456/0001-78'); alert('Chave PIX copiada!');" class="text-xs bg-brandBlue text-white px-3 py-1.5 rounded-md font-semibold hover:bg-blue-900 transition">Copiar</button>
+                    </div>
+                  </div>
+                  
+                  <div class="flex flex-col gap-1">
+                    <span class="text-xs font-semibold text-slate-500">Conta Bancária (Banco do Brasil)</span>
+                    <div class="text-sm font-medium text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                      <p>Agência: <span class="font-bold">0000-0</span></p>
+                      <p>Conta Corrente: <span class="font-bold">00000-0</span></p>
+                      <p>Favorecido: <span class="font-bold">Casa da Criança</span></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Localização Física (Mapa Integrado) -->
+          <div class="bg-white/90 border border-slate-200 p-6 rounded-3xl shadow-sm flex flex-col">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 bg-pastelBlue text-brandBlue rounded-xl flex items-center justify-center">
+                <i class="ph-fill ph-map-pin text-xl"></i>
+              </div>
+              <div>
+                <h3 class="text-lg font-bold text-brandBlue">Onde Entregar</h3>
+                <p class="text-xs text-slate-600 font-medium">Rua XV de Novembro, 1000 - Centro, Itapira - SP, 13970-000</p>
+              </div>
+            </div>
+            
+            <div class="w-full flex-grow min-h-[300px] rounded-2xl overflow-hidden border border-slate-200">
+              <iframe
+                title="Localização da Casa da Criança no Google Maps"
+                width="100%"
+                height="100%"
+                style="border:0"
+                loading="lazy"
+                allowfullscreen
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d14742.66228308477!2d-46.82916!3d-22.43472!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x94c8e76c245a4a99%3A0x6b77242e88a38!2sItapira%20-%20SP!5e0!3m2!1spt-BR!2sbr!4v1697800000000">
+              </iframe>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Inicialização da Randomização de Avatar para a página doar
+    document.addEventListener("DOMContentLoaded", () => {
+      const randomID = Math.floor(Math.random() * 9) + 1; 
+      const formattedID = "0" + randomID; 
+      const avatarElement = document.getElementById('avatar-visitante-doar');
+      
+      if (avatarElement) {
+        avatarElement.src = `../../public/assets/avatarPublico${formattedID}.png`;
+      }
+    });
+  </script>
+</body>
+</html>

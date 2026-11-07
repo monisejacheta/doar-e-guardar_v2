@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Locais de Armazenamento | Casa da Criança</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#1E3A8A',
+            brandGreen: '#10B981',
+            accentAmber: '#F59E0B',
+            stateError: '#DC2626',
+            neutralDark: '#111827',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../../public/css/styles.css">
+  <script src="../../public/js/accessibility.js" defer></script>
+</head>
+<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+
+  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
+        🏠
+      </div>
+      <div>
+        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
+        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 text-sm font-semibold">
+      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
+      <a href="./moderacao-campanhas.html" class="hover:text-green-300">Moderar Campanhas</a>
+      <a href="./locais-armazenamento.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Armazenamento</a>
+      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
+        🌓 Contraste
+      </button>
+      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
+        Sair
+      </a>
+    </div>
+  </nav>
+
+  <main class="flex-grow max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Mapeamento Físico de Armazenamento</h1>
+        <p class="text-xs sm:text-sm text-gray-600 mt-1">
+          Cadastro de armários, geladeiras, prateleiras e gavetas (sem estrutura de ruas ou corredores).
+        </p>
+      </div>
+      <button onclick="document.getElementById('form-novo-local').classList.toggle('hidden')" class="bg-brandGreen hover:bg-emerald-600 text-white font-bold px-4 py-2.5 rounded-xl text-xs sm:text-sm btn-touch shadow transition">
+        + Adicionar Novo Compartimento
+      </button>
+    </div>
+
+    <!-- Formulário de Cadastro de Compartimento (US06) -->
+    <div id="form-novo-local" class="hidden bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+      <h2 class="text-base font-bold text-brandBlue border-b pb-2">Cadastrar Novo Compartimento Físico</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Nome do Compartimento *</label>
+          <input type="text" id="nome-local-input" placeholder="Ex: Armário C, Geladeira 02" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Tipo de Compartimento *</label>
+          <select id="tipo-local-input" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+            <option value="armário">Armário</option>
+            <option value="geladeira">Geladeira</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Sublocal (Divisória) *</label>
+          <input type="text" id="sublocal-input" placeholder="Ex: Prateleira 1 e 2, Gaveta de Laticínios" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-gray-700 mb-1">Ambiente na Casa da Criança *</label>
+          <input type="text" id="ambiente-input" placeholder="Ex: Despensa Central, Cozinha Comunitária" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-brandBlue focus:outline-none">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="document.getElementById('form-novo-local').classList.add('hidden')" class="px-4 py-2 border border-gray-300 text-gray-600 text-xs rounded-xl">Cancelar</button>
+        <button onclick="salvarLocal()" class="px-6 py-2 bg-brandBlue hover:bg-blue-900 text-white font-bold text-xs rounded-xl shadow">Salvar Local</button>
+      </div>
+    </div>
+
+    <!-- Tabela de Compartimentos Cadastrados e Ocupação -->
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-gray-100 text-xs font-bold text-gray-700 uppercase border-b border-gray-200">
+          <tr>
+            <th class="p-4">Identificação</th>
+            <th class="p-4">Tipo</th>
+            <th class="p-4">Sublocais / Prateleiras</th>
+            <th class="p-4">Ambiente</th>
+            <th class="p-4">Ocupação</th>
+            <th class="p-4 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200 text-xs">
+          <tr class="hover:bg-gray-50">
+            <td class="p-4 font-bold text-gray-900">Armário A</td>
+            <td class="p-4"><span class="bg-blue-100 text-brandBlue font-bold px-2 py-0.5 rounded">ARMÁRIO</span></td>
+            <td class="p-4">Prateleira 1 e 2</td>
+            <td class="p-4">Despensa Central</td>
+            <td class="p-4 font-bold text-amber-700">14 lotes ativos</td>
+            <td class="p-4 text-center">
+              <button onclick="tentarExcluirLocal('Armário A', 14)" class="text-stateError hover:text-red-800 font-bold">
+                Excluir
+              </button>
+            </td>
+          </tr>
+
+          <tr class="hover:bg-gray-50">
+            <td class="p-4 font-bold text-gray-900">Geladeira 1</td>
+            <td class="p-4"><span class="bg-cyan-100 text-cyan-800 font-bold px-2 py-0.5 rounded">GELADEIRA</span></td>
+            <td class="p-4">Prateleiras Centrais e Gaveta</td>
+            <td class="p-4">Cozinha Comunitária</td>
+            <td class="p-4 font-bold text-amber-700">5 lotes ativos</td>
+            <td class="p-4 text-center">
+              <button onclick="tentarExcluirLocal('Geladeira 1', 5)" class="text-stateError hover:text-red-800 font-bold">
+                Excluir
+              </button>
+            </td>
+          </tr>
+
+          <tr class="hover:bg-gray-50">
+            <td class="p-4 font-bold text-gray-900">Armário C (Reserva)</td>
+            <td class="p-4"><span class="bg-blue-100 text-brandBlue font-bold px-2 py-0.5 rounded">ARMÁRIO</span></td>
+            <td class="p-4">Gaveta Inferior</td>
+            <td class="p-4">Despensa Central</td>
+            <td class="p-4 text-gray-400 font-semibold">Vazio (0 lotes)</td>
+            <td class="p-4 text-center">
+              <button onclick="tentarExcluirLocal('Armário C (Reserva)', 0)" class="text-stateError hover:text-red-800 font-bold">
+                Excluir
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
+    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
+  </footer>
+
+  <script>
+    function tentarExcluirLocal(nome, lotesVinculados) {
+      // Regra US06: Bloquear exclusão se existirem lotes alocados
+      if (lotesVinculados > 0) {
+        alert(`Ação Bloqueada:\nNão é possível excluir o compartimento "${nome}" porque existem ${lotesVinculados} lotes ativos guardados nele.\nTransfira os lotes no inventário antes de remover o local.`);
+        return;
+      }
+
+      if (confirm(`Deseja realmente remover o compartimento "${nome}"?`)) {
+        alert(`Compartimento "${nome}" excluído com sucesso.`);
+        window.location.reload();
+      }
+    }
+
+    function salvarLocal() {
+      const nome = document.getElementById('nome-local-input').value.trim();
+      const sub = document.getElementById('sublocal-input').value.trim();
+      const amb = document.getElementById('ambiente-input').value.trim();
+
+      if (!nome || !sub || !amb) {
+        alert('Preencha todos os campos do compartimento.');
+        return;
+      }
+
+      alert(`Compartimento "${nome}" cadastrado com sucesso.`);
+      document.getElementById('form-novo-local').classList.add('hidden');
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>

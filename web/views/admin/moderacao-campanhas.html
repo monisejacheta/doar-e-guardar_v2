@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moderação de Campanhas | Casa da Criança</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandBlue: '#1E3A8A',
+            brandGreen: '#10B981',
+            accentAmber: '#F59E0B',
+            stateError: '#DC2626',
+            neutralDark: '#111827',
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../../public/css/styles.css">
+  <script src="../../public/js/accessibility.js" defer></script>
+</head>
+<body class="bg-gray-50 text-neutralDark flex flex-col min-h-screen">
+
+  <nav class="bg-brandBlue text-white py-3.5 px-4 sm:px-8 flex justify-between items-center shadow-md">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 bg-white text-brandBlue rounded-lg flex items-center justify-center font-bold text-lg shadow">
+        🏠
+      </div>
+      <div>
+        <span class="text-lg font-bold block leading-tight">Doar&Guardar</span>
+        <span class="text-xs text-blue-200">Painel dos Funcionários</span>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-4 text-sm font-semibold">
+      <a href="./dashboard.html" class="hover:text-green-300">Dashboard</a>
+      <a href="./moderacao-campanhas.html" class="text-green-300 border-b-2 border-green-300 pb-0.5">Moderar Campanhas</a>
+      <a href="./locais-armazenamento.html" class="hover:text-green-300">Armazenamento</a>
+      <button onclick="alternarAltoContraste()" class="px-2 py-1 bg-white/10 hover:bg-white/20 border border-white/30 rounded text-xs">
+        🌓 Contraste
+      </button>
+      <a href="../../index.html" class="border border-white/40 px-3 py-1.5 rounded-lg hover:bg-white hover:text-brandBlue text-xs transition">
+        Sair
+      </a>
+    </div>
+  </nav>
+
+  <main class="flex-grow max-w-5xl mx-auto p-4 sm:p-8 space-y-6">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brandBlue">Moderação de Campanhas Comunitárias</h1>
+      <p class="text-xs sm:text-sm text-gray-600 mt-1">
+        Avalie a viabilidade física e operacional das arrecadações propostas por doadores da sociedade civil.
+      </p>
+    </div>
+
+    <!-- Fila de Campanhas Pendentes de Análise (US05) -->
+    <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h2 class="text-base font-bold text-brandBlue">Fila de Análise Pendente (1 proposta aguardando)</h2>
+        <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
+          Status: Pendente de Análise
+        </span>
+      </div>
+
+      <div class="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-3">
+        <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-2">
+          <div>
+            <h3 class="font-bold text-base text-gray-800">Campanha de Óleo e Macarrão Comunitária</h3>
+            <p class="text-xs text-gray-600 mt-0.5">
+              Proponente: <strong>Monise Jacheta</strong> • Submetida em: 18/10/2026
+            </p>
+            <p class="text-xs text-gray-600">
+              Vigência proposta: <strong>25/10/2026 até 15/11/2026</strong> • Ponto de Coleta: Igreja Matriz
+            </p>
+          </div>
+        </div>
+
+        <div class="text-xs text-gray-700 bg-white p-3 rounded-lg border border-gray-200">
+          <strong>Metas de Itens Solicitados:</strong>
+          <ul class="list-disc list-inside mt-1 text-gray-600">
+            <li>Óleo de Soja (900ml) - Meta: 80 unidades</li>
+            <li>Macarrão Espaguete (500g) - Meta: 120 pacotes</li>
+          </ul>
+        </div>
+
+        <!-- Ações de Homologação da Equipe -->
+        <div class="flex flex-wrap justify-end gap-3 pt-2">
+          <button onclick="abrirModalReprovar('Campanha de Óleo e Macarrão Comunitária')" class="bg-red-50 hover:bg-red-100 text-stateError border border-red-200 font-bold px-4 py-2 rounded-xl text-xs btn-touch transition">
+            ✕ Reprovar com Justificativa
+          </button>
+          <button onclick="aprovarCampanha('Campanha de Óleo e Macarrão Comunitária')" class="bg-brandGreen hover:bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl text-xs btn-touch shadow transition">
+            ✓ Aprovar e Publicar na Web
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Reprovação com Justificativa Obrigatória (US05) -->
+    <div id="modal-reprovacao" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div class="bg-white max-w-md w-full p-6 rounded-2xl shadow-xl border border-gray-200 space-y-4">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-base text-stateError">Parecer Técnico de Reprovação</h3>
+          <button onclick="fecharModalReprovar()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">×</button>
+        </div>
+        <p class="text-xs text-gray-600">
+          Conforme a regra US05, é <strong>obrigatório</strong> detalhar a justificativa técnica que será enviada diretamente ao proponente por E-mail e WhatsApp.
+        </p>
+
+        <div>
+          <label class="block text-xs font-semibold text-gray-700 mb-1">Justificativa / Parecer da Instituição *</label>
+          <textarea id="texto-justificativa" rows="4" placeholder="Ex: Informamos que o espaço de armazenamento atual para este tipo de embalagem está lotado, sugerimos focar em..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs focus:border-stateError focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button onclick="fecharModalReprovar()" class="px-4 py-2 border border-gray-300 text-gray-600 text-xs rounded-xl hover:bg-gray-100">
+            Cancelar
+          </button>
+          <button onclick="confirmarReprovacao()" class="px-4 py-2 bg-stateError hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow">
+            Confirmar Reprovação
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="bg-neutralDark text-gray-400 py-6 px-4 text-xs text-center border-t border-gray-800">
+    <p>© 2026 Casa da Criança - Sistema Doar&Guardar 2.0</p>
+  </footer>
+
+  <script>
+    function aprovarCampanha(nome) {
+      alert(`Campanha "${nome}" aprovada com sucesso!\n\n• Publicada automaticamente na vitrine da Tela W02.\n• Notificação transacional disparada para a proponente.`);
+      window.location.reload();
+    }
+
+    function abrirModalReprovar(nome) {
+      document.getElementById('modal-reprovacao').classList.remove('hidden');
+    }
+
+    function fecharModalReprovar() {
+      document.getElementById('modal-reprovacao').classList.add('hidden');
+      document.getElementById('texto-justificativa').value = '';
+    }
+
+    function confirmarReprovacao() {
+      const justificativa = document.getElementById('texto-justificativa').value.trim();
+
+      // Regra US05: Validação mandatória de texto explicativo
+      if (!justificativa) {
+        alert('Ação bloqueada: É obrigatório informar o parecer técnico/justificativa para reprovar a campanha.');
+        return;
+      }
+
+      alert('Campanha reprovada com registro oficial.\nO parecer técnico foi arquivado e notificado à proponente.');
+      fecharModalReprovar();
+      window.location.reload();
+    }
+  </script>
+</body>
+</html>

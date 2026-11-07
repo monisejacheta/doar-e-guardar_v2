@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Casa da Criança | Bem-vindo</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
+            brandBlue: '#1E3A8A',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link rel="stylesheet" href="./public/css/styles.css">
+  <script src="./public/js/accessibility.js" defer></script>
+  <script src="./public/js/carousel.js" defer></script>
+</head>
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
+
+  <!-- Navbar Lateral Fixa -->
+  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
+    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
+      <!-- Botão de Logout no canto superior direito (oculto por padrão) -->
+      <button id="btn-logout-corner" class="hidden absolute top-4 right-4 text-slate-500 hover:text-red-500 transition" aria-label="Sair da conta" title="Sair da conta">
+         <i class="ph ph-sign-out text-2xl"></i>
+      </button>
+
+      <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm overflow-hidden border-2 border-white">
+        <img id="avatar-visitante" src="" alt="Avatar Público" class="w-full h-full object-cover">
+      </div>
+      <h2 class="text-lg font-bold text-brandBlue" id="nome-usuario">Visitante</h2>
+      <div id="nivel-acesso" class="inline-flex items-center gap-1 mt-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">
+        <i class="ph ph-shield-check"></i>
+        <span>Acesso Público</span>
+      </div>
+    </div>
+
+    <!-- NAVEGAÇÃO PÚBLICA (Padrão) -->
+    <nav id="menu-publico" class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+      <a href="#" onclick="irParaSlide(0)" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+        <i class="ph ph-house text-xl"></i> Início
+      </a>
+      <a href="#" onclick="irParaSlide(1)" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-book-open text-xl"></i> Nossa História
+      </a>
+      <a href="./views/public/como-onde-doar.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-map-pin text-xl"></i> Como e Onde Doar
+      </a>
+    </nav>
+
+    <!-- NAVEGAÇÃO DOADOR (Oculta até o login) -->
+    <nav id="menu-doador" class="hidden flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+      <a href="#" onclick="irParaSlide(0)" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+        <i class="ph ph-house text-xl"></i> Início
+      </a>
+      <!-- Links adicionados conforme solicitação -->
+      <a href="./views/donor/dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-squares-four text-xl"></i> Dashboard Doador
+      </a>
+      <a href="./views/public/como-onde-doar.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-map-pin text-xl"></i> Como e Onde Doar
+      </a>
+      <a href="./views/donor/campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-megaphone text-xl"></i> Campanhas Ativas
+      </a>
+      <a href="./views/donor/minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
+      </a>
+      <a href="./views/donor/estoque.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-package text-xl"></i> Estoque Atual
+      </a>
+      <a href="./views/donor/configuracoes.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-user-gear text-xl"></i> Meu Perfil
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
+      <button onclick="abrirModal('modal-configuracoes')" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
+        <i class="ph ph-gear text-xl"></i> Configurações
+      </button>
+
+      <!-- Botões de Login (Visitante) -->
+      <div id="container-botoes-login">
+        <button onclick="abrirModal('modal-login')" class="flex items-center justify-center gap-2 w-full py-3 bg-brandBlue rounded-xl text-white font-semibold hover:bg-blue-900 transition shadow-sm">
+          <i class="ph ph-sign-in text-xl"></i> Entrar / Cadastrar
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Área Principal (Carrossel Tela Cheia) -->
+  <main class="flex-1 relative overflow-hidden bg-slate-50">
+    <div id="carousel-container" class="flex w-full h-full transition-transform duration-500 ease-in-out">
+      
+      <!-- SLIDE 1: Boas-vindas -->
+      <section class="min-w-full h-full flex flex-col items-center justify-center p-8 text-center relative">
+        <!-- Background Isolado com 50% de Opacidade e Sem Blur -->
+        <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundCarrossel01.jpg');"></div>
+        
+        <div class="max-w-3xl z-10 bg-white/60 p-8 rounded-3xl backdrop-blur-sm shadow-sm">
+          <i class="ph ph-package text-6xl text-brandBlue mb-4"></i>
+          <h1 class="text-4xl lg:text-6xl font-extrabold text-brandBlue mb-6 leading-tight">
+            Nutrindo o futuro das nossas crianças.
+          </h1>
+          <p class="text-lg lg:text-xl text-slate-800 mb-10 leading-relaxed max-w-2xl mx-auto font-medium">
+            Cada pequeno gesto nos ajuda a construir uma história mais feliz. Aqui na Casa da Criança, transformamos carinho em refeições diárias e muito acolhimento.
+          </p>
+          <a href="./views/public/como-onde-doar.html" class="inline-flex items-center gap-3 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-10 py-4 rounded-2xl text-xl shadow-sm transition-transform transform hover:-translate-y-1 border border-emerald-200">
+            <i class="ph-fill ph-heart text-2xl text-emerald-700"></i> Quero Doar
+          </a>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Institucional -->
+      <section class="min-w-full h-full overflow-y-auto p-8 lg:p-16 flex items-center relative">
+        <!-- Background Isolado com 50% de Opacidade e Sem Blur -->
+        <div class="absolute inset-0 bg-cover bg-center opacity-50 z-0" style="background-image: url('./public/assets/backgroundCarrossel02.jpg');"></div>
+        
+        <div class="max-w-5xl mx-auto w-full z-10 bg-white/70 p-10 rounded-[2.5rem] backdrop-blur-md shadow-sm">
+          <div class="text-center mb-12">
+            <i class="ph ph-clock-counter-clockwise text-4xl text-brandBlue mb-4"></i>
+            <h3 class="text-3xl font-bold text-brandBlue mb-4">A Nossa História</h3>
+            <p class="text-lg text-slate-800 font-medium leading-relaxed max-w-3xl mx-auto">
+              Fundada em julho de 1945 pela Sra. Celencina Caldas Sarkis com a linda proposta de acolher crianças carentes, a Casa da Criança acompanhou as mudanças da sociedade ao longo das décadas. Hoje, investimos constantemente em novas metodologias para atender com excelência crianças de 06 a 14 anos.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-pastelBlue/90 p-8 rounded-3xl border border-pastelBlue text-center shadow-sm">
+              <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-brandBlue shadow-sm"><i class="ph ph-target text-2xl"></i></div>
+              <h4 class="text-xl font-bold text-brandBlue mb-3">Nossa Missão</h4>
+              <p class="text-slate-700 font-medium">Educar crianças através da moralidade, para que se tornem cidadãos plenos e conscientes.</p>
+            </div>
+
+            <div class="bg-pastelGreen/90 p-8 rounded-3xl border border-pastelGreen text-center shadow-sm">
+              <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-700 shadow-sm"><i class="ph ph-binoculars text-2xl"></i></div>
+              <h4 class="text-xl font-bold text-emerald-900 mb-3">Nossa Visão</h4>
+              <p class="text-slate-700 font-medium">Formar pessoas críticas, autônomas e perfeitamente capazes de transformar a sociedade.</p>
+            </div>
+
+            <div class="bg-pastelYellow/90 p-8 rounded-3xl border border-pastelYellow text-center shadow-sm">
+              <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-yellow-700 shadow-sm"><i class="ph ph-hands-clapping text-2xl"></i></div>
+              <h4 class="text-xl font-bold text-yellow-900 mb-3">Nossos Valores</h4>
+              <p class="text-slate-700 font-medium">Acolhimento com carinho, responsabilidade social, transparência e respeito pelo desenvolvimento.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Controles do Carrossel -->
+    <div class="absolute bottom-10 left-0 right-0 flex justify-center gap-6 z-10">
+      <button onclick="moverSlide(-1)" class="w-12 h-12 bg-white text-brandBlue rounded-full shadow-md flex items-center justify-center hover:bg-blue-50 transition border border-blue-100">
+        <i class="ph ph-caret-left text-2xl"></i>
+      </button>
+      <button onclick="moverSlide(1)" class="w-12 h-12 bg-white text-brandBlue rounded-full shadow-md flex items-center justify-center hover:bg-blue-50 transition border border-blue-100">
+        <i class="ph ph-caret-right text-2xl"></i>
+      </button>
+    </div>
+  </main>
+
+  <!-- MODAL DE LOGIN -->
+  <div id="modal-login" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button onclick="fecharModal('modal-login')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+      <div class="text-center mb-6">
+        <i class="ph ph-door-open text-4xl text-brandBlue mb-2"></i>
+        <h3 class="text-2xl font-bold text-brandBlue">Bem-vindo de volta!</h3>
+        <p class="text-slate-500 mt-2">Acesse para acompanhar campanhas e organizar o estoque da instituição.</p>
+      </div>
+      <button onclick="window.realizarLoginGoogle()" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl transition mb-4">
+        <i class="ph ph-google-logo text-xl text-red-500"></i> Continuar com o Google
+      </button>
+      <div class="flex items-center gap-4 my-4">
+        <hr class="flex-1 border-slate-200">
+        <span class="text-slate-400 text-sm">ou com e-mail</span>
+        <hr class="flex-1 border-slate-200">
+      </div>
+      <form onsubmit="window.realizarLoginCredenciais(event)">
+        <div class="mb-4">
+          <label class="block text-sm font-semibold text-slate-700 mb-1">E-mail</label>
+          <input id="login-email" type="email" required placeholder="seuemail@exemplo.com" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-slate-700 mb-1">Senha</label>
+          <input id="login-senha" type="password" required placeholder="••••••••" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+        </div>
+        <button type="submit" class="w-full bg-brandBlue text-white font-bold py-3 rounded-xl hover:bg-blue-900 transition">
+          Entrar na Plataforma
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE CONFIGURAÇÕES -->
+  <div id="modal-configuracoes" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-sm w-full p-8 relative transform scale-95 transition-transform duration-300">
+      <button onclick="fecharModal('modal-configuracoes')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-xl"></i>
+      </button>
+      <div class="text-center mb-6">
+        <i class="ph ph-sliders text-4xl text-brandBlue mb-2"></i>
+        <h3 class="text-2xl font-bold text-brandBlue">Configurações</h3>
+        <p class="text-slate-500 mt-2">Ajuste a visualização do site para a sua necessidade.</p>
+      </div>
+      <div class="space-y-4">
+        <div class="p-4 bg-pastelBlue/30 rounded-2xl border border-pastelBlue">
+          <p class="text-sm font-bold text-brandBlue mb-3">Recursos de Acessibilidade</p>
+          <button onclick="alternarAltoContraste()" class="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-blue-900 hover:bg-blue-50 transition mb-2 shadow-sm border border-slate-100">
+            <i class="ph ph-moon text-xl"></i> Modo Alto Contraste
+          </button>
+          <button onclick="alternarTamanhoFonte()" class="w-full flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-blue-900 hover:bg-blue-50 transition shadow-sm border border-slate-100">
+            <i class="ph ph-text-aa text-xl"></i> Aumentar Letra
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="./public/js/auth.js"></script>
+  
+  <script>
+    window.fecharModal = function(id) {
+      const modal = document.getElementById(id);
+      const modalBox = modal.querySelector('div');
+      modal.classList.add('opacity-0');
+      modalBox.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    function abrirModal(id) {
+      const modal = document.getElementById(id);
+      const modalBox = modal.querySelector('div');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        modalBox.classList.remove('scale-95');
+      }, 10);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const randomID = Math.floor(Math.random() * 9) + 1; 
+      const formattedID = "0" + randomID; 
+      const avatarElement = document.getElementById('avatar-visitante');
+      
+      if (avatarElement && !avatarElement.src.includes('googleusercontent')) {
+        avatarElement.src = `./public/assets/avatarPublico${formattedID}.png`;
+      }
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* Personalização da barra de rolagem */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+/* 
+  =========================================
+  OVERRIDE DE ALTO CONTRASTE (ACESSIBILIDADE)
+  =========================================
+*/
+html.high-contrast body,
+html.high-contrast main,
+html.high-contrast aside,
+html.high-contrast section,
+html.high-contrast div {
+  background-color: #000000 !important;
+  border-color: #FFFF00 !important;
+  color: #FFFFFF !important;
+}
+
+html.high-contrast h1, 
+html.high-contrast h2, 
+html.high-contrast h3, 
+html.high-contrast h4, 
+html.high-contrast p, 
+html.high-contrast span, 
+html.high-contrast i {
+  color: #FFFFFF !important;
+}
+
+html.high-contrast a, 
+html.high-contrast button {
+  background-color: #000000 !important;
+  color: #FFFF00 !important;
+  border: 2px solid #FFFF00 !important;
+  box-shadow: none !important;
+}
+
+html.high-contrast a:hover, 
+html.high-contrast button:hover {
+  background-color: #FFFF00 !important;
+  color: #000000 !important;
+}

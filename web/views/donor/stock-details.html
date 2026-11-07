@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estoque Transparente | Casa da Criança</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pastelBlue: '#E6F0FA',
+            pastelGreen: '#D1F0E4',
+            pastelYellow: '#FFF4D6',
+            textDark: '#2D3748',
+            brandBlue: '#1E3A8A',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="../../public/css/styles.css">
+  <script src="../../public/js/accessibility.js" defer></script>
+</head>
+<body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
+
+  <!-- Navbar Lateral Fixa (Movida para a esquerda) -->
+  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
+    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
+      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
+        <i class="ph ph-package text-3xl"></i>
+      </div>
+      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
+      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
+    </div>
+
+    <!-- Navegação do Doador -->
+    <nav class="flex-1 px-4 py-6 space-y-3 overflow-y-auto">
+      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-squares-four text-xl"></i> Dashboard
+      </a>
+      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-3 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50">
+        <i class="ph ph-magnifying-glass text-xl"></i> Estoque Transparente
+      </a>
+      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-megaphone text-xl"></i> Criar Campanha
+      </a>
+      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-folder-star text-xl"></i> Minhas Campanhas
+      </a>
+      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-3 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium">
+        <i class="ph ph-user-gear text-xl"></i> Configurações
+      </a>
+    </nav>
+
+    <!-- Área Inferior da Navbar -->
+    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
+      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
+        <i class="ph ph-moon text-xl"></i> Contraste
+      </button>
+
+      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
+        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
+      </button>
+    </div>
+  </aside>
+
+  <!-- Área Principal -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+    
+    <!-- Cabeçalho (Botão Voltar e Título) -->
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+      <div>
+        <button onclick="window.history.back()" class="flex items-center gap-2 text-brandBlue hover:text-blue-900 font-bold mb-2 transition">
+          <i class="ph-bold ph-arrow-left"></i> Voltar ao Estoque Geral
+        </button>
+        <h1 class="text-3xl font-extrabold text-brandBlue">Detalhes dos Lotes</h1>
+        <p class="text-sm text-slate-600 mt-1 max-w-2xl">
+          Consulte o saldo exato e as informações rastreáveis do alimento na nossa base de dados.
+        </p>
+      </div>
+    </div>
+
+    <div id="loading" class="flex flex-col items-center justify-center py-16 text-brandBlue">
+      <i class="ph ph-spinner-gap text-4xl animate-spin mb-4"></i>
+      <p class="font-semibold text-sm">Carregando detalhes do produto na nuvem...</p>
+    </div>
+
+    <div id="conteudo-detalhes" class="hidden space-y-6">
+      
+      <!-- Resumo do Produto Selecionado -->
+      <div class="bg-white p-6 md:p-8 rounded-[2rem] border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <img id="img-produto" src="" alt="Produto" class="w-32 h-32 rounded-2xl object-cover bg-slate-100 border border-slate-200 shadow-sm">
+          
+          <div class="flex-1 text-center sm:text-left">
+            <h2 id="titulo-produto" class="text-2xl font-extrabold text-brandBlue mb-1 leading-tight">Nome do Produto</h2>
+            <p id="subtitulo-produto" class="text-sm text-slate-500 font-semibold mb-4">Categoria • Código: --</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <p class="text-xs font-bold text-slate-500 uppercase">Saldo Total</p>
+                <p id="saldo-total" class="text-xl font-bold text-brandBlue">0 pcts</p>
+              </div>
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <p class="text-xs font-bold text-slate-500 uppercase">Estoque Mínimo</p>
+                <p id="estoque-min" class="text-lg font-bold text-slate-700">0 pcts</p>
+              </div>
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <p class="text-xs font-bold text-slate-500 uppercase">Data Mais Crítica</p>
+                <p id="data-critica" class="text-sm font-bold text-slate-700 mt-1">--/--/----</p>
+              </div>
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
+                <p class="text-xs font-bold text-slate-500 uppercase">Situação FEFO</p>
+                <div id="status-fefo-container" class="mt-1">
+                  <!-- Injetado -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtro por Localização -->
+      <div class="bg-pastelBlue/30 border border-pastelBlue p-6 rounded-3xl">
+        <h3 class="text-sm font-bold text-brandBlue uppercase mb-4 flex items-center gap-2">
+          <i class="ph-fill ph-map-pin text-lg"></i> Filtrar Lotes por Prateleira
+        </h3>
+        <div id="filtro-locais" class="flex flex-wrap gap-3">
+          <!-- Injetado: <button class="px-4 py-2 bg-white rounded-lg border...">Local A</button> -->
+        </div>
+      </div>
+
+      <!-- Lista de Lotes Rastreados -->
+      <div>
+        <h3 class="text-lg font-bold text-brandBlue mb-4 ml-2">Lista de Lotes Ativos</h3>
+        <div id="lista-lotes" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Cards Injetados via JS -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDDmJWmKMOgSQg0XxfpAVtrNy8XY79G7VM",
+      authDomain: "doar-e-guardar-v2.firebaseapp.com",
+      projectId: "doar-e-guardar-v2",
+      storageBucket: "doar-e-guardar-v2.firebasestorage.app",
+      messagingSenderId: "206062751062",
+      appId: "1:206062751062:web:38cda34f65ca612043daf7",
+      measurementId: "G-87KFR89NX0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) window.location.href = '../../index.html';
+    });
+
+    window.realizarLogout = async () => {
+      await signOut(auth);
+      window.location.href = '../../index.html';
+    };
+
+    // --- Lógica de Dados AWS ---
+    let todosOsLotesDoProduto = [];
+    let locaisDisponiveis = new Set();
+    let filtroLocalAtual = 'TODOS';
+
+    // Utilitário para Data e FEFO (Herdado da Home)
+    const classificarValidade = (dataLoteStr) => {
+      if (!dataLoteStr) return 'regular';
+      let dataVal;
+      if (dataLoteStr.includes('/')) {
+        const [d, m, y] = dataLoteStr.split('/');
+        dataVal = new Date(`${y}-${m}-${d}T00:00:00`);
+      } else {
+        dataVal = new Date(`${dataLoteStr}T00:00:00`);
+      }
+      
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const diffDias = Math.ceil((dataVal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDias < 0) return 'vencido';
+      if (diffDias <= 7) return 'proximo';
+      return 'regular';
+    };
+
+    const formatarDataBR = (dataIso) => {
+      if(!dataIso) return '--/--/----';
+      if(dataIso.includes('/')) return dataIso;
+      const [y, m, d] = dataIso.split('-');
+      return `${d}/${m}/${y}`;
+    };
+
+    const obterPlaceholder = (cat) => {
+      const c = (cat || '').toLowerCase();
+      if (c.includes('lati') || c.includes('leite')) return '../../public/assets/placeholder_laticinios.png';
+      if (c.includes('grão') || c.includes('arroz') || c.includes('feij')) return '../../public/assets/placeholder_graos.png';
+      if (c.includes('massa')) return '../../public/assets/placeholder_massas.png';
+      if (c.includes('óleo') || c.includes('oleo')) return '../../public/assets/placeholder_oleos.png';
+      return '../../public/assets/placeholder_geral.png';
+    };
+
+    async function carregarDetalhesLotes() {
+      // Pega o EAN ou NOME vindo da URL (ex: ?produto=7891000200204)
+      const params = new URLSearchParams(window.location.search);
+      const eanAlvo = params.get('produto');
+      
+      if(!eanAlvo) {
+        alert('Nenhum produto selecionado.');
+        window.history.back();
+        return;
+      }
+
+      const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
+
+      try {
+        const resp = await fetch(API_AWS_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ acao: 'consultar_estoque' })
+        });
+        const dados = await resp.json();
+
+        if (dados.sucesso && Array.isArray(dados.lotes)) {
+          // Filtra os lotes apenas do produto selecionado
+          todosOsLotesDoProduto = dados.lotes.filter(l => 
+            (l.codigo_barra_produto === eanAlvo || l.nome_produto === eanAlvo) && 
+            parseInt(l.quantidade_atual_pacote, 10) > 0
+          );
+
+          if(todosOsLotesDoProduto.length === 0) {
+             alert('Este produto não possui mais lotes ativos em estoque.');
+             window.history.back();
+             return;
+          }
+
+          renderizarPainelSuperior();
+          construirFiltrosLocais();
+          renderizarListaLotes();
+
+          document.getElementById('loading').classList.add('hidden');
+          document.getElementById('conteudo-detalhes').classList.remove('hidden');
+        }
+      } catch (e) {
+        console.error("Erro na AWS", e);
+        alert('Erro de comunicação com a AWS Lambda.');
+      }
+    }
+
+    function renderizarPainelSuperior() {
+      // Como todos os lotes são do mesmo produto, usamos o primeiro para dados base
+      const prodBase = todosOsLotesDoProduto[0];
+      const estoqueMinimo = parseInt(prodBase.estoque_minimo_pacote || 0, 10);
+      let saldoTotal = 0;
+      let dataMaisUrgente = '9999-12-31';
+
+      todosOsLotesDoProduto.forEach(l => {
+        saldoTotal += parseInt(l.quantidade_atual_pacote, 10);
+        const dVal = l.data_validade_lote || '9999-12-31';
+        if(dVal < dataMaisUrgente) dataMaisUrgente = dVal;
+      });
+
+      const catStatus = classificarValidade(dataMaisUrgente);
+      const isEstoqueBaixo = saldoTotal < estoqueMinimo;
+
+      // Preenche Textos
+      document.getElementById('img-produto').src = prodBase.url_foto_produto || prodBase.foto_url || obterPlaceholder(prodBase.categoria);
+      document.getElementById('titulo-produto').innerText = prodBase.nome_produto;
+      document.getElementById('subtitulo-produto').innerText = `${prodBase.categoria || 'Geral'} • EAN: ${prodBase.codigo_barra_produto}`;
+      
+      const txtSaldo = document.getElementById('saldo-total');
+      txtSaldo.innerText = `${saldoTotal} pcts`;
+      if(isEstoqueBaixo) {
+        txtSaldo.classList.remove('text-brandBlue');
+        txtSaldo.classList.add('text-orange-600');
+      }
+
+      document.getElementById('estoque-min').innerText = `${estoqueMinimo} pcts`;
+      document.getElementById('data-critica').innerText = formatarDataBR(dataMaisUrgente);
+
+      // Badge FEFO
+      const containerFefo = document.getElementById('status-fefo-container');
+      if (catStatus === 'vencido') {
+        containerFefo.innerHTML = `<span class="bg-red-100 text-red-700 font-bold text-xs px-2 py-1 rounded">Vencido</span>`;
+      } else if (catStatus === 'proximo') {
+        containerFefo.innerHTML = `<span class="bg-amber-100 text-amber-800 font-bold text-xs px-2 py-1 rounded">Vence em Breve</span>`;
+      } else {
+        containerFefo.innerHTML = `<span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-2 py-1 rounded">Regular / No Prazo</span>`;
+      }
+    }
+
+    function construirFiltrosLocais() {
+      locaisDisponiveis.clear();
+      todosOsLotesDoProduto.forEach(l => {
+         if(l.local_descricao) locaisDisponiveis.add(l.local_descricao);
+      });
+
+      const container = document.getElementById('filtro-locais');
+      container.innerHTML = `<button onclick="aplicarFiltroLocal('TODOS')" id="btn-loc-TODOS" class="px-4 py-2 bg-brandBlue text-white font-bold text-xs rounded-xl shadow-sm transition">Todos os Locais</button>`;
+      
+      Array.from(locaisDisponiveis).sort().forEach(loc => {
+         // Cria um ID amigável sem espaços
+         const safeId = 'btn-loc-' + loc.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+         container.innerHTML += `<button onclick="aplicarFiltroLocal('${loc}')" id="${safeId}" class="px-4 py-2 bg-white text-slate-600 border border-slate-300 font-bold text-xs rounded-xl shadow-sm hover:bg-slate-50 transition">${loc}</button>`;
+      });
+    }
+
+    window.aplicarFiltroLocal = (localNome) => {
+      filtroLocalAtual = localNome;
+      
+      // Reseta visual dos botões
+      document.querySelectorAll('#filtro-locais button').forEach(b => {
+         b.className = "px-4 py-2 bg-white text-slate-600 border border-slate-300 font-bold text-xs rounded-xl shadow-sm hover:bg-slate-50 transition";
+      });
+
+      // Ativa o clicado
+      const safeId = localNome === 'TODOS' ? 'btn-loc-TODOS' : 'btn-loc-' + localNome.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+      const btn = document.getElementById(safeId);
+      if(btn) btn.className = "px-4 py-2 bg-brandBlue text-white font-bold text-xs rounded-xl shadow-sm transition";
+
+      renderizarListaLotes();
+    };
+
+    function renderizarListaLotes() {
+      const listaContainer = document.getElementById('lista-lotes');
+      listaContainer.innerHTML = '';
+
+      // Ordenar do vencimento mais próximo para o mais distante (FEFO Rigoroso)
+      let lotesFiltrados = [...todosOsLotesDoProduto].sort((a, b) => {
+        const valA = a.data_validade_lote || '9999-12-31';
+        const valB = b.data_validade_lote || '9999-12-31';
+        return valA.localeCompare(valB);
+      });
+
+      if (filtroLocalAtual !== 'TODOS') {
+        lotesFiltrados = lotesFiltrados.filter(l => l.local_descricao === filtroLocalAtual);
+      }
+
+      if (lotesFiltrados.length === 0) {
+         listaContainer.innerHTML = `<p class="text-sm text-slate-500 font-medium">Nenhum lote neste armário.</p>`;
+         return;
+      }
+
+      lotesFiltrados.forEach((lote, index) => {
+        const catStatus = classificarValidade(lote.data_validade_lote);
+        let corBorda = 'border-slate-200';
+        let corFundo = 'bg-white';
+        let iconeFefo = '';
+        
+        // Pelo FEFO, o índice 0 na lista filtrada é a recomendação de saída.
+        const ehRecomendacaoSaida = (index === 0 && catStatus !== 'vencido');
+
+        if (catStatus === 'vencido') {
+          corBorda = 'border-red-300';
+          corFundo = 'bg-red-50';
+          iconeFefo = '<span class="text-xs font-bold text-red-700 bg-red-100 px-2 py-0.5 rounded">Vencido</span>';
+        } else if (catStatus === 'proximo' || ehRecomendacaoSaida) {
+          corBorda = 'border-amber-300';
+          corFundo = 'bg-amber-50/30';
+          iconeFefo = ehRecomendacaoSaida 
+            ? '<span class="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded flex items-center gap-1"><i class="ph-fill ph-warning-circle"></i> Próxima Saída</span>'
+            : '<span class="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">Vence Logo</span>';
+        }
+
+        const div = document.createElement('div');
+        div.className = `p-5 rounded-2xl border ${corBorda} ${corFundo} shadow-sm`;
+        div.innerHTML = `
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs text-slate-500 font-bold uppercase mb-0.5">Código do Lote</p>
+              <p class="text-base font-extrabold text-brandBlue">${lote.numero_codigo_lote}</p>
+            </div>
+            ${iconeFefo}
+          </div>
+          
+          <div class="bg-white rounded-xl border border-slate-100 p-3 mb-4 flex items-center gap-3">
+             <div class="w-10 h-10 bg-pastelBlue text-brandBlue rounded-lg flex items-center justify-center">
+               <i class="ph-fill ph-map-pin text-xl"></i>
+             </div>
+             <div>
+               <p class="text-xs font-bold text-slate-500 uppercase">Fisicamente em:</p>
+               <p class="text-sm font-bold text-slate-700">${lote.local_descricao || 'Não informado'}</p>
+             </div>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 border-t border-slate-200/60">
+            <div>
+              <p class="text-xs font-bold text-slate-500 uppercase">Validade FEFO</p>
+              <p class="text-sm font-bold ${catStatus === 'vencido' ? 'text-red-600' : 'text-slate-800'}">${formatarDataBR(lote.data_validade_lote)}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-bold text-slate-500 uppercase">Saldo do Lote</p>
+              <p class="text-lg font-extrabold text-brandBlue">${lote.quantidade_atual_pacote} un.</p>
+            </div>
+          </div>
+        `;
+        listaContainer.appendChild(div);
+      });
+    }
+
+    // Inicializa
+    window.addEventListener('DOMContentLoaded', carregarDetalhesLotes);
+
+  </script>
+</body>
+</html>
