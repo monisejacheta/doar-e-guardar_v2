@@ -528,7 +528,7 @@ export default function StockAddScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
             <Feather name="maximize" size={20} color={theme.primary} style={{ marginRight: 8 }} />
             <Text style={{ fontSize: 15 * fontScale, fontWeight: '700', color: theme.text }}>
-              1. Identificação do Código de Barras
+              Identificação do Código de Barras
             </Text>
           </View>
 

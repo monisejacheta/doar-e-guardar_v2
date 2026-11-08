@@ -58,7 +58,7 @@ export default function ProfileEditScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          2.1.2 Editar Perfil
+          Editar Perfil
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
           Atualize seu nome de operador exibido nas movimentações de prateleiras e baixas.

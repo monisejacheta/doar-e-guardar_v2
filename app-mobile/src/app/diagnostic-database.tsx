@@ -85,7 +85,7 @@ export default function DiagnosticDatabaseScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          9.2 Bancos de Dados (AWS + Firebase)
+           Bancos de Dados (AWS + Firebase)
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
           Inspeção de integridade entre `tb_lotesProdutos`, `tb_locaisArmazenamento` e `tb_movimentacoesEstoques`.

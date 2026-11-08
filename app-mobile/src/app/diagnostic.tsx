@@ -69,7 +69,7 @@ export default function DiagnosticScreen() {
   const servicos = [
     {
       rota: '/diagnostic-aws',
-      nome: '9.1 Funções Serverless AWS Lambda',
+      nome: ' Funções Serverless AWS Lambda',
       detalhe:
         latenciaMs !== null
           ? `Região us-east-2 • Latência real: ${latenciaMs} ms`
@@ -79,21 +79,21 @@ export default function DiagnosticScreen() {
     },
     {
       rota: '/diagnostic-database',
-      nome: '9.2 Bancos de Dados (DynamoDB + Firebase)',
+      nome: 'Bancos de Dados (DynamoDB + Firebase)',
       detalhe: `${totalLotes} lotes ativos • ${totalPrateleiras} prateleiras homologadas`,
       status: statusAws === 'DISPONÍVEL' ? 'SINCRONIZADO' : statusAws,
       cor: statusAws === 'DISPONÍVEL' ? theme.secondary : theme.danger,
     },
     {
       rota: '/diagnostic-apis',
-      nome: '9.3 Cascata de 3 APIs (Código de Barras)',
+      nome: 'Cascata de 3 APIs (Código de Barras)',
       detalhe: 'Open Food Facts • Cosmos/Bluesoft • Open Product Data / UPCitemdb',
       status: 'TESTAR EAN',
       cor: tokens.colors.accentAmber500,
     },
     {
       rota: '/diagnostic-config',
-      nome: '9.4 Configurar Chaves e Integrações',
+      nome: 'Configurar Chaves e Integrações',
       detalhe: 'Inspecionar endpoints AWS, timeouts e prioridade da cascata EAN',
       status: 'INSPECIONAR',
       cor: theme.primary,

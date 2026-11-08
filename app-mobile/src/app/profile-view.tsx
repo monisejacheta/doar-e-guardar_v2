@@ -36,7 +36,7 @@ export default function ProfileViewScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          2.1.1 Dados do Colaborador
+           Dados do Colaborador
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
           Informações vinculadas à sua credencial de operador para rastreabilidade de lotes na AWS.
