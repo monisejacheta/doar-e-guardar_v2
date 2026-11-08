@@ -13,8 +13,8 @@ export function BottomNavBar() {
   // Estado para controlar o modal do Menu Hambúrguer
   const [menuAberto, setMenuAberto] = useState(false);
 
-  // Esconde o menu na tela de Login (rota raiz '/')
-  if (rotaAtual === '/') {
+  // Esconde o menu na tela de Login e na tela de Perfil
+  if (rotaAtual === '/' || rotaAtual === '/profile') {
     return null;
   }
 
