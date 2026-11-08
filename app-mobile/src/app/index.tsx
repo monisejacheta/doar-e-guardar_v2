@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather, FontAwesome } from '@expo/vector-icons';
-import { signInWithPopup, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithPopup, signInWithEmailAndPassword, GoogleAuthProvider } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebaseConfig';
 import { useAppTheme } from '../context/ThemeContext';
 import { requisicaoApi } from '../services/api';
@@ -74,7 +74,7 @@ export default function LoginScreen() {
     }
   };
 
-  // Login com E-mail e Senha
+  // FIX #2: Login com E-mail e Senha — corrigido para tratar erros Firebase e API separadamente
   const autenticarPorCredenciais = async () => {
     if (!email.trim() || !senha.trim()) {
       Alert.alert('Atenção', 'Por favor, informe seu e-mail e senha.');
@@ -86,26 +86,48 @@ export default function LoginScreen() {
       const emailLimpo = email.trim().toLowerCase();
       const senhaLimpa = senha.trim();
       let idToken = '';
+      let perfilUsuario = {
+        id: '',
+        name: emailLimpo.split('@')[0],
+        email: emailLimpo,
+        foto: '',
+      };
 
+      // Tenta autenticar no Firebase primeiro (se configurado)
       if (auth) {
         try {
           const credencial = await signInWithEmailAndPassword(auth, emailLimpo, senhaLimpa);
           idToken = await credencial.user.getIdToken();
+          perfilUsuario = {
+            id: credencial.user.uid,
+            name: credencial.user.displayName || emailLimpo.split('@')[0],
+            email: credencial.user.email || emailLimpo,
+            foto: credencial.user.photoURL || '',
+          };
         } catch (firebaseErr: any) {
-          const codigo = firebaseErr?.code || '';
+          const codigo: string = firebaseErr?.code || '';
+          // Erros definitivos de credencial: exibe mensagem e para
           if (
             codigo === 'auth/invalid-credential' ||
             codigo === 'auth/user-not-found' ||
             codigo === 'auth/wrong-password' ||
-            codigo === 'auth/invalid-email'
+            codigo === 'auth/invalid-email' ||
+            codigo === 'auth/too-many-requests'
           ) {
-            Alert.alert('Acesso Negado', 'E-mail ou senha incorretos.');
+            const mensagem =
+              codigo === 'auth/too-many-requests'
+                ? 'Muitas tentativas incorretas. Aguarde alguns minutos e tente novamente.'
+                : 'E-mail ou senha incorretos. Verifique suas credenciais.';
+            Alert.alert('Acesso Negado', mensagem);
             return;
           }
-          throw firebaseErr;
+          // Para outros erros Firebase (ex.: sem conexão), continua sem idToken
+          // e tenta autenticar diretamente pelo backend
+          console.warn('[Login] Firebase indisponível, tentando apenas backend:', codigo);
         }
       }
 
+      // FIX #2: Envia e-mail + senha para o backend (com ou sem idToken do Firebase)
       const resposta: any = await requisicaoApi('/api/auth/login', {
         metodo: 'POST',
         dados: {
@@ -113,6 +135,7 @@ export default function LoginScreen() {
           email: emailLimpo,
           senha: senhaLimpa,
           id_token: idToken,
+          perfil_usuario: perfilUsuario,
           plataforma: Platform.OS === 'web' ? 'portal_web' : 'mobile_android',
         },
       });
@@ -123,7 +146,7 @@ export default function LoginScreen() {
         Alert.alert('Acesso Negado', resposta?.mensagem || 'Credenciais inválidas.');
       }
     } catch (erro: any) {
-      Alert.alert('Erro de Conexão', erro.message || 'Não foi possível autenticar.');
+      Alert.alert('Erro de Conexão', erro.message || 'Não foi possível autenticar. Verifique sua conexão.');
     } finally {
       setCarregando(false);
     }
@@ -150,7 +173,7 @@ export default function LoginScreen() {
           {/* Cabeçalho Limpo: Título com fonte ampliada e Mensagem de Boas-Vindas */}
           <View style={styles.header}>
             <Text style={[styles.appName, { color: theme.primary, fontSize: 34 * fontScale }]}>
-              Doar & Guardar
+              Doar &amp; Guardar
             </Text>
 
             <View style={styles.welcomeContainer}>
@@ -213,6 +236,9 @@ export default function LoginScreen() {
                   onChangeText={setEmail}
                   autoCapitalize="none"
                   keyboardType="email-address"
+                  autoCorrect={false}
+                  textContentType="emailAddress"
+                  returnKeyType="next"
                 />
               </View>
             </View>
@@ -232,6 +258,10 @@ export default function LoginScreen() {
                   value={senha}
                   onChangeText={setSenha}
                   autoCapitalize="none"
+                  autoCorrect={false}
+                  textContentType="password"
+                  returnKeyType="done"
+                  onSubmitEditing={autenticarPorCredenciais}
                 />
                 <TouchableOpacity
                   onPress={() => setExibirSenha(!exibirSenha)}
@@ -256,7 +286,7 @@ export default function LoginScreen() {
               accessible={true}
               accessibilityRole="button"
               accessibilityLabel="Entrar no aplicativo"
-              style={[styles.primaryButton, { backgroundColor: theme.primary }]}
+              style={[styles.primaryButton, { backgroundColor: theme.primary, opacity: carregando ? 0.7 : 1 }]}
               activeOpacity={0.8}
             >
               {carregando ? (

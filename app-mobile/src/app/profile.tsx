@@ -1,6 +1,6 @@
 // src/app/profile.tsx
-import React from 'react';
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
@@ -12,10 +12,13 @@ import { AppButton } from '../components/common/AppButton';
 export default function ProfileScreen() {
   const roteador = useRouter();
   const { theme, fontScale } = useAppTheme();
+  const [saindo, setSaindo] = useState(false);
 
   const usuarioAtual = auth?.currentUser;
   const nomeExibicao = usuarioAtual?.displayName || 'Colaborador Casa da Criança';
   const emailExibicao = usuarioAtual?.email || 'operador@casadacrianca.org.br';
+  // FIX #1: Lê a URL da foto do usuário autenticado no Firebase
+  const urlFoto = usuarioAtual?.photoURL ?? null;
 
   const confirmarLogout = () => {
     Alert.alert(
@@ -27,14 +30,21 @@ export default function ProfileScreen() {
           text: 'Sim, Sair',
           style: 'destructive',
           onPress: async () => {
+            setSaindo(true);
             try {
+              // FIX #1: aguarda o signOut completo antes de navegar
               if (auth) {
                 await signOut(auth);
               }
-            } catch {
-              // Ignora erro local de signOut
+              // Substitui a rota atual pelo index (tela de login) para limpar o histórico
+              roteador.replace('/');
+            } catch (erro: any) {
+              setSaindo(false);
+              Alert.alert(
+                'Erro ao Sair',
+                erro?.message || 'Não foi possível encerrar a sessão. Tente novamente.',
+              );
             }
-            roteador.replace('/');
           },
         },
       ]
@@ -59,21 +69,38 @@ export default function ProfileScreen() {
 
         {/* Cabeçalho do Perfil */}
         <View style={{ alignItems: 'center', marginBottom: 24 }}>
-          <View
-            style={{
-              width: 80,
-              height: 80,
-              borderRadius: 40,
-              borderWidth: 2,
-              borderColor: theme.primary,
-              justifyContent: 'center',
-              alignItems: 'center',
-              backgroundColor: theme.surface,
-              marginBottom: 12,
-            }}
-          >
-            <AppIcon name="user" size={40} variant="primary" />
-          </View>
+          {/* FIX #1: Exibe a foto real do perfil quando disponível */}
+          {urlFoto ? (
+            <Image
+              source={{ uri: urlFoto }}
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                borderWidth: 2,
+                borderColor: theme.primary,
+                marginBottom: 12,
+                backgroundColor: theme.surface,
+              }}
+              accessibilityLabel="Foto de perfil do usuário"
+            />
+          ) : (
+            <View
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 40,
+                borderWidth: 2,
+                borderColor: theme.primary,
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: theme.surface,
+                marginBottom: 12,
+              }}
+            >
+              <AppIcon name="user" size={40} variant="primary" />
+            </View>
+          )}
           <Text style={{ fontWeight: 'bold', color: theme.text, fontSize: 18 * fontScale, textAlign: 'center' }}>
             {nomeExibicao}
           </Text>
@@ -104,7 +131,7 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <AppIcon name="user" size={20} variant="primary" />
               <Text style={{ fontWeight: '600', color: theme.text, fontSize: 14 * fontScale }}>
-                2.1.1 Visualizar Perfil Detalhado
+                 Visualizar Perfil Detalhado
               </Text>
             </View>
             <AppIcon name="chevron-right" size={16} variant="neutral" />
@@ -113,7 +140,7 @@ export default function ProfileScreen() {
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="2.1.2 Editar perfil e dados cadastrais"
+            accessibilityLabel="Editar perfil e dados cadastrais"
             onPress={() => roteador.push('/profile-edit' as any)}
             style={{
               flexDirection: 'row',
@@ -130,7 +157,7 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <AppIcon name="settings" size={20} variant="primary" />
               <Text style={{ fontWeight: '600', color: theme.text, fontSize: 14 * fontScale }}>
-                2.1.2 Editar Perfil
+                 Editar Perfil
               </Text>
             </View>
             <AppIcon name="chevron-right" size={16} variant="neutral" />
@@ -156,7 +183,7 @@ export default function ProfileScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <AppIcon name="contrast" size={20} variant="secondary" />
               <Text style={{ fontWeight: '600', color: theme.text, fontSize: 14 * fontScale }}>
-                2.1.3 Alterar Preferências e Acessibilidade
+                 Alterar Preferências e Acessibilidade
               </Text>
             </View>
             <AppIcon name="chevron-right" size={16} variant="neutral" />
@@ -165,8 +192,9 @@ export default function ProfileScreen() {
 
         {/* Botão de Logout (2.1.4) */}
         <AppButton
-          title="2.1.4 Sair da Conta (Logout)"
+          title=" Sair da Conta "
           variant="danger"
+          loading={saindo}
           onPress={confirmarLogout}
           accessibilityHint="Encerra a sessão atual e retorna à tela de login"
         />
