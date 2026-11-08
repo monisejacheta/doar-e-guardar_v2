@@ -755,3 +755,9 @@ window.obterLocaisArmazenamentoReconciliados = obterLocaisArmazenamentoReconcili
 window.carregarDadosEstoqueAws = carregarDadosEstoqueAws;
 window.carregarCampanhasReconciliadas = carregarCampanhasReconciliadas;
 window.salvarOuModerarCampanhaAdmin = salvarOuModerarCampanhaAdmin;
+
+
+if (typeof window !== 'undefined') {
+  window.normalizarObjetoCampanha = normalizarObjetoCampanha;
+  window.garantirModalAcessibilidadePadraoIndex = garantirModalAcessibilidadePadraoIndex;
+}

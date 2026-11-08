@@ -137,3 +137,9 @@ function renderizarListaCriticos(itens, todosProdutos = []) {
 
 window.toggleItensCriticos = toggleItensCriticos;
 window.buscarItensCriticosAws = buscarItensCriticosAws;
+
+
+if (typeof window !== 'undefined') {
+  window.escaparHtml = escaparHtml;
+  window.renderizarListaCriticos = renderizarListaCriticos;
+}

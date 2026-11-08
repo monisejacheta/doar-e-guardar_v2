@@ -38,3 +38,9 @@ window.addEventListener('DOMContentLoaded', () => {
     htmlElement.style.fontSize = '130%';
   }
 });
+
+
+if (typeof window !== 'undefined') {
+  window.alternarAltoContraste = alternarAltoContraste;
+  window.alternarTamanhoFonte = alternarTamanhoFonte;
+}
