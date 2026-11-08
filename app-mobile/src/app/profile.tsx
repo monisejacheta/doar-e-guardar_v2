@@ -6,11 +6,9 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
   Image,
   StyleSheet,
   ActivityIndicator,
-  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -29,157 +27,163 @@ export default function ProfileScreen() {
   const emailExibicao = usuarioAtual?.email || 'operador@casadacrianca.org.br';
   const urlFoto = usuarioAtual?.photoURL ?? null;
 
+  // Realiza o logout e redireciona diretamente para a tela de login ('/')
   const executarLogout = async () => {
     if (saindo) return;
     setSaindo(true);
+
     try {
       if (auth) {
-        await signOut(auth);
+        // Encerra sessão no Firebase com limite de espera para nunca travar a navegação
+        await Promise.race([
+          signOut(auth),
+          new Promise((resolve) => setTimeout(resolve, 1200)),
+        ]);
       }
     } catch (erro: any) {
-      console.warn('[Logout] signOut Firebase:', erro?.message);
-      // Mesmo com erro no Firebase, derruba a sessão local e redireciona
+      console.warn('[Logout] Aviso no encerramento de sessão:', erro?.message || erro);
     } finally {
+      setSaindo(false);
+      // Redireciona imediatamente para a tela inicial/login
       roteador.replace('/');
     }
   };
 
-  const confirmarLogout = () => {
-    Alert.alert(
-      'Encerrar Sessão',
-      'Deseja realmente sair da sua conta?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sim, Sair', style: 'destructive', onPress: executarLogout },
-      ],
-      { cancelable: true }
-    );
-  };
-
   return (
-    // flex: 1 garante que o View filho com posição absoluta funcione corretamente
-    <View style={[estilos.raiz, { backgroundColor: theme.background }]}>
-      <SafeAreaView style={{ flex: 1 }}>
-
-        {/* Conteúdo rolável — paddingBottom reserva espaço para o botão fixo + BottomNavBar */}
-        <ScrollView
-          contentContainerStyle={[estilos.scroll, { paddingBottom: 160 }]}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <SafeAreaView style={[estilos.container, { backgroundColor: theme.background }]}>
+      <ScrollView
+        contentContainerStyle={estilos.scroll}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Botão Voltar */}
+        <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar para a tela anterior"
+          onPress={() => roteador.back()}
+          style={estilos.voltar}
         >
-          {/* Botão Voltar */}
-          <TouchableOpacity
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel="Voltar para a tela anterior"
-            onPress={() => roteador.back()}
-            style={estilos.voltar}
-          >
-            <Feather name="arrow-left" size={20} color={theme.primary} />
-            <Text style={[estilos.voltarTexto, { color: theme.primary, fontSize: 15 * fontScale }]}>
-              Voltar
-            </Text>
-          </TouchableOpacity>
+          <Feather name="arrow-left" size={20} color={theme.primary} />
+          <Text style={[estilos.voltarTexto, { color: theme.primary, fontSize: 15 * fontScale }]}>
+            Voltar
+          </Text>
+        </TouchableOpacity>
 
-          {/* Avatar + Nome + Email */}
-          <View style={estilos.cabecalho}>
-            {urlFoto ? (
-              <Image
-                source={{ uri: urlFoto }}
-                style={[estilos.avatar, { borderColor: theme.primary, backgroundColor: theme.surface }]}
-                accessibilityLabel="Foto de perfil do usuário"
-              />
-            ) : (
-              <View style={[estilos.avatar, estilos.avatarFallback, { borderColor: theme.primary, backgroundColor: theme.surface }]}>
-                <AppIcon name="user" size={40} variant="primary" />
-              </View>
-            )}
-            <Text style={[estilos.nome, { color: theme.text, fontSize: 18 * fontScale }]}>
-              {nomeExibicao}
-            </Text>
-            <Text style={[estilos.email, { color: theme.subtext, fontSize: 13 * fontScale }]}>
-              {emailExibicao}
-            </Text>
-          </View>
+        {/* Cabeçalho do Perfil (Avatar + Nome + E-mail) */}
+        <View style={estilos.cabecalho}>
+          {urlFoto ? (
+            <Image
+              source={{ uri: urlFoto }}
+              style={[
+                estilos.avatar,
+                { borderColor: theme.primary, backgroundColor: theme.surface },
+              ]}
+              accessibilityLabel="Foto de perfil do usuário"
+            />
+          ) : (
+            <View
+              style={[
+                estilos.avatar,
+                estilos.avatarFallback,
+                { borderColor: theme.primary, backgroundColor: theme.surface },
+              ]}
+            >
+              <AppIcon name="user" size={40} variant="primary" />
+            </View>
+          )}
 
-          {/* Opções de Navegação */}
-          <View style={estilos.opcoes}>
-            {[
-              { label: 'Visualizar Perfil Detalhado', icone: 'user', variante: 'primary', rota: '/profile-view' },
-              { label: 'Editar Perfil', icone: 'settings', variante: 'primary', rota: '/profile-edit' },
-              { label: 'Alterar Preferências e Acessibilidade', icone: 'contrast', variante: 'secondary', rota: '/accessibility' },
-            ].map((item) => (
-              <TouchableOpacity
-                key={item.rota}
-                accessible
-                accessibilityRole="button"
-                accessibilityLabel={item.label}
-                onPress={() => roteador.push(item.rota as any)}
-                style={[estilos.opcaoBotao, { backgroundColor: theme.surface, borderColor: theme.border }]}
-              >
-                <View style={estilos.opcaoEsquerda}>
-                  <AppIcon name={item.icone as any} size={20} variant={item.variante as any} />
-                  <Text style={[estilos.opcaoTexto, { color: theme.text, fontSize: 14 * fontScale }]}>
-                    {item.label}
-                  </Text>
-                </View>
-                <AppIcon name="chevron-right" size={16} variant="neutral" />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-
-        {/*
-          Botão "Sair da Conta" fixado acima do BottomNavBar (bottom: 80 = altura da navbar 72 + 8 de margem).
-          Renderizado FORA do ScrollView e com zIndex alto para garantir que
-          nenhum overlay o bloqueie.
-        */}
-        <View
-          style={[
-            estilos.rodape,
-            { backgroundColor: theme.background },
-          ]}
-          pointerEvents="box-none"
-        >
-          <TouchableOpacity
-            accessible
-            accessibilityRole="button"
-            accessibilityLabel="Sair da Conta"
-            accessibilityHint="Encerra a sessão e retorna à tela de login"
-            onPress={confirmarLogout}
-            disabled={saindo}
-            activeOpacity={0.75}
-            style={[
-              estilos.botaoSair,
-              {
-                backgroundColor: saindo ? theme.subtext : theme.danger,
-              },
-            ]}
-          >
-            {saindo ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <>
-                <Feather name="log-out" size={18} color="#FFFFFF" style={{ marginRight: 10 }} />
-                <Text style={[estilos.botaoSairTexto, { fontSize: 15 * fontScale }]}>
-                  Sair da Conta
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <Text style={[estilos.nome, { color: theme.text, fontSize: 18 * fontScale }]}>
+            {nomeExibicao}
+          </Text>
+          <Text style={[estilos.email, { color: theme.subtext, fontSize: 13 * fontScale }]}>
+            {emailExibicao}
+          </Text>
         </View>
 
-      </SafeAreaView>
-    </View>
+        {/* Opções de Navegação do Perfil */}
+        <View style={estilos.opcoes}>
+          {[
+            {
+              label: 'Visualizar Perfil Detalhado',
+              icone: 'user',
+              variante: 'primary',
+              rota: '/profile-view',
+            },
+            {
+              label: 'Editar Perfil',
+              icone: 'settings',
+              variante: 'primary',
+              rota: '/profile-edit',
+            },
+            {
+              label: 'Alterar Preferências e Acessibilidade',
+              icone: 'contrast',
+              variante: 'secondary',
+              rota: '/accessibility',
+            },
+          ].map((item) => (
+            <TouchableOpacity
+              key={item.rota}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={item.label}
+              onPress={() => roteador.push(item.rota as any)}
+              style={[
+                estilos.opcaoBotao,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+              ]}
+            >
+              <View style={estilos.opcaoEsquerda}>
+                <AppIcon name={item.icone as any} size={20} variant={item.variante as any} />
+                <Text style={[estilos.opcaoTexto, { color: theme.text, fontSize: 14 * fontScale }]}>
+                  {item.label}
+                </Text>
+              </View>
+              <AppIcon name="chevron-right" size={16} variant="neutral" />
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Botão Sair da Conta — Chamada direta sem travar em modal/Alert */}
+        <TouchableOpacity
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Sair da Conta"
+          accessibilityHint="Encerra a sessão e retorna à tela de login"
+          onPress={executarLogout}
+          disabled={saindo}
+          activeOpacity={0.8}
+          style={[
+            estilos.botaoSair,
+            {
+              backgroundColor: saindo ? theme.subtext : theme.danger,
+            },
+          ]}
+        >
+          {saindo ? (
+            <ActivityIndicator color="#FFFFFF" size="small" />
+          ) : (
+            <>
+              <Feather name="log-out" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+              <Text style={[estilos.botaoSairTexto, { fontSize: 15 * fontScale }]}>
+                Sair da Conta
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const estilos = StyleSheet.create({
-  raiz: {
+  container: {
     flex: 1,
   },
   scroll: {
     padding: 20,
+    paddingBottom: 80,
   },
   voltar: {
     flexDirection: 'row',
@@ -215,6 +219,7 @@ const estilos = StyleSheet.create({
   },
   opcoes: {
     gap: 12,
+    marginBottom: 24,
   },
   opcaoBotao: {
     flexDirection: 'row',
@@ -235,28 +240,17 @@ const estilos = StyleSheet.create({
     fontWeight: '600',
     flexShrink: 1,
   },
-  // Faixa fixada na parte de baixo da SafeAreaView, acima do BottomNavBar
-  rodape: {
-    position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 90 : 80,   // 72 (navbar) + margem
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    zIndex: 99,
-    elevation: 20,                             // Android: garante que fica acima do BottomNavBar (elevation 10)
-  },
   botaoSair: {
     flexDirection: 'row',
     height: 52,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
   },
   botaoSairTexto: {
     color: '#FFFFFF',
