@@ -322,25 +322,6 @@ export default function ReportsScreen() {
           />
         </View>
 
-        {/* 3. ENVIO DE RELATÓRIO COMPLETO POR E-MAIL */}
-        <View style={[estilosReports.secaoCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <Text style={[estilosReports.tituloSecao, { color: theme.text, fontSize: tokens.typography.fontSize.md * fontScale }]}>
-            Exportar Documento (PDF Completo)
-          </Text>
-          <AppInput
-            rotulo="E-mails destinatários"
-            placeholder="exemplo@casadacrianca.org.br"
-            keyboardType="email-address"
-            value={emailsDestino}
-            onChangeText={setEmailsDestino}
-          />
-          <AppButton
-            title={enviandoEmail ? 'Processando...' : 'Gerar e Enviar Relatório'}
-            variant="secondary"
-            loading={enviandoEmail}
-            onPress={exportarPdfPorEmail}
-          />
-        </View>
       </ScrollView>
     </SafeAreaView>
   );

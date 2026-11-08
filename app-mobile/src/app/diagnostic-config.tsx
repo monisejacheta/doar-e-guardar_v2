@@ -37,7 +37,7 @@ export default function DiagnosticConfigScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          9.4 Parâmetros e Integrações
+          Parâmetros e Integrações
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
           Configurações ativas de comunicação entre o aplicativo mobile e a infraestrutura AWS Serverless.

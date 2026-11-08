@@ -41,7 +41,7 @@ export default function SettingsScreen() {
         </Text>
 
         <ActionCard
-          titulo="6.5 Locais de Armazenamento (Prateleiras AWS)"
+          titulo="Locais de Armazenamento (Prateleiras AWS)"
           descricao="Cadastrar armários, geladeiras, prateleiras e gavetas sincronizados na tabela tb_locaisArmazenamento."
           iconName="box"
           destaque={true}
@@ -50,14 +50,14 @@ export default function SettingsScreen() {
         />
 
         <ActionCard
-          titulo="6.4 Categorias de Alimentos"
+          titulo="Categorias de Alimentos"
           descricao="Conferir categorias institucionais e contagem real de lotes ativos por categoria na AWS."
           iconName="clipboard"
           aoTocar={() => roteador.push('/settings-categories')}
         />
 
         <ActionCard
-          titulo="6.7 Motivos de Saída e Trava US07"
+          titulo="Motivos de Saída e Trava US07"
           descricao="Regras de justificativa para consumo diário na cozinha e baixa auditada com trava PERDA."
           iconName="arrow-down-circle"
           aoTocar={() => roteador.push('/settings-reasons')}
@@ -68,21 +68,21 @@ export default function SettingsScreen() {
         </Text>
 
         <ActionCard
-          titulo="6.1 Doadores (Pessoa Física)"
+          titulo="Doadores (Pessoa Física)"
           descricao="Consultar apoiadores e política de anonimização LGPD de dados sensíveis."
           iconName="user"
           aoTocar={() => roteador.push('/settings-donors')}
         />
 
         <ActionCard
-          titulo="6.2 Instituições Parceiras"
+          titulo="Instituições Parceiras"
           descricao="Entidades homologadas vinculadas às doações recorrentes da Casa da Criança."
           iconName="box"
           aoTocar={() => roteador.push('/settings-institutions')}
         />
 
         <ActionCard
-          titulo="6.3 Campanhas de Doações Ativas"
+          titulo="Campanhas de Doações Ativas"
           descricao="Campanhas homologadas pela administração da ONG (Regra W08)."
           iconName="bell"
           aoTocar={() => roteador.push('/settings-campaigns')}
@@ -93,14 +93,14 @@ export default function SettingsScreen() {
         </Text>
 
         <ActionCard
-          titulo="6.6 Usuários e Permissões"
+          titulo="Usuários e Permissões"
           descricao="Níveis de acesso de administradores, nutricionistas e operadores de estoque."
           iconName="settings"
           aoTocar={() => roteador.push('/settings-users')}
         />
 
         <ActionCard
-          titulo="6.8 Backup e Sincronização AWS"
+          titulo="Backup e Sincronização AWS"
           descricao="Reconciliar prateleiras e verificar o status de sincronização com o DynamoDB."
           iconName="refresh-cw"
           aoTocar={() => roteador.push('/settings-sync')}
