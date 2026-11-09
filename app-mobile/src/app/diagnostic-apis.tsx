@@ -47,7 +47,7 @@ export default function DiagnosticApisScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -118,3 +118,4 @@ export default function DiagnosticApisScreen() {
     </SafeAreaView>
   );
 }
+

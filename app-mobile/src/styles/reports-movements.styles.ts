@@ -8,7 +8,7 @@ export const estilosReportsMove = StyleSheet.create({
   rolagem: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   botaoVoltar: {
     flexDirection: 'row',

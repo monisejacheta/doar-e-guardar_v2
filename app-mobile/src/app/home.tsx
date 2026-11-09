@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { auth } from '../services/firebaseConfig';
 import { requisicaoApi } from '../services/api';
+import { resolverFotoProduto } from '../utils/imageUtils';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 import { useAppTheme } from '../context/ThemeContext';
 import { estilosHome } from '../styles/home.styles';
@@ -299,9 +300,10 @@ export default function HomeScreen() {
   };
 
   const paddingLateral = 16;
-  const espacoEntreCards = 8;
+  const espacoEntreCards = 10;
   const larguraDisponivel = larguraJanela - paddingLateral * 2;
-  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * 2) / 3);
+  const numColunas = larguraJanela < 600 ? 2 : 3;
+  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * (numColunas - 1)) / numColunas);
 
   const renderizarBotaoOrdenacaoFixo = (
     criterio: CriterioOrdenacao,
@@ -559,7 +561,7 @@ export default function HomeScreen() {
                   style={[estilosHome.listaCard, { backgroundColor: estiloVisual.backgroundColor, borderColor: estiloVisual.borderColor }]}
                 >
                   <Image
-                    source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                    source={resolverFotoProduto(item.foto_url, item.categoria)}
                     style={estilosHome.listaFoto}
                     resizeMode="cover"
                   />
@@ -664,7 +666,7 @@ export default function HomeScreen() {
                   ]}
                 >
                   <Image
-                    source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                    source={resolverFotoProduto(item.foto_url, item.categoria)}
                     style={estilosHome.gridFoto}
                     resizeMode="cover"
                   />
@@ -743,11 +745,7 @@ export default function HomeScreen() {
               </TouchableOpacity>
 
               <Image
-                source={
-                  produtoSelecionado?.foto_url
-                    ? { uri: produtoSelecionado.foto_url }
-                    : obterPlaceholderPorCategoria(produtoSelecionado?.categoria || '')
-                }
+                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
                 style={estilosHome.modalProdutoFotoCapa}
                 resizeMode="cover"
               />
@@ -837,3 +835,5 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
+
+

@@ -7,7 +7,7 @@ export const estilosAccessibilityVoiceNav = StyleSheet.create({
   rolagem: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   cabecalho: {
     marginBottom: 20,
@@ -41,3 +41,4 @@ export const estilosAccessibilityVoiceNav = StyleSheet.create({
     marginBottom: 12,
   },
 });
+

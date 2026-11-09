@@ -24,7 +24,7 @@ export default function SettingsCampaignsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -68,3 +68,4 @@ export default function SettingsCampaignsScreen() {
     </SafeAreaView>
   );
 }
+

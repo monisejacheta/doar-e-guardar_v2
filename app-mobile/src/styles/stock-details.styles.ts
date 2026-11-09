@@ -5,7 +5,7 @@ export const estilosStockDetails = StyleSheet.create({
   rolagem: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   botaoVoltar: {
     flexDirection: 'row',
@@ -35,7 +35,7 @@ export const estilosStockDetails = StyleSheet.create({
   searchBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     marginBottom: 16,
   },
   inputSearchWrapper: {
@@ -119,7 +119,7 @@ export const estilosStockDetails = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
     width: '100%',
   },
   gridCard: {
@@ -131,7 +131,7 @@ export const estilosStockDetails = StyleSheet.create({
   },
   gridFoto: {
     width: '100%',
-    height: 70,
+    height: 96,
     backgroundColor: '#F1F5F9',
   },
   gridConteudo: {
@@ -157,7 +157,7 @@ export const estilosStockDetails = StyleSheet.create({
   },
   gridTitulo: {
     fontWeight: '700',
-    lineHeight: 14,
+    lineHeight: 16,
   },
 
   // Modal de Detalhes com Foto em Capa

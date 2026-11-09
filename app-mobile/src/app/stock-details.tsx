@@ -19,6 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
 import { estilosStockDetails } from '../styles/stock-details.styles';
 import { requisicaoApi } from '../services/api';
+import { resolverFotoProduto } from '../utils/imageUtils';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 
 interface LoteItem {
@@ -177,9 +178,10 @@ export default function StockDetailsScreen() {
   }, [catalogoAgrupado, pesquisa]);
 
   const paddingLateral = 16;
-  const espacoEntreCards = 8;
+  const espacoEntreCards = 10;
   const larguraDisponivel = larguraJanela - paddingLateral * 2;
-  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * 2) / 3);
+  const numColunas = larguraJanela < 600 ? 2 : 3;
+  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * (numColunas - 1)) / numColunas);
 
   return (
     <SafeAreaView style={[estilosStockDetails.container, { backgroundColor: theme.background }]}>
@@ -270,7 +272,7 @@ export default function StockDetailsScreen() {
                 style={[estilosStockDetails.listaCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
               >
                 <Image
-                  source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                  source={resolverFotoProduto(item.foto_url, item.categoria)}
                   style={estilosStockDetails.listaFoto}
                   resizeMode="cover"
                 />
@@ -311,7 +313,7 @@ export default function StockDetailsScreen() {
                 style={[estilosStockDetails.gridCard, { width: larguraCardGrid, backgroundColor: theme.surface, borderColor: theme.border }]}
               >
                 <Image
-                  source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                  source={resolverFotoProduto(item.foto_url, item.categoria)}
                   style={estilosStockDetails.gridFoto}
                   resizeMode="cover"
                 />
@@ -355,11 +357,7 @@ export default function StockDetailsScreen() {
               </TouchableOpacity>
 
               <Image
-                source={
-                  produtoSelecionado?.foto_url
-                    ? { uri: produtoSelecionado.foto_url }
-                    : obterPlaceholderPorCategoria(produtoSelecionado?.categoria || '')
-                }
+                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
                 style={estilosStockDetails.modalProdutoFotoCapa}
                 resizeMode="cover"
               />
@@ -443,3 +441,4 @@ export default function StockDetailsScreen() {
     </SafeAreaView>
   );
 }
+

@@ -8,7 +8,7 @@ export const estilosStockMove = StyleSheet.create({
   rolagem: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   cabecalho: {
     marginBottom: 16,
@@ -121,22 +121,22 @@ export const estilosStockMove = StyleSheet.create({
   gridContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
     width: '100%',
   },
   gridCard: {
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1.5,
     overflow: 'hidden',
     elevation: 1,
   },
   gridFoto: {
     width: '100%',
-    height: 60,
+    height: 96,
     backgroundColor: '#F1F5F9',
   },
   gridConteudo: {
-    padding: 5,
+    padding: 8,
   },
   gridBadgeRow: {
     flexDirection: 'row',
@@ -158,7 +158,7 @@ export const estilosStockMove = StyleSheet.create({
   },
   gridTitulo: {
     fontWeight: '700',
-    lineHeight: 13,
+    lineHeight: 16,
   },
 
   // Estilos de Card de Lote e Locais
@@ -175,14 +175,14 @@ export const estilosStockMove = StyleSheet.create({
   gradeLocais: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
     marginTop: 6,
     marginBottom: 12,
   },
   gradeOpcoes: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: 10,
     marginTop: 6,
     marginBottom: 12,
   },
@@ -191,7 +191,7 @@ export const estilosStockMove = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1.5,
-    borderRadius: 10,
+    borderRadius: 14,
     minHeight: 46,
     justifyContent: 'center',
   },
@@ -204,7 +204,7 @@ export const estilosStockMove = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderWidth: 1.5,
-    borderRadius: 10,
+    borderRadius: 14,
     minHeight: 48,
     justifyContent: 'center',
   },
@@ -216,7 +216,7 @@ export const estilosStockMove = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1.5,
     marginTop: 6,
     marginBottom: 12,
@@ -322,3 +322,4 @@ export const estilosStockMove = StyleSheet.create({
     marginTop: 2,
   },
 });
+

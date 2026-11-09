@@ -2,6 +2,7 @@
 import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useAppTheme } from '../context/ThemeContext';
 import { BottomNavBar } from '../components/common/BottomNavBar';
 
@@ -10,7 +11,10 @@ function RootNavigationLayout() {
 
   return (
     <>
-      <StatusBar style={mode === 'dark' || mode === 'high-contrast' ? 'light' : 'dark'} />
+      <StatusBar
+        style={mode === 'dark' || mode === 'high-contrast' ? 'light' : 'dark'}
+        translucent={true}
+      />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -49,8 +53,10 @@ function RootNavigationLayout() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <RootNavigationLayout />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <RootNavigationLayout />
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

@@ -52,7 +52,7 @@ export const estilosEstoque = StyleSheet.create({
   rolagemLista: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   tituloSecao: {
     fontWeight: 'bold',

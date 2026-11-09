@@ -20,7 +20,9 @@ export default function DiagnosticAwsScreen() {
     const testes = [
       { rota: '/api/estoque', modulo: 'estoque', acao: 'consultar_estoque', nome: 'Lambda Estoque (/api/estoque)' },
       { rota: '/api/configuracoes', modulo: 'configuracoes', acao: 'listar_locais', nome: 'Lambda Prateleiras (/api/configuracoes)' },
-      { rota: '/api/relatorios', modulo: 'relatorios', acao: 'gerar_relatorio', nome: 'Lambda Relatórios (/api/relatorios)' },
+      { rota: '/api/relatorios', modulo: 'relatorios', acao: 'consultar_movimentacoes', nome: 'Lambda Relatórios (/api/relatorios)' },
+      { rota: '/api/auth/login', modulo: 'auth', acao: 'status', nome: 'Lambda Autenticação (/api/auth/login)' },
+      { rota: '/api/dora', modulo: 'dora', acao: 'ping', nome: 'Lambda Dora IA (/api/dora)' },
     ];
 
     const lista: { rota: string; modulo: string; status: string; latenciaMs: number; ok: boolean }[] = [];
@@ -31,6 +33,7 @@ export default function DiagnosticAwsScreen() {
         const resp: any = await requisicaoApi(t.rota, {
           metodo: 'POST',
           dados: { modulo: t.modulo, acao: t.acao },
+          timeoutMs: 8000,
         });
         const ms = Date.now() - inicio;
         lista.push({
@@ -44,7 +47,7 @@ export default function DiagnosticAwsScreen() {
         lista.push({
           rota: t.nome,
           modulo: t.modulo,
-          status: e?.message || 'FALHA',
+          status: e?.message || 'FALHA DE RESPOSTA',
           latenciaMs: Date.now() - inicio,
           ok: false,
         });
@@ -61,7 +64,7 @@ export default function DiagnosticAwsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -76,7 +79,7 @@ export default function DiagnosticAwsScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          9.1 Funções Serverless AWS Lambda
+          Funções Serverless AWS Lambda
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
           Endpoint ativo: {API_BASE_URL}

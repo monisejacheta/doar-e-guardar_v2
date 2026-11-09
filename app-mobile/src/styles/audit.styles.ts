@@ -6,7 +6,7 @@ export const estilosAudit = StyleSheet.create({
   rolagem: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   botaoVoltar: {
     flexDirection: 'row',
@@ -222,3 +222,4 @@ export const estilosAudit = StyleSheet.create({
     marginTop: 2,
   },
 });
+

@@ -21,6 +21,7 @@ import { AppInput } from '../components/common/AppInput';
 import { AppButton } from '../components/common/AppButton';
 import { estilosStockMove } from '../styles/stock-move.styles';
 import { requisicaoApi } from '../services/api';
+import { resolverFotoProduto } from '../utils/imageUtils';
 import { auth } from '../services/firebaseConfig';
 import {
   LocalArmazenamento,
@@ -430,9 +431,10 @@ export default function StockMoveScreen() {
   };
 
   const paddingLateral = 16;
-  const espacoEntreCards = 8;
+  const espacoEntreCards = 10;
   const larguraDisponivel = larguraJanela - paddingLateral * 2;
-  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * 2) / 3);
+  const numColunas = larguraJanela < 600 ? 2 : 3;
+  const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * (numColunas - 1)) / numColunas);
 
   return (
     <SafeAreaView style={[estilosStockMove.container, { backgroundColor: theme.background }]}>
@@ -693,7 +695,7 @@ export default function StockMoveScreen() {
                   style={[estilosStockMove.listaCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
                 >
                   <Image
-                    source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                    source={resolverFotoProduto(item.foto_url, item.categoria)}
                     style={estilosStockMove.listaFoto}
                     resizeMode="cover"
                   />
@@ -759,7 +761,7 @@ export default function StockMoveScreen() {
                 ]}
               >
                 <Image
-                  source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                  source={resolverFotoProduto(item.foto_url, item.categoria)}
                   style={estilosStockMove.gridFoto}
                   resizeMode="cover"
                 />
@@ -849,11 +851,7 @@ export default function StockMoveScreen() {
               </TouchableOpacity>
 
               <Image
-                source={
-                  produtoSelecionado?.foto_url
-                    ? { uri: produtoSelecionado.foto_url }
-                    : obterPlaceholderPorCategoria(produtoSelecionado?.categoria || '')
-                }
+                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
                 style={estilosStockMove.modalProdutoFotoCapa}
                 resizeMode="cover"
               />
@@ -1396,3 +1394,4 @@ export default function StockMoveScreen() {
     </SafeAreaView>
   );
 }
+

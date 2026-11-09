@@ -1146,3 +1146,4 @@ const estilosCamera = StyleSheet.create({
     borderRadius: 12,
   },
 });
+

@@ -8,7 +8,7 @@ export const estilosHome = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 14,
-    paddingBottom: 85,
+    paddingBottom: 105,
   },
   header: {
     flexDirection: 'row',
@@ -525,3 +525,5 @@ export const estilosHome = StyleSheet.create({
     marginTop: 1,
   },
 });
+
+

@@ -26,7 +26,7 @@ export default function SettingsUsersScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -67,3 +67,4 @@ export default function SettingsUsersScreen() {
     </SafeAreaView>
   );
 }
+

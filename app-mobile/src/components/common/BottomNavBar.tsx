@@ -2,14 +2,16 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Text, Modal, StyleSheet, Pressable } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../../context/ThemeContext';
 
 export function BottomNavBar() {
   const roteador = useRouter();
   const rotaAtual = usePathname();
+  const insets = useSafeAreaInsets();
   const { theme, fontScale } = useAppTheme();
-  
+
   // Estado para controlar o modal do Menu Hambúrguer
   const [menuAberto, setMenuAberto] = useState(false);
 
@@ -25,25 +27,37 @@ export function BottomNavBar() {
 
   // Itens da barra inferior principal
   const widgetsPrincipais = [
-    { nome: 'Início', icone: 'home', rota: '/home', corTexto: '#3B82F6', corFundo: '#EFF6FF' }, // Azul Pastel
-    { nome: 'Estoque', icone: 'box', rota: '/stock', corTexto: '#10B981', corFundo: '#ECFDF5' }, // Verde Pastel
-    { nome: 'Dora IA', icone: 'smile', rota: '/dora', corTexto: '#F59E0B', corFundo: '#FFFBEB' }, // Âmbar Pastel (Rosto humano/robô)
-    { nome: 'Avisos', icone: 'bell', rota: '/notifications', corTexto: '#8B5CF6', corFundo: '#F5F3FF' }, // Lilás/Lavanda Pastel
+    { nome: 'Início', icone: 'home', rota: '/home', corTexto: '#3B82F6', corFundo: '#EFF6FF' },
+    { nome: 'Estoque', icone: 'box', rota: '/stock', corTexto: '#10B981', corFundo: '#ECFDF5' },
+    { nome: 'Dora IA', icone: 'smile', rota: '/dora', corTexto: '#F59E0B', corFundo: '#FFFBEB' },
+    { nome: 'Avisos', icone: 'bell', rota: '/notifications', corTexto: '#8B5CF6', corFundo: '#F5F3FF' },
   ];
 
   // Itens do Menu Hambúrguer (Mais opções)
   const widgetsExtras = [
-    { nome: 'Meu Perfil', icone: 'user', rota: '/profile', corTexto: '#8B5CF6', corFundo: '#F5F3FF' }, // Lavanda
-    { nome: 'Relatórios', icone: 'bar-chart-2', rota: '/reports', corTexto: '#EF4444', corFundo: '#FEF2F2' }, // Pêssego/Salmão
-    { nome: 'Auditoria', icone: 'clipboard', rota: '/audit', corTexto: '#14B8A6', corFundo: '#F0FDFA' }, // Menta
-    { nome: 'Ajustes', icone: 'settings', rota: '/settings', corTexto: '#64748B', corFundo: '#F8FAFC' }, // Cinza Azulado
-    { nome: 'Sistema', icone: 'activity', rota: '/diagnostic', corTexto: '#F59E0B', corFundo: '#FFFBEB' }, // Baunilha
+    { nome: 'Meu Perfil', icone: 'user', rota: '/profile', corTexto: '#8B5CF6', corFundo: '#F5F3FF' },
+    { nome: 'Relatórios', icone: 'bar-chart-2', rota: '/reports', corTexto: '#EF4444', corFundo: '#FEF2F2' },
+    { nome: 'Auditoria', icone: 'clipboard', rota: '/audit', corTexto: '#14B8A6', corFundo: '#F0FDFA' },
+    { nome: 'Ajustes', icone: 'settings', rota: '/settings', corTexto: '#64748B', corFundo: '#F8FAFC' },
+    { nome: 'Sistema AWS', icone: 'activity', rota: '/diagnostic', corTexto: '#F59E0B', corFundo: '#FFFBEB' },
   ];
+
+  const alturaBarra = 60 + (insets.bottom > 0 ? insets.bottom : 8);
+  const paddingInferior = insets.bottom > 0 ? insets.bottom : 6;
 
   return (
     <>
-      <View style={[estilos.barraInferior, { backgroundColor: theme.background, borderTopColor: theme.border }]}>
-        
+      <View
+        style={[
+          estilos.barraInferior,
+          {
+            backgroundColor: theme.background,
+            borderTopColor: theme.border,
+            height: alturaBarra,
+            paddingBottom: paddingInferior,
+          },
+        ]}
+      >
         {/* Renderiza os 4 botões principais */}
         {widgetsPrincipais.map((widget, idx) => {
           const ativo = rotaAtual === widget.rota;
@@ -55,9 +69,22 @@ export function BottomNavBar() {
               key={idx}
               onPress={() => navegarPara(widget.rota)}
               style={[estilos.botaoNav, { backgroundColor: bgIcone }]}
+              accessible={true}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: ativo }}
+              accessibilityLabel={widget.nome}
             >
               <Feather name={widget.icone as any} size={20} color={corIcone} style={{ marginBottom: 2 }} />
-              <Text style={[estilos.textoNav, { color: corIcone, fontSize: 10 * fontScale, fontWeight: ativo ? 'bold' : '600' }]}>
+              <Text
+                style={[
+                  estilos.textoNav,
+                  {
+                    color: corIcone,
+                    fontSize: 10.5 * fontScale,
+                    fontWeight: ativo ? 'bold' : '600',
+                  },
+                ]}
+              >
                 {widget.nome}
               </Text>
             </TouchableOpacity>
@@ -68,9 +95,12 @@ export function BottomNavBar() {
         <TouchableOpacity
           onPress={() => setMenuAberto(true)}
           style={estilos.botaoNav}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Abrir mais opções do menu"
         >
           <Feather name="menu" size={22} color={theme.subtext} style={{ marginBottom: 2 }} />
-          <Text style={[estilos.textoNav, { color: theme.subtext, fontSize: 10 * fontScale }]}>
+          <Text style={[estilos.textoNav, { color: theme.subtext, fontSize: 10.5 * fontScale }]}>
             Mais
           </Text>
         </TouchableOpacity>
@@ -84,10 +114,27 @@ export function BottomNavBar() {
         onRequestClose={() => setMenuAberto(false)}
       >
         <Pressable style={estilos.modalOverlay} onPress={() => setMenuAberto(false)}>
-          <View style={[estilos.modalConteudo, { backgroundColor: theme.background, borderColor: theme.border }]}>
+          <View
+            style={[
+              estilos.modalConteudo,
+              {
+                backgroundColor: theme.background,
+                borderColor: theme.border,
+                paddingBottom: 28 + (insets.bottom > 0 ? insets.bottom : 12),
+              },
+            ]}
+          >
             <View style={estilos.modalCabecalho}>
-              <Text style={[estilos.modalTitulo, { color: theme.text, fontSize: 16 * fontScale }]}>Mais Opções</Text>
-              <TouchableOpacity onPress={() => setMenuAberto(false)} style={estilos.botaoFechar}>
+              <Text style={[estilos.modalTitulo, { color: theme.text, fontSize: 16 * fontScale }]}>
+                Mais Opções
+              </Text>
+              <TouchableOpacity
+                onPress={() => setMenuAberto(false)}
+                style={estilos.botaoFechar}
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar menu"
+              >
                 <Feather name="x" size={22} color={theme.subtext} />
               </TouchableOpacity>
             </View>
@@ -98,11 +145,14 @@ export function BottomNavBar() {
                   key={idx}
                   onPress={() => navegarPara(widget.rota)}
                   style={[estilos.botaoExtra, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={widget.nome}
                 >
                   <View style={[estilos.iconeExtraWrapper, { backgroundColor: widget.corFundo }]}>
                     <Feather name={widget.icone as any} size={22} color={widget.corTexto} />
                   </View>
-                  <Text style={[estilos.textoExtra, { color: theme.text, fontSize: 12 * fontScale }]}>
+                  <Text style={[estilos.textoExtra, { color: theme.text, fontSize: 12.5 * fontScale }]}>
                     {widget.nome}
                   </Text>
                 </TouchableOpacity>
@@ -121,32 +171,31 @@ const estilos = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 72,
     borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingBottom: 6,
-    paddingTop: 6,
+    paddingTop: 4,
     paddingHorizontal: 8,
-    elevation: 10,
+    elevation: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    zIndex: 999,
   },
   botaoNav: {
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 56,
-    height: 52,
-    borderRadius: 14,
+    minWidth: 54,
+    height: 48,
+    borderRadius: 12,
   },
   textoNav: {
     fontWeight: '600',
     marginTop: 2,
   },
-  
+
   // Estilos do Modal (Hambúrguer)
   modalOverlay: {
     flex: 1,
@@ -157,8 +206,7 @@ const estilos = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     borderTopWidth: 1,
-    padding: 24,
-    paddingBottom: 40,
+    padding: 20,
     elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
@@ -169,19 +217,19 @@ const estilos = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 18,
   },
   modalTitulo: {
     fontWeight: 'bold',
   },
   botaoFechar: {
-    padding: 4,
+    padding: 6,
   },
   gradeExtras: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: 12,
+    gap: 10,
   },
   botaoExtra: {
     width: '48%',
@@ -192,9 +240,9 @@ const estilos = StyleSheet.create({
     borderRadius: 14,
   },
   iconeExtraWrapper: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 10,
@@ -202,5 +250,5 @@ const estilos = StyleSheet.create({
   textoExtra: {
     fontWeight: '600',
     flex: 1,
-  }
+  },
 });

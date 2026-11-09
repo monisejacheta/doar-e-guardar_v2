@@ -20,6 +20,7 @@ import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-ca
 import { useAppTheme } from '../context/ThemeContext';
 import { estilosStockRemove } from '../styles/stock-remove.styles';
 import { requisicaoApi } from '../services/api';
+import { resolverFotoProduto } from '../utils/imageUtils';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 import { auth } from '../services/firebaseConfig';
 import { AppInput } from '../components/common/AppInput';
@@ -426,7 +427,7 @@ export default function StockRemoveScreen() {
                 ]}
               >
                 <Image
-                  source={item.foto_url ? { uri: item.foto_url } : obterPlaceholderPorCategoria(item.categoria)}
+                  source={resolverFotoProduto(item.foto_url, item.categoria)}
                   style={estilosStockRemove.listaFoto}
                   resizeMode="cover"
                 />
@@ -509,11 +510,7 @@ export default function StockRemoveScreen() {
               </TouchableOpacity>
 
               <Image
-                source={
-                  produtoSelecionado?.foto_url
-                    ? { uri: produtoSelecionado.foto_url }
-                    : obterPlaceholderPorCategoria(produtoSelecionado?.categoria || '')
-                }
+                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
                 style={estilosStockRemove.modalProdutoFotoCapa}
                 resizeMode="cover"
               />
@@ -696,11 +693,7 @@ export default function StockRemoveScreen() {
               <View style={{ backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 14, padding: 16, marginBottom: 20 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border, paddingBottom: 12 }}>
                   <Image
-                    source={
-                      loteSelecionado.foto_url || loteSelecionado.url_foto_produto
-                        ? { uri: loteSelecionado.foto_url || loteSelecionado.url_foto_produto }
-                        : obterPlaceholderPorCategoria(loteSelecionado.categoria)
-                    }
+                    source={resolverFotoProduto(loteSelecionado.foto_url || loteSelecionado.url_foto_produto, loteSelecionado.categoria)}
                     style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12 }}
                   />
                   <View style={{ flex: 1 }}>
@@ -787,3 +780,4 @@ const estilosCameraSaida = StyleSheet.create({
     borderRadius: 12,
   },
 });
+

@@ -1467,3 +1467,4 @@ export default function DoraScreen() {
     </SafeAreaView>
   );
 }
+

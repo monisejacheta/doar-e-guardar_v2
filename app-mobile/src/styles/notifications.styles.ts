@@ -32,7 +32,7 @@ export const estilosNotificacoes = StyleSheet.create({
   rolagem: {
     paddingHorizontal: 20,
     paddingTop: 16,
-    paddingBottom: 40,
+    paddingBottom: 105,
   },
   cartaoAviso: {
     borderWidth: 1.5,
