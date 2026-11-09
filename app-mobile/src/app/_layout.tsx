@@ -13,7 +13,6 @@ function RootNavigationLayout() {
     <>
       <StatusBar
         style={mode === 'dark' || mode === 'high-contrast' ? 'light' : 'dark'}
-        translucent={true}
       />
       <Stack
         screenOptions={{

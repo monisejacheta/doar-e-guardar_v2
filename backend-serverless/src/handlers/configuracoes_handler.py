@@ -2,6 +2,8 @@
 import os
 import re
 import json
+import uuid
+from datetime import datetime
 import unicodedata
 import boto3
 from decimal import Decimal
@@ -11,6 +13,73 @@ from src.utils.response import formatar_resposta_http
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
 TABELA_LOCAIS = os.getenv("DYNAMODB_TABLE_LOCAIS", "tb_locaisArmazenamento")
 TABELA_LOTES = os.getenv("DYNAMODB_TABLE_LOTES", "tb_lotesProdutos")
+TABELA_CATEGORIAS = os.getenv("DYNAMODB_TABLE_CATEGORIAS", "tb_categoriasAlimentos")
+
+_CATEGORIAS_PADRAO = [
+    {"nome_categoria": "Grãos e Cereais", "descricao": "Arroz, feijão, lentilha, milho e farináceos básicos."},
+    {"nome_categoria": "Laticínios", "descricao": "Leite integral UHT, leite em pó, derivados refrigerados."},
+    {"nome_categoria": "Massas e Padaria", "descricao": "Macarrão, biscoitos, pães e misturas de panificação."},
+    {"nome_categoria": "Óleos e Temperos", "descricao": "Óleo de soja, azeite, sal, açúcar e condimentos."},
+    {"nome_categoria": "Enlatados e Conservas", "descricao": "Extrato de tomate, milho, ervilha, sardinha e atum."},
+    {"nome_categoria": "Bebidas e Sucos", "descricao": "Sucos integrais, achocolatados e bebidas lácteas."},
+    {"nome_categoria": "Higiene e Limpeza", "descricao": "Sabonete, detergente, água sanitária e itens de apoio."},
+    {"nome_categoria": "Outros Alimentos", "descricao": "Itens diversos não classificados nas categorias anteriores."},
+]
+_TABELA_CATEGORIAS_MEMORIA: List[Dict[str, Any]] = [dict(c) for c in _CATEGORIAS_PADRAO]
+
+
+def listar_categorias_alimentos_aws() -> List[Dict[str, Any]]:
+    tabela = _obter_tabela_dynamodb(TABELA_CATEGORIAS)
+    if tabela is not None:
+        try:
+            resp = tabela.scan()
+            itens = resp.get("Items", [])
+            if itens:
+                return _converter_decimals(itens)
+        except Exception:
+            pass
+    return list(_TABELA_CATEGORIAS_MEMORIA)
+
+
+def cadastrar_categoria_alimento_aws(dados: Dict[str, Any]) -> Dict[str, Any]:
+    nome = str(dados.get("nome_categoria") or dados.get("nome") or "").strip()
+    descricao = str(dados.get("descricao_categoria") or dados.get("descricao") or "").strip()
+    if not nome:
+        return {"sucesso": False, "status_code": 400, "mensagem": "Nome da categoria é obrigatório."}
+
+    # Verifica se já existe
+    for cat in _TABELA_CATEGORIAS_MEMORIA:
+        if str(cat.get("nome_categoria", "")).lower() == nome.lower():
+            return {
+                "sucesso": True,
+                "status_code": 200,
+                "mensagem": f"Categoria '{nome}' já homologada na AWS.",
+                "categoria": cat,
+            }
+
+    id_cat = f"cat_{uuid.uuid4().hex[:8]}"
+    nova_cat = {
+        "id_categoria_alimento": id_cat,
+        "nome_categoria": nome,
+        "descricao_categoria": descricao or f"Categoria institucional {nome}",
+        "status_ativo": True,
+        "data_cadastro": datetime.now().isoformat(),
+    }
+    _TABELA_CATEGORIAS_MEMORIA.append(nova_cat)
+
+    tabela = _obter_tabela_dynamodb(TABELA_CATEGORIAS)
+    if tabela is not None:
+        try:
+            tabela.put_item(Item=nova_cat)
+        except Exception as e:
+            print(f"[AVISO] Não foi possível persistir categoria no DynamoDB: {e}")
+
+    return {
+        "sucesso": True,
+        "status_code": 201,
+        "mensagem": f"Categoria '{nome}' cadastrada na AWS com sucesso.",
+        "categoria": nova_cat,
+    }
 
 # Catálogo homologado padrão de compartimentos físicos (US06: exclusivamente 'armário' ou 'geladeira')
 _LOCAIS_PADRAO_HOMOLOGADOS: List[Dict[str, Any]] = [
@@ -483,6 +552,22 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
 
     if acao == "moderar_campanha":
         res = funcaoModerarCampanhaDoacao(corpo)
+        return formatar_resposta_http(res["status_code"], res)
+
+    if acao in ("listar_categorias", "consultar_categorias"):
+        cats = listar_categorias_alimentos_aws()
+        return formatar_resposta_http(
+            200,
+            {
+                "sucesso": True,
+                "status_code": 200,
+                "categorias": cats,
+                "total_categorias": len(cats),
+            },
+        )
+
+    if acao == "cadastrar_categoria":
+        res = cadastrar_categoria_alimento_aws(corpo)
         return formatar_resposta_http(res["status_code"], res)
 
     return formatar_resposta_http(

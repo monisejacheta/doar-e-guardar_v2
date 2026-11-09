@@ -1,11 +1,12 @@
 // app-mobile/src/app/settings-storage.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Text,
   View,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   ActivityIndicator,
   Alert,
   RefreshControl,
@@ -35,12 +36,44 @@ export default function SettingsStorageScreen() {
   const [recarregando, setRecarregando] = useState(false);
   const [sincronizandoAws, setSincronizandoAws] = useState(false);
 
+  // Filtros e Organização de Prateleiras
+  const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'armário' | 'geladeira'>('TODOS');
+  const [buscaTermo, setBuscaTermo] = useState('');
+
   // Formulário de nova prateleira (US06)
   const [nomeLocal, setNomeLocal] = useState('');
   const [tipoLocal, setTipoLocal] = useState<'armário' | 'geladeira'>('armário');
   const [sublocal, setSublocal] = useState('');
   const [ambiente, setAmbiente] = useState('Despensa Principal');
   const [salvandoNovo, setSalvandoNovo] = useState(false);
+
+  const locaisFiltrados = useMemo(() => {
+    return locais.filter((l) => {
+      if (filtroTipo !== 'TODOS' && l.tipo_local !== filtroTipo) {
+        return false;
+      }
+      if (buscaTermo.trim()) {
+        const termo = buscaTermo.trim().toLowerCase();
+        return (
+          l.local_descricao.toLowerCase().includes(termo) ||
+          l.nome_local.toLowerCase().includes(termo) ||
+          l.sublocal_compartimento.toLowerCase().includes(termo) ||
+          (l.localizacao_ambiente || '').toLowerCase().includes(termo)
+        );
+      }
+      return true;
+    });
+  }, [locais, filtroTipo, buscaTermo]);
+
+  const locaisAgrupadosPorMovel = useMemo(() => {
+    const grupos: Record<string, LocalArmazenamento[]> = {};
+    locaisFiltrados.forEach((l) => {
+      const chave = l.nome_local || 'Outros Compartimentos';
+      if (!grupos[chave]) grupos[chave] = [];
+      grupos[chave].push(l);
+    });
+    return grupos;
+  }, [locaisFiltrados]);
 
   const carregarDados = useCallback(async (silencioso = false) => {
     try {
@@ -351,87 +384,255 @@ export default function SettingsStorageScreen() {
           />
         </View>
 
-        {/* Lista de Prateleiras Cadastradas na AWS */}
-        <Text style={{ fontWeight: '800', color: theme.text, fontSize: 15 * fontScale, marginBottom: 10 }}>
-          Prateleiras Cadastradas ({locais.length})
-        </Text>
+        {/* Seção Organizada de Prateleiras Cadastradas na AWS */}
+        <View style={{ marginBottom: 12 }}>
+          <Text style={{ fontWeight: '800', color: theme.text, fontSize: 16 * fontScale }}>
+            Locais Cadastrados ({locaisFiltrados.length} de {locais.length})
+          </Text>
+          <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, marginTop: 2 }}>
+            Organizados por equipamento e compartimento para navegação ágil.
+          </Text>
+        </View>
+
+        {/* Abas de Filtro por Equipamento */}
+        <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+          {[
+            { chave: 'TODOS', rotulo: `Todos (${locais.length})`, icon: 'layers' },
+            { chave: 'armário', rotulo: `Armários (${locais.filter((l) => l.tipo_local === 'armário').length})`, icon: 'archive' },
+            { chave: 'geladeira', rotulo: `Geladeiras (${locais.filter((l) => l.tipo_local === 'geladeira').length})`, icon: 'thermometer' },
+          ].map((aba) => {
+            const ativo = filtroTipo === aba.chave;
+            return (
+              <TouchableOpacity
+                key={aba.chave}
+                onPress={() => setFiltroTipo(aba.chave as any)}
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  paddingVertical: 8,
+                  paddingHorizontal: 4,
+                  borderRadius: 10,
+                  borderWidth: 1.5,
+                  backgroundColor: ativo ? theme.primary : theme.surface,
+                  borderColor: ativo ? theme.primary : theme.border,
+                }}
+              >
+                <Feather
+                  name={aba.icon as any}
+                  size={13}
+                  color={ativo ? '#FFFFFF' : theme.subtext}
+                  style={{ marginRight: 4 }}
+                />
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontSize: 11 * fontScale,
+                    fontWeight: ativo ? '700' : '500',
+                    color: ativo ? '#FFFFFF' : theme.text,
+                  }}
+                >
+                  {aba.rotulo}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
+        {/* Campo de Busca Rápida de Locais */}
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: theme.surface,
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            marginBottom: 14,
+            borderWidth: 1.5,
+            borderColor: theme.border,
+          }}
+        >
+          <Feather name="search" size={16} color="#9CA3AF" style={{ marginRight: 8 }} />
+          <TextInput
+            style={{ flex: 1, fontSize: 13 * fontScale, color: theme.text, padding: 0 }}
+            placeholder="Buscar por armário, geladeira ou prateleira..."
+            placeholderTextColor="#9CA3AF"
+            value={buscaTermo}
+            onChangeText={setBuscaTermo}
+          />
+          {buscaTermo.length > 0 && (
+            <TouchableOpacity onPress={() => setBuscaTermo('')}>
+              <Feather name="x" size={16} color="#9CA3AF" />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {carregando ? (
           <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
+        ) : Object.keys(locaisAgrupadosPorMovel).length === 0 ? (
+          <View
+            style={{
+              padding: 24,
+              backgroundColor: theme.surface,
+              borderRadius: 14,
+              alignItems: 'center',
+              borderWidth: 1.5,
+              borderColor: theme.border,
+            }}
+          >
+            <Feather name="inbox" size={32} color={theme.subtext} style={{ marginBottom: 8 }} />
+            <Text style={{ color: theme.text, fontWeight: '700', fontSize: 14 * fontScale }}>
+              Nenhum compartimento encontrado
+            </Text>
+            <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, marginTop: 4, textAlign: 'center' }}>
+              Tente ajustar os termos de busca ou o filtro por tipo de equipamento.
+            </Text>
+          </View>
         ) : (
-          <View style={{ gap: 10 }}>
-            {locais.map((loc) => {
-              const ocupado = (loc.quantidade_pacotes_alocados || 0) > 0;
+          <View style={{ gap: 14 }}>
+            {Object.entries(locaisAgrupadosPorMovel).map(([nomeMovel, listaCompartimentos]) => {
+              const ehGeladeira = listaCompartimentos[0]?.tipo_local === 'geladeira';
+              const ambienteMovel = listaCompartimentos[0]?.localizacao_ambiente || 'Despensa';
+              const totalPacotesNoMovel = listaCompartimentos.reduce(
+                (acc, cur) => acc + (cur.quantidade_pacotes_alocados || 0),
+                0
+              );
+
               return (
                 <View
-                  key={loc.id_local_armazenamento}
+                  key={nomeMovel}
                   style={{
                     backgroundColor: theme.surface,
-                    borderColor: ocupado ? `${theme.primary}60` : theme.border,
+                    borderRadius: 16,
                     borderWidth: 1.5,
-                    borderRadius: 14,
+                    borderColor: theme.border,
                     padding: 14,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
+                    overflow: 'hidden',
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 10 }}>
-                    <View
-                      style={{
-                        width: 42,
-                        height: 42,
-                        borderRadius: 12,
-                        backgroundColor: loc.tipo_local === 'geladeira' ? '#E0F2FE' : '#ECFDF5',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        marginRight: 12,
-                      }}
-                    >
-                      <Feather
-                        name={loc.tipo_local === 'geladeira' ? 'thermometer' : 'archive'}
-                        size={20}
-                        color={loc.tipo_local === 'geladeira' ? '#0284C7' : '#059669'}
-                      />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={{ fontWeight: '800', color: theme.text, fontSize: 13.5 * fontScale }}>
-                        {loc.local_descricao}
-                      </Text>
-                      <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginTop: 2 }}>
-                        {loc.localizacao_ambiente} • ID: {loc.id_local_armazenamento}
-                      </Text>
-                      <Text
+                  {/* Cabeçalho do Equipamento */}
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      paddingBottom: 10,
+                      borderBottomWidth: 1,
+                      borderBottomColor: theme.border,
+                      marginBottom: 10,
+                    }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: 8 }}>
+                      <View
                         style={{
-                          color: ocupado ? theme.primary : theme.subtext,
-                          fontWeight: ocupado ? '700' : '500',
-                          fontSize: 11 * fontScale,
-                          marginTop: 3,
+                          width: 36,
+                          height: 36,
+                          borderRadius: 10,
+                          backgroundColor: ehGeladeira ? '#E0F2FE' : '#ECFDF5',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          marginRight: 10,
                         }}
                       >
-                        {ocupado
-                          ? `${loc.quantidade_lotes_ativos} lote(s) ativo(s) • ${loc.quantidade_pacotes_alocados} pacote(s)`
-                          : 'Prateleira livre (0 pacotes)'}
+                        <Feather
+                          name={ehGeladeira ? 'thermometer' : 'archive'}
+                          size={18}
+                          color={ehGeladeira ? '#0284C7' : '#059669'}
+                        />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontWeight: '800', color: theme.text, fontSize: 14 * fontScale }}>
+                          {nomeMovel}
+                        </Text>
+                        <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>
+                          {ambienteMovel} • {listaCompartimentos.length} compartimento(s)
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View
+                      style={{
+                        backgroundColor: totalPacotesNoMovel > 0 ? `${theme.primary}15` : '#F3F4F6',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 8,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 10.5 * fontScale,
+                          fontWeight: '700',
+                          color: totalPacotesNoMovel > 0 ? theme.primary : theme.subtext,
+                        }}
+                      >
+                        {totalPacotesNoMovel} pcts
                       </Text>
                     </View>
                   </View>
 
-                  <TouchableOpacity
-                    accessible={true}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Excluir prateleira ${loc.local_descricao}`}
-                    onPress={() => confirmarExclusao(loc)}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      backgroundColor: ocupado ? '#F1F5F9' : '#FEF2F2',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <Feather name={ocupado ? 'lock' : 'trash-2'} size={17} color={ocupado ? '#94A3B8' : theme.danger} />
-                  </TouchableOpacity>
+                  {/* Lista de Compartimentos deste Equipamento */}
+                  <View style={{ gap: 8 }}>
+                    {listaCompartimentos.map((loc) => {
+                      const ocupado = (loc.quantidade_pacotes_alocados || 0) > 0;
+                      return (
+                        <View
+                          key={loc.id_local_armazenamento}
+                          style={{
+                            backgroundColor: ocupado ? '#F8FAFC' : '#FFFFFF',
+                            borderColor: ocupado ? `${theme.primary}40` : '#E2E8F0',
+                            borderWidth: 1,
+                            borderRadius: 12,
+                            paddingVertical: 9,
+                            paddingHorizontal: 12,
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <View style={{ flex: 1, marginRight: 10 }}>
+                            <Text style={{ fontWeight: '700', color: theme.text, fontSize: 13 * fontScale }}>
+                              {loc.sublocal_compartimento || loc.local_descricao}
+                            </Text>
+                            <Text
+                              style={{
+                                color: ocupado ? theme.primary : theme.subtext,
+                                fontWeight: ocupado ? '700' : '500',
+                                fontSize: 11 * fontScale,
+                                marginTop: 2,
+                              }}
+                            >
+                              {ocupado
+                                ? `${loc.quantidade_lotes_ativos} lote(s) • ${loc.quantidade_pacotes_alocados} pacotes`
+                                : 'Livre (0 pacotes)'}
+                            </Text>
+                          </View>
+
+                          <TouchableOpacity
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={`Excluir prateleira ${loc.local_descricao}`}
+                            onPress={() => confirmarExclusao(loc)}
+                            style={{
+                              width: 36,
+                              height: 36,
+                              borderRadius: 8,
+                              backgroundColor: ocupado ? '#F1F5F9' : '#FEF2F2',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Feather
+                              name={ocupado ? 'lock' : 'trash-2'}
+                              size={15}
+                              color={ocupado ? '#94A3B8' : theme.danger}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
               );
             })}

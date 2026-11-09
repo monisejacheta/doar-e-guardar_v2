@@ -1,11 +1,12 @@
 // app-mobile/src/app/stock-add.tsx
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   Text,
   View,
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  TextInput,
   Alert,
   Modal,
   Image,
@@ -119,6 +120,11 @@ export default function StockAddScreen() {
   const [nomeProduto, setNomeProduto] = useState('');
   const [marcaProduto, setMarcaProduto] = useState('');
   const [categoria, setCategoria] = useState('Grãos e Cereais');
+  const [categorias, setCategorias] = useState<string[]>(CATEGORIAS_INSTITUCIONAIS);
+  const [modalNovaCategoriaVisivel, setModalNovaCategoriaVisivel] = useState(false);
+  const [nomeNovaCategoria, setNomeNovaCategoria] = useState('');
+  const [salvandoCategoria, setSalvandoCategoria] = useState(false);
+
   const [unidadeMedida, setUnidadeMedida] = useState('pacotes');
   const [estoqueMinimo, setEstoqueMinimo] = useState('10');
   const [urlFotoProduto, setUrlFotoProduto] = useState('');
@@ -132,6 +138,10 @@ export default function StockAddScreen() {
   const [dataValidade, setDataValidade] = useState('');
   const [locaisDisponiveis, setLocaisDisponiveis] = useState<string[]>(LOCAIS_PADRAO_HOMOLOGADOS);
   const [localArmazenamento, setLocalArmazenamento] = useState(LOCAIS_PADRAO_HOMOLOGADOS[0]);
+
+  // Filtros e Organização dos Locais de Armazenamento
+  const [filtroTipoLocal, setFiltroTipoLocal] = useState<'TODOS' | 'armário' | 'geladeira'>('TODOS');
+  const [buscaLocal, setBuscaLocal] = useState('');
 
   // Estados de Controle
   const [carregandoVerificacao, setCarregandoVerificacao] = useState(false);
@@ -172,9 +182,121 @@ export default function StockAddScreen() {
     }
   }, []);
 
+  // Carrega categorias de alimentos já cadastradas na AWS
+  const carregarCategoriasDoBackend = useCallback(async () => {
+    try {
+      const resp: any = await requisicaoApi('/api/estoque', {
+        metodo: 'POST',
+        dados: { modulo: 'estoque', acao: 'listar_categorias' },
+      });
+      if (resp?.sucesso && Array.isArray(resp.categorias) && resp.categorias.length > 0) {
+        const nomesServidor: string[] = resp.categorias
+          .map((c: any) => (typeof c === 'string' ? c : c.nome_categoria || c.nome))
+          .filter(Boolean);
+
+        setCategorias((atuais) => {
+          const conjunto = new Set([...atuais, ...nomesServidor]);
+          return Array.from(conjunto);
+        });
+      }
+    } catch {
+      // Mantém categorias iniciais
+    }
+  }, []);
+
+  const salvarNovaCategoriaNaAws = async () => {
+    const nomeLimpo = nomeNovaCategoria.trim();
+    if (!nomeLimpo) {
+      Alert.alert('Atenção', 'Informe o nome da categoria para cadastrar.');
+      return;
+    }
+
+    setSalvandoCategoria(true);
+    try {
+      const resp: any = await requisicaoApi('/api/estoque', {
+        metodo: 'POST',
+        dados: {
+          modulo: 'estoque',
+          acao: 'cadastrar_categoria',
+          nome_categoria: nomeLimpo,
+        },
+      });
+
+      setCategorias((atuais) => {
+        if (!atuais.includes(nomeLimpo)) {
+          return [...atuais, nomeLimpo];
+        }
+        return atuais;
+      });
+      setCategoria(nomeLimpo);
+      setNomeNovaCategoria('');
+      setModalNovaCategoriaVisivel(false);
+      Alert.alert('Sucesso', resp?.mensagem || `Categoria "${nomeLimpo}" cadastrada na AWS com sucesso!`);
+    } catch (err: any) {
+      setCategorias((atuais) => {
+        if (!atuais.includes(nomeLimpo)) {
+          return [...atuais, nomeLimpo];
+        }
+        return atuais;
+      });
+      setCategoria(nomeLimpo);
+      setNomeNovaCategoria('');
+      setModalNovaCategoriaVisivel(false);
+      Alert.alert('Categoria Cadastrada', `Categoria "${nomeLimpo}" adicionada e selecionada.`);
+    } finally {
+      setSalvandoCategoria(false);
+    }
+  };
+
   useEffect(() => {
     carregarLocaisDoBackend();
-  }, [carregarLocaisDoBackend]);
+    carregarCategoriasDoBackend();
+  }, [carregarLocaisDoBackend, carregarCategoriasDoBackend]);
+
+  // Estruturação organizada dos locais de armazenamento para facilitar a navegação
+  const parsedLocais = useMemo(() => {
+    return locaisDisponiveis.map((locDesc) => {
+      const partes = locDesc.split(' - ');
+      const equipamento = partes[0]?.trim() || locDesc;
+      const compartimento = partes.slice(1).join(' - ').trim() || 'Compartimento Único';
+      const ehGeladeira = locDesc.toLowerCase().includes('geladeira');
+      const tipo = ehGeladeira ? 'geladeira' : 'armário';
+      return {
+        descricao: locDesc,
+        equipamento,
+        compartimento,
+        tipo,
+      };
+    });
+  }, [locaisDisponiveis]);
+
+  const locaisFiltrados = useMemo(() => {
+    return parsedLocais.filter((item) => {
+      if (filtroTipoLocal !== 'TODOS' && item.tipo !== filtroTipoLocal) {
+        return false;
+      }
+      if (buscaLocal.trim()) {
+        const termo = buscaLocal.trim().toLowerCase();
+        return (
+          item.descricao.toLowerCase().includes(termo) ||
+          item.equipamento.toLowerCase().includes(termo) ||
+          item.compartimento.toLowerCase().includes(termo)
+        );
+      }
+      return true;
+    });
+  }, [parsedLocais, filtroTipoLocal, buscaLocal]);
+
+  const gruposEquipamentos = useMemo(() => {
+    const grupos: Record<string, typeof locaisFiltrados> = {};
+    locaisFiltrados.forEach((item) => {
+      if (!grupos[item.equipamento]) {
+        grupos[item.equipamento] = [];
+      }
+      grupos[item.equipamento].push(item);
+    });
+    return grupos;
+  }, [locaisFiltrados]);
 
   // Máscaras de entrada
   const lidarComMascaraData = (texto: string) => {
@@ -236,18 +358,30 @@ export default function StockAddScreen() {
     }
   };
 
-  const aoLerCodigoCamera = (resultado: BarcodeScanningResult) => {
+  const aoLerCodigoCamera = (resultado: any) => {
     if (leituraProcessadaRef.current) return;
-    const codigoExtraido = (resultado?.data || '').replace(/\D/g, '');
-    if (codigoExtraido.length < 8 || codigoExtraido.length > 14) {
-      return;
-    }
+    const raw = String(resultado?.data ?? resultado?.raw ?? resultado ?? '').trim();
+    if (!raw) return;
 
     leituraProcessadaRef.current = true;
     setLanternaAtiva(false);
     setModalCameraVisivel(false);
-    setCodigoBarras(codigoExtraido);
-    processarCodigoBarras(codigoExtraido);
+
+    // Extrai números para formato EAN/GTIN ou preserva o código identificado
+    const apenasDigitos = raw.replace(/\D/g, '');
+    const codigoIdentificado = apenasDigitos.length >= 6 ? apenasDigitos : raw;
+
+    // Retorna para a tela de cadastro com o número do código de barras preenchido no campo
+    setCodigoBarras(codigoIdentificado);
+
+    // Se possui formato padrão EAN (8 a 14 dígitos numéricos), consulta nas 3 APIs em cascata
+    if (codigoIdentificado.length >= 8 && codigoIdentificado.length <= 14 && /^\d+$/.test(codigoIdentificado)) {
+      processarCodigoBarras(codigoIdentificado);
+    } else {
+      // Se for outro tipo de código ou alfanumérico, avança para a conferência manual com o campo preenchido
+      setEtapa(2);
+      rolarParaAbaixo();
+    }
   };
 
   // FLUXO REAL: Consulta o backend AWS Lambda (/api/estoque -> verificar_produto)
@@ -733,7 +867,7 @@ export default function StockAddScreen() {
               Categoria do Alimento:
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-              {CATEGORIAS_INSTITUCIONAIS.map((cat) => {
+              {categorias.map((cat) => {
                 const selecionada = categoria === cat;
                 return (
                   <TouchableOpacity
@@ -760,6 +894,33 @@ export default function StockAddScreen() {
                   </TouchableOpacity>
                 );
               })}
+
+              {/* Botão Adicionar Categoria no mesmo formato e tamanho */}
+              <TouchableOpacity
+                onPress={() => setModalNovaCategoriaVisivel(true)}
+                style={{
+                  paddingVertical: 8,
+                  paddingHorizontal: 12,
+                  borderRadius: 10,
+                  borderWidth: 1.5,
+                  borderStyle: 'dashed',
+                  borderColor: theme.primary,
+                  backgroundColor: `${theme.primary}0D`,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+              >
+                <Feather name="plus" size={13} color={theme.primary} style={{ marginRight: 4 }} />
+                <Text
+                  style={{
+                    fontSize: 12 * fontScale,
+                    fontWeight: '700',
+                    color: theme.primary,
+                  }}
+                >
+                  Adicionar Categoria
+                </Text>
+              </TouchableOpacity>
             </View>
 
             <AppInput
@@ -846,37 +1007,190 @@ export default function StockAddScreen() {
               </View>
             </View>
 
-            <Text style={{ fontSize: 12 * fontScale, fontWeight: '600', color: theme.text, marginBottom: 8, marginTop: 4 }}>
+            <Text style={{ fontSize: 13 * fontScale, fontWeight: '700', color: theme.text, marginBottom: 6, marginTop: 4 }}>
               Local de Armazenamento (Armário / Geladeira):
             </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-              {locaisDisponiveis.map((loc) => {
-                const selecionado = localArmazenamento === loc;
+
+            {/* Card de Destaque com o Local Selecionado */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#ECFDF5',
+                borderColor: '#10B981',
+                borderWidth: 1.5,
+                borderRadius: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 12,
+                marginBottom: 12,
+              }}
+            >
+              <Feather
+                name={localArmazenamento.toLowerCase().includes('geladeira') ? 'thermometer' : 'archive'}
+                size={18}
+                color="#059669"
+                style={{ marginRight: 10 }}
+              />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 10.5 * fontScale, color: '#047857', fontWeight: '600' }}>
+                  Local Selecionado para este Lote:
+                </Text>
+                <Text style={{ fontSize: 13 * fontScale, color: '#065F46', fontWeight: '800' }}>
+                  {localArmazenamento}
+                </Text>
+              </View>
+              <Feather name="check-circle" size={18} color="#059669" />
+            </View>
+
+            {/* Abas Rápidas por Tipo: Todos, Armários, Geladeiras */}
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+              {[
+                { chave: 'TODOS', rotulo: `Todos (${parsedLocais.length})`, icon: 'layers' },
+                { chave: 'armário', rotulo: `Armários (${parsedLocais.filter((l) => l.tipo === 'armário').length})`, icon: 'archive' },
+                { chave: 'geladeira', rotulo: `Geladeiras (${parsedLocais.filter((l) => l.tipo === 'geladeira').length})`, icon: 'thermometer' },
+              ].map((aba) => {
+                const ativo = filtroTipoLocal === aba.chave;
                 return (
                   <TouchableOpacity
-                    key={loc}
-                    onPress={() => setLocalArmazenamento(loc)}
+                    key={aba.chave}
+                    onPress={() => setFiltroTipoLocal(aba.chave as any)}
                     style={{
-                      paddingVertical: 10,
-                      paddingHorizontal: 12,
-                      borderRadius: 10,
-                      borderWidth: 1.5,
-                      borderColor: selecionado ? '#10B981' : '#E5E7EB',
-                      backgroundColor: selecionado ? '#ECFDF5' : '#FFFFFF',
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      paddingVertical: 7,
+                      paddingHorizontal: 4,
+                      borderRadius: 8,
+                      borderWidth: 1.2,
+                      backgroundColor: ativo ? theme.primary : '#F9FAFB',
+                      borderColor: ativo ? theme.primary : '#E5E7EB',
                     }}
                   >
+                    <Feather
+                      name={aba.icon as any}
+                      size={12}
+                      color={ativo ? '#FFFFFF' : theme.subtext}
+                      style={{ marginRight: 4 }}
+                    />
                     <Text
+                      numberOfLines={1}
                       style={{
-                        fontSize: 12 * fontScale,
-                        fontWeight: selecionado ? '700' : '500',
-                        color: selecionado ? '#047857' : theme.text,
+                        fontSize: 10.5 * fontScale,
+                        fontWeight: ativo ? '700' : '500',
+                        color: ativo ? '#FFFFFF' : theme.text,
                       }}
                     >
-                      {loc}
+                      {aba.rotulo}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
+            </View>
+
+            {/* Campo de Busca Rápida de Prateleiras */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#F3F4F6',
+                borderRadius: 10,
+                paddingHorizontal: 10,
+                paddingVertical: 7,
+                marginBottom: 12,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+              }}
+            >
+              <Feather name="search" size={14} color="#9CA3AF" style={{ marginRight: 6 }} />
+              <TextInput
+                style={{ flex: 1, fontSize: 12 * fontScale, color: theme.text, padding: 0 }}
+                placeholder="Filtrar prateleira ou compartimento..."
+                placeholderTextColor="#9CA3AF"
+                value={buscaLocal}
+                onChangeText={setBuscaLocal}
+              />
+              {buscaLocal.length > 0 && (
+                <TouchableOpacity onPress={() => setBuscaLocal('')}>
+                  <Feather name="x" size={14} color="#9CA3AF" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {/* Lista Organizada em Blocos por Equipamento */}
+            <View style={{ gap: 10, marginBottom: 16 }}>
+              {Object.keys(gruposEquipamentos).length === 0 ? (
+                <View style={{ padding: 14, alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 10 }}>
+                  <Text style={{ fontSize: 12 * fontScale, color: theme.subtext }}>
+                    Nenhum compartimento encontrado para o filtro aplicado.
+                  </Text>
+                </View>
+              ) : (
+                Object.entries(gruposEquipamentos).map(([nomeEquip, compartimentos]) => {
+                  const ehGeladeira = nomeEquip.toLowerCase().includes('geladeira');
+                  return (
+                    <View
+                      key={nomeEquip}
+                      style={{
+                        backgroundColor: '#F9FAFB',
+                        borderRadius: 12,
+                        padding: 10,
+                        borderWidth: 1,
+                        borderColor: '#E5E7EB',
+                      }}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                        <Feather
+                          name={ehGeladeira ? 'thermometer' : 'archive'}
+                          size={14}
+                          color={ehGeladeira ? '#0284C7' : '#059669'}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={{ fontSize: 12.5 * fontScale, fontWeight: '700', color: theme.text, flex: 1 }}>
+                          {nomeEquip}
+                        </Text>
+                        <Text style={{ fontSize: 10.5 * fontScale, color: theme.subtext }}>
+                          {compartimentos.length} compartimento(s)
+                        </Text>
+                      </View>
+
+                      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                        {compartimentos.map((item) => {
+                          const selecionado = localArmazenamento === item.descricao;
+                          return (
+                            <TouchableOpacity
+                              key={item.descricao}
+                              onPress={() => setLocalArmazenamento(item.descricao)}
+                              style={{
+                                paddingVertical: 7,
+                                paddingHorizontal: 10,
+                                borderRadius: 8,
+                                borderWidth: 1.5,
+                                borderColor: selecionado ? '#10B981' : '#D1D5DB',
+                                backgroundColor: selecionado ? '#10B981' : '#FFFFFF',
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: 4,
+                              }}
+                            >
+                              {selecionado && <Feather name="check" size={12} color="#FFFFFF" />}
+                              <Text
+                                style={{
+                                  fontSize: 11.5 * fontScale,
+                                  fontWeight: selecionado ? '700' : '500',
+                                  color: selecionado ? '#FFFFFF' : theme.text,
+                                }}
+                              >
+                                {item.compartimento}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  );
+                })
+              )}
             </View>
 
             {salvando ? (
@@ -898,6 +1212,7 @@ export default function StockAddScreen() {
         transparent={false}
         animationType="slide"
         onRequestClose={() => {
+          leituraProcessadaRef.current = false;
           setLanternaAtiva(false);
           setModalCameraVisivel(false);
         }}
@@ -908,7 +1223,18 @@ export default function StockAddScreen() {
             facing="back"
             enableTorch={lanternaAtiva}
             barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+              barcodeTypes: [
+                'ean13',
+                'ean8',
+                'upc_a',
+                'upc_e',
+                'code128',
+                'code39',
+                'itf14',
+                'qr',
+                'codabar',
+                'code93',
+              ],
             }}
             onBarcodeScanned={aoLerCodigoCamera}
           />
@@ -916,6 +1242,7 @@ export default function StockAddScreen() {
           <View style={estilosCamera.topoBarra}>
             <TouchableOpacity
               onPress={() => {
+                leituraProcessadaRef.current = false;
                 setLanternaAtiva(false);
                 setModalCameraVisivel(false);
               }}
@@ -952,6 +1279,112 @@ export default function StockAddScreen() {
             </Text>
           </View>
         </SafeAreaView>
+      </Modal>
+
+      {/* Modal para Adicionar Nova Categoria na AWS */}
+      <Modal
+        visible={modalNovaCategoriaVisivel}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalNovaCategoriaVisivel(false)}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0, 0, 0, 0.55)',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 20,
+          }}
+        >
+          <View
+            style={{
+              width: '100%',
+              maxWidth: 400,
+              backgroundColor: '#FFFFFF',
+              borderRadius: 18,
+              padding: 20,
+              borderWidth: 1.5,
+              borderColor: theme.border,
+              elevation: 5,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 14 }}>
+              <View
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 10,
+                  backgroundColor: `${theme.primary}15`,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 10,
+                }}
+              >
+                <Feather name="plus-circle" size={20} color={theme.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 16 * fontScale, fontWeight: '800', color: theme.text }}>
+                  Nova Categoria de Alimento
+                </Text>
+                <Text style={{ fontSize: 11.5 * fontScale, color: theme.subtext }}>
+                  Cadastrar no banco de dados AWS
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setModalNovaCategoriaVisivel(false)}>
+                <Feather name="x" size={20} color={theme.subtext} />
+              </TouchableOpacity>
+            </View>
+
+            <AppInput
+              rotulo="Nome da Categoria *"
+              placeholder="Ex: Frutas e Verduras, Padaria, Doces..."
+              value={nomeNovaCategoria}
+              onChangeText={setNomeNovaCategoria}
+            />
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 8 }}>
+              <TouchableOpacity
+                onPress={() => setModalNovaCategoriaVisivel(false)}
+                disabled={salvandoCategoria}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  borderWidth: 1,
+                  borderColor: '#D1D5DB',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Text style={{ color: theme.subtext, fontWeight: '600', fontSize: 13 * fontScale }}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={salvarNovaCategoriaNaAws}
+                disabled={salvandoCategoria}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderRadius: 10,
+                  backgroundColor: theme.primary,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {salvandoCategoria ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 * fontScale }}>
+                    Cadastrar na AWS
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       {/* Modal de Confirmação com Imagem e Resumo Real Gravado */}

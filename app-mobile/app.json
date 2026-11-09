@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "app-mobile",
-    "slug": "app-mobile",
+    "name": "Doar&Guardar",
+    "slug": "doar-e-guardar",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -59,8 +59,9 @@
         }
       },
       "eas": {
-        "projectId": "15e31e90-1bfc-445c-bb31-42703900c88a"
+        "projectId": "50db87c7-f324-4ecd-98ec-170411236126"
       }
-    }
+    },
+    "owner": "juuliano_mancini"
   }
 }

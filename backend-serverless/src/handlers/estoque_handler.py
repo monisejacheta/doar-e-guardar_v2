@@ -19,6 +19,8 @@ from src.handlers.configuracoes_handler import (
     funcaoCadastrarLocalArmazenamento,
     funcaoExcluirLocalArmazenamento,
     funcaoModerarCampanhaDoacao,
+    listar_categorias_alimentos_aws,
+    cadastrar_categoria_alimento_aws,
 )
 
 AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
@@ -992,6 +994,26 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         if res.get("sucesso"):
             _registrar_log_auditoria_persistido(
                 "Exclusão de Local", corpo_requisicao, corpo_requisicao.get("id_usuario", "casadacrianca@adm")
+            )
+        return formatar_resposta_http(res["status_code"], res)
+
+    if acao in ("listar_categorias", "consultar_categorias"):
+        cats = listar_categorias_alimentos_aws()
+        return formatar_resposta_http(
+            200,
+            {
+                "sucesso": True,
+                "status_code": 200,
+                "categorias": cats,
+                "total_categorias": len(cats),
+            },
+        )
+
+    if acao == "cadastrar_categoria":
+        res = cadastrar_categoria_alimento_aws(corpo_requisicao)
+        if res.get("sucesso"):
+            _registrar_log_auditoria_persistido(
+                "Cadastro de Categoria", res.get("categoria", {}), corpo_requisicao.get("id_usuario", "casadacrianca@adm")
             )
         return formatar_resposta_http(res["status_code"], res)
 
