@@ -12,6 +12,8 @@ import {
   useWindowDimensions,
   Modal,
   RefreshControl,
+  Platform,
+  Vibration,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -249,6 +251,22 @@ export default function StockMoveScreen() {
   };
 
   const abrirLeitorCodigoBarras = async () => {
+    if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
+      bloqueioLeituraRef.current = false;
+      try {
+        const sub = CameraView.onModernBarcodeScanned((event) => {
+          sub?.remove();
+          aoLerCodigoCamera({ data: event.data });
+        });
+        await CameraView.launchScanner({
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+        });
+        return;
+      } catch (err) {
+        console.warn('Google scanner não disponível no move:', err);
+      }
+    }
+
     if (!permissaoCamera?.granted) {
       const permissao = await solicitarPermissaoCamera();
       if (!permissao.granted) {
@@ -267,9 +285,12 @@ export default function StockMoveScreen() {
   const aoLerCodigoCamera = ({ data }: { data: string }) => {
     if (bloqueioLeituraRef.current) return;
     const eanLido = (data || '').replace(/\D/g, '');
-    if (eanLido.length < 8) return;
+    if (eanLido.length < 6) return;
 
     bloqueioLeituraRef.current = true;
+    try {
+      Vibration.vibrate(100);
+    } catch {}
     setScannerAberto(false);
     setPesquisa(eanLido);
 
@@ -819,6 +840,7 @@ export default function StockMoveScreen() {
               <CameraView
                 style={{ flex: 1 }}
                 facing="back"
+                autofocus="on"
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
                 }}

@@ -1,5 +1,5 @@
 // src/app/profile.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Text,
   View,
@@ -14,6 +14,7 @@ import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
+import { authService } from '../services/authService';
 import { useAppTheme } from '../context/ThemeContext';
 import { AppIcon } from '../components/common/AppIcon';
 
@@ -23,9 +24,21 @@ export default function ProfileScreen() {
   const [saindo, setSaindo] = useState(false);
 
   const usuarioAtual = auth?.currentUser;
-  const nomeExibicao = usuarioAtual?.displayName || 'Colaborador Casa da Criança';
-  const emailExibicao = usuarioAtual?.email || 'operador@casadacrianca.org.br';
-  const urlFoto = usuarioAtual?.photoURL ?? null;
+  const [nomeExibicao, setNomeExibicao] = useState(usuarioAtual?.displayName || 'Colaborador Casa da Criança');
+  const [emailExibicao, setEmailExibicao] = useState(usuarioAtual?.email || 'operador@casadacrianca.org.br');
+  const [urlFoto, setUrlFoto] = useState<string | null>(usuarioAtual?.photoURL ?? null);
+
+  useEffect(() => {
+    const carregarPerfil = async () => {
+      const sessao = await authService.obterSessaoLocal();
+      if (sessao) {
+        if (sessao.nome_usuario) setNomeExibicao(sessao.nome_usuario);
+        if (sessao.email_usuario) setEmailExibicao(sessao.email_usuario);
+        if (sessao.url_foto_perfil) setUrlFoto(sessao.url_foto_perfil);
+      }
+    };
+    carregarPerfil();
+  }, []);
 
   // Realiza o logout e redireciona diretamente para a tela de login ('/')
   const executarLogout = async () => {
@@ -39,6 +52,7 @@ export default function ProfileScreen() {
           signOut(auth),
           new Promise((resolve) => setTimeout(resolve, 1200)),
         ]);
+        await authService.limparSessaoLocal();
       }
     } catch (erro: any) {
       console.warn('[Logout] Aviso no encerramento de sessão:', erro?.message || erro);

@@ -13,6 +13,8 @@ import {
   Alert,
   RefreshControl,
   StyleSheet,
+  Platform,
+  Vibration,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -190,6 +192,22 @@ export default function StockRemoveScreen() {
 
   const abrirScannerBusca = async () => {
     try {
+      if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
+        leituraProcessadaRef.current = false;
+        try {
+          const sub = CameraView.onModernBarcodeScanned((event) => {
+            sub?.remove();
+            aoEscanearCodigoParaSaida(event as any);
+          });
+          await CameraView.launchScanner({
+            barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+          });
+          return;
+        } catch (e) {
+          console.warn('[Scanner Saída] Fallback para câmera:', e);
+        }
+      }
+
       if (!permissaoCamera?.granted) {
         const resp = await solicitarPermissaoCamera();
         if (!resp.granted) {
@@ -206,10 +224,15 @@ export default function StockRemoveScreen() {
 
   const aoEscanearCodigoParaSaida = (resultado: BarcodeScanningResult) => {
     if (leituraProcessadaRef.current) return;
-    const eanLido = (resultado?.data || '').replace(/\D/g, '');
-    if (eanLido.length < 8 || eanLido.length > 14) return;
+    const raw = String(resultado?.data || resultado?.raw || '').trim();
+    const apenasDigitos = raw.replace(/\D/g, '');
+    const eanLido = apenasDigitos.length >= 6 ? apenasDigitos : raw;
+    if (!eanLido) return;
 
     leituraProcessadaRef.current = true;
+    try {
+      Vibration.vibrate(100);
+    } catch {}
     setModalCameraVisivel(false);
     setTermoBusca(eanLido);
 
@@ -469,6 +492,7 @@ export default function StockRemoveScreen() {
           <CameraView
             style={StyleSheet.absoluteFill}
             facing="back"
+            autofocus="on"
             barcodeScannerSettings={{
               barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
             }}

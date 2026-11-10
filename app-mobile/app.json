@@ -23,7 +23,10 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.danielcanivezo.appmobile",
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "pan",
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "androidStatusBar": {
       "barStyle": "dark-content",
@@ -45,6 +48,14 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permitir que o Doar & Guardar utilize a câmera para leitura de códigos de barras (EAN).",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
         }
       ]
     ],

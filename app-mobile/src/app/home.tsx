@@ -17,6 +17,7 @@ import { useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { auth } from '../services/firebaseConfig';
 import { requisicaoApi } from '../services/api';
+import { authService } from '../services/authService';
 import { resolverFotoProduto } from '../utils/imageUtils';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 import { useAppTheme } from '../context/ThemeContext';
@@ -145,6 +146,18 @@ export default function HomeScreen() {
   }, []);
 
   useEffect(() => {
+    const carregarSessaoLocal = async () => {
+      const sessao = await authService.obterSessaoLocal();
+      if (sessao?.nome_usuario) {
+        setUsuarioNome(sessao.nome_usuario);
+        if (sessao.url_foto_perfil) {
+          setFotoPerfil(sessao.url_foto_perfil);
+          setErroCarregarFoto(false);
+        }
+      }
+    };
+    carregarSessaoLocal();
+
     const desinscrever = auth.onAuthStateChanged((user) => {
       if (user) {
         setUsuarioNome(user.displayName || user.email?.split('@')[0] || 'Colaborador');

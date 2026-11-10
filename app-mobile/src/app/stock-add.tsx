@@ -12,6 +12,9 @@ import {
   Image,
   ActivityIndicator,
   StyleSheet,
+  Animated,
+  Platform,
+  Vibration,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
@@ -109,6 +112,28 @@ export default function StockAddScreen() {
   const [modalCameraVisivel, setModalCameraVisivel] = useState(false);
   const [lanternaAtiva, setLanternaAtiva] = useState(false);
   const leituraProcessadaRef = useRef(false);
+  const animLaser = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (modalCameraVisivel) {
+      const loop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(animLaser, {
+            toValue: 140,
+            duration: 1400,
+            useNativeDriver: true,
+          }),
+          Animated.timing(animLaser, {
+            toValue: 0,
+            duration: 1400,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      loop.start();
+      return () => loop.stop();
+    }
+  }, [modalCameraVisivel, animLaser]);
 
   // Etapa: 1 = Código de Barras | 2 = Dados do Produto (se novo) | 3 = Dados do Lote
   const [etapa, setEtapa] = useState<1 | 2 | 3>(1);
@@ -334,9 +359,27 @@ export default function StockAddScreen() {
     }, 150);
   };
 
-  // Abertura da câmera física para leitura de código de barras (sem valor mockado)
+  // Abertura da câmera física ou Google Code Scanner para leitura de código de barras
   const abrirScannerCamera = async () => {
     try {
+      // 1. No Android, se o Google Code Scanner estiver disponível, aciona o scanner nativo oficial do Google
+      if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
+        leituraProcessadaRef.current = false;
+        try {
+          const sub = CameraView.onModernBarcodeScanned((event) => {
+            sub?.remove();
+            aoLerCodigoCamera(event);
+          });
+          await CameraView.launchScanner({
+            barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'itf14', 'qr'],
+          });
+          return;
+        } catch (errGoogle: any) {
+          console.warn('[Scanner] Fallback para visor da câmera:', errGoogle?.message || errGoogle);
+        }
+      }
+
+      // 2. Se não estiver disponível ou cancelado, abre a câmera interna com foco contínuo
       if (!permissaoCamera?.granted) {
         const respostaPermissao = await solicitarPermissaoCamera();
         if (!respostaPermissao.granted) {
@@ -358,12 +401,31 @@ export default function StockAddScreen() {
     }
   };
 
+  const abrirScannerGoogleNativo = async () => {
+    try {
+      leituraProcessadaRef.current = false;
+      const sub = CameraView.onModernBarcodeScanned((event) => {
+        sub?.remove();
+        aoLerCodigoCamera(event);
+      });
+      await CameraView.launchScanner({
+        barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr'],
+      });
+    } catch (err: any) {
+      console.warn('Google Code Scanner não disponível:', err);
+    }
+  };
+
   const aoLerCodigoCamera = (resultado: any) => {
     if (leituraProcessadaRef.current) return;
     const raw = String(resultado?.data ?? resultado?.raw ?? resultado ?? '').trim();
     if (!raw) return;
 
     leituraProcessadaRef.current = true;
+    try {
+      Vibration.vibrate(100);
+    } catch {}
+
     setLanternaAtiva(false);
     setModalCameraVisivel(false);
 
@@ -1531,12 +1593,14 @@ const estilosCamera = StyleSheet.create({
     flex: 1,
     backgroundColor: '#000000',
     justifyContent: 'space-between',
+    width: '100%',
+    height: '100%',
   },
   topoBarra: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     zIndex: 10,
   },
   botaoControle: {
@@ -1544,15 +1608,15 @@ const estilosCamera = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(17, 24, 39, 0.78)',
     paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     borderRadius: 24,
-    minHeight: 48,
-    gap: 8,
+    minHeight: 46,
+    gap: 6,
   },
   textoBotaoControle: {
     color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 13,
   },
   areaMiraCentral: {
     flex: 1,
@@ -1567,16 +1631,46 @@ const estilosCamera = StyleSheet.create({
     borderColor: '#10B981',
     borderRadius: 16,
     backgroundColor: 'rgba(16, 185, 129, 0.08)',
+    overflow: 'hidden',
+    alignItems: 'center',
+    paddingTop: 8,
+  },
+  laserLinha: {
+    width: '92%',
+    height: 2.5,
+    backgroundColor: '#10B981',
+    shadowColor: '#10B981',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.9,
+    shadowRadius: 5,
+    elevation: 4,
   },
   instrucaoScanner: {
     color: '#FFFFFF',
     fontWeight: '700',
     textAlign: 'center',
-    marginTop: 20,
+    marginTop: 18,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
+  },
+  botaoManual: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 18,
+    backgroundColor: 'rgba(30, 41, 59, 0.88)',
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#3B82F6',
+  },
+  textoBotaoManual: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 13,
   },
 });
 
