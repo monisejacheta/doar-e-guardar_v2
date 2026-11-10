@@ -359,27 +359,9 @@ export default function StockAddScreen() {
     }, 150);
   };
 
-  // Abertura da câmera física ou Google Code Scanner para leitura de código de barras
+  // Abertura da câmera física para leitura de código de barras
   const abrirScannerCamera = async () => {
     try {
-      // 1. No Android, se o Google Code Scanner estiver disponível, aciona o scanner nativo oficial do Google
-      if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
-        leituraProcessadaRef.current = false;
-        try {
-          const sub = CameraView.onModernBarcodeScanned((event) => {
-            sub?.remove();
-            aoLerCodigoCamera(event);
-          });
-          await CameraView.launchScanner({
-            barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'itf14', 'qr'],
-          });
-          return;
-        } catch (errGoogle: any) {
-          console.warn('[Scanner] Fallback para visor da câmera:', errGoogle?.message || errGoogle);
-        }
-      }
-
-      // 2. Se não estiver disponível ou cancelado, abre a câmera interna com foco contínuo
       if (!permissaoCamera?.granted) {
         const respostaPermissao = await solicitarPermissaoCamera();
         if (!respostaPermissao.granted) {
@@ -403,16 +385,19 @@ export default function StockAddScreen() {
 
   const abrirScannerGoogleNativo = async () => {
     try {
-      leituraProcessadaRef.current = false;
-      const sub = CameraView.onModernBarcodeScanned((event) => {
-        sub?.remove();
-        aoLerCodigoCamera(event);
-      });
-      await CameraView.launchScanner({
-        barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'qr'],
-      });
+      if (CameraView.launchScanner) {
+        leituraProcessadaRef.current = false;
+        const sub = CameraView.onModernBarcodeScanned((event) => {
+          sub?.remove();
+          aoLerCodigoCamera(event);
+        });
+        await CameraView.launchScanner({
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'itf14', 'qr'],
+        });
+      }
     } catch (err: any) {
       console.warn('Google Code Scanner não disponível:', err);
+      Alert.alert('Google Scanner', 'Utilize o visor da câmera com foco automático integrado.');
     }
   };
 
@@ -1283,6 +1268,7 @@ export default function StockAddScreen() {
           <CameraView
             style={StyleSheet.absoluteFill}
             facing="back"
+            autofocus="on"
             enableTorch={lanternaAtiva}
             barcodeScannerSettings={{
               barcodeTypes: [
@@ -1294,11 +1280,9 @@ export default function StockAddScreen() {
                 'code39',
                 'itf14',
                 'qr',
-                'codabar',
-                'code93',
               ],
             }}
-            onBarcodeScanned={aoLerCodigoCamera}
+            onBarcodeScanned={leituraProcessadaRef.current ? undefined : aoLerCodigoCamera}
           />
 
           <View style={estilosCamera.topoBarra}>
@@ -1335,10 +1319,40 @@ export default function StockAddScreen() {
           </View>
 
           <View style={estilosCamera.areaMiraCentral}>
-            <View style={estilosCamera.molduraScanner} />
+            <View style={estilosCamera.molduraScanner}>
+              <Animated.View
+                style={[
+                  estilosCamera.laserLinha,
+                  { transform: [{ translateY: animLaser }] },
+                ]}
+              />
+            </View>
             <Text style={[estilosCamera.instrucaoScanner, { fontSize: 14 * fontScale }]}>
               Posicione o código de barras (EAN) da embalagem dentro do quadro
             </Text>
+
+            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
+              {Platform.OS === 'android' && (
+                <TouchableOpacity
+                  onPress={abrirScannerGoogleNativo}
+                  style={estilosCamera.botaoManual}
+                >
+                  <Feather name="maximize-2" size={18} color="#10B981" />
+                  <Text style={estilosCamera.textoBotaoManual}>Google Code Scanner</Text>
+                </TouchableOpacity>
+              )}
+
+              <TouchableOpacity
+                onPress={() => {
+                  setModalCameraVisivel(false);
+                  setEtapa(1);
+                }}
+                style={[estilosCamera.botaoManual, { borderColor: '#6B7280' }]}
+              >
+                <Feather name="edit-3" size={18} color="#FFFFFF" />
+                <Text style={estilosCamera.textoBotaoManual}>Digitar Código</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </SafeAreaView>
       </Modal>

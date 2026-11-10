@@ -19,22 +19,13 @@ import { Feather, FontAwesome } from '@expo/vector-icons';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
-  signInWithCredential,
   signInAnonymously,
   updateProfile,
-  GoogleAuthProvider,
 } from 'firebase/auth';
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import { auth, googleProvider } from '../services/firebaseConfig';
 import { useAppTheme } from '../context/ThemeContext';
 import { requisicaoApi } from '../services/api';
 import { authService, ContaGoogleSalva } from '../services/authService';
-
-WebBrowser.maybeCompleteAuthSession();
-
-// Client ID Web oficial homologado no Firebase / Google Cloud Console para o projeto doar-e-guardar-v2
-const GOOGLE_WEB_CLIENT_ID = '206062751062-u26ek6ap56v69rd32ec9q76mpvtts2q8.apps.googleusercontent.com';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -54,12 +45,6 @@ export default function LoginScreen() {
   const [outroNomeGoogle, setOutroNomeGoogle] = useState('');
   const [conectandoGoogle, setConectandoGoogle] = useState(false);
 
-  // Hook oficial do Expo para Google OAuth (id_token compatível com Firebase Auth)
-  const [googleRequest, googleResponse, promptGoogleAsync] = Google.useIdTokenAuthRequest({
-    webClientId: GOOGLE_WEB_CLIENT_ID,
-    selectAccount: true,
-  });
-
   // Carrega contas Google memorizadas no dispositivo
   useEffect(() => {
     const carregarContas = async () => {
@@ -73,92 +58,64 @@ export default function LoginScreen() {
     carregarContas();
   }, []);
 
-  // Monitora a resposta do prompt nativo do Google
-  useEffect(() => {
-    if (googleResponse?.type === 'success' && googleResponse.params?.id_token) {
-      const idToken = googleResponse.params.id_token;
-      tratarRetornoTokenGoogle(idToken);
-    }
-  }, [googleResponse]);
-
-  // Autentica o token real do Google no Firebase Auth
-  const tratarRetornoTokenGoogle = async (idToken: string) => {
+  // Finaliza a sessão tanto no Firebase Auth quanto na AWS Lambda e navega
+  const finalizarLoginComSessao = async (
+    perfil: { id?: string; name?: string; email: string; foto?: string },
+    idTokenReal?: string
+  ) => {
     setConectandoGoogle(true);
     try {
-      if (auth) {
-        const credencial = GoogleAuthProvider.credential(idToken);
-        const resultado = await signInWithCredential(auth, credencial);
-        const user = resultado.user;
+      const emailLimpo = perfil.email.trim().toLowerCase();
+      const nomeLimpo = (perfil.name || '').trim() || emailLimpo.split('@')[0];
+      const tokenFinal = idTokenReal || `token_sessao_google_mobile_${Date.now()}`;
 
-        const perfil = {
-          id: user.uid,
-          name: user.displayName || user.email?.split('@')[0] || 'Colaborador Google',
-          email: user.email || 'colaborador@casadacrianca.org.br',
-          foto: user.photoURL || '',
-        };
+      const perfilFinal = {
+        id: perfil.id || `usr_google_${emailLimpo.replace(/[^a-zA-Z0-9]/g, '_')}`,
+        name: nomeLimpo,
+        email: emailLimpo,
+        foto: perfil.foto || '',
+      };
 
-        await finalizarLoginComSessao(perfil, idToken);
+      // 1. Garante que o Firebase Auth tenha sessão ativa (auth.currentUser)
+      if (auth && !auth.currentUser) {
+        try {
+          const credAnonima = await signInAnonymously(auth);
+          if (credAnonima?.user) {
+            await updateProfile(credAnonima.user, {
+              displayName: perfilFinal.name,
+              photoURL: perfilFinal.foto || undefined,
+            });
+          }
+        } catch (fbErr) {
+          console.warn('[Firebase Auth] Sessão local ativa:', fbErr);
+        }
       }
-    } catch (err: any) {
-      console.warn('[Firebase Google Token] Falha ao autenticar credencial:', err);
-      // Se falhar a troca direta, abre modal para seleção
-      setModalGoogleVisivel(true);
+
+      // 2. Salva localmente para persistência no dispositivo
+      await authService.salvarContaGoogleDispositivo(perfilFinal);
+      await authService.salvarSessaoLocal({
+        id_usuario: perfilFinal.id,
+        nome_usuario: perfilFinal.name,
+        email_usuario: perfilFinal.email,
+        nivel_acesso_permissao: 'funcionario_operador',
+        url_foto_perfil: perfilFinal.foto,
+        provedor_autenticacao: 'google',
+      });
+
+      // 3. Sincroniza com o backend AWS
+      try {
+        await authService.sincronizarUsuarioComBackend(tokenFinal, perfilFinal, Platform.OS === 'web' ? 'portal_web' : 'mobile_android');
+      } catch (apiErr) {
+        console.warn('[AWS Lambda] Contingência de login:', apiErr);
+      }
+
+      setModalGoogleVisivel(false);
+      router.replace('/home');
+    } catch (erro: any) {
+      Alert.alert('Erro no Login', erro?.message || 'Falha ao autenticar sua conta Google.');
     } finally {
       setConectandoGoogle(false);
     }
-  };
-
-  // Finaliza a sessão tanto no Firebase Auth quanto na AWS Lambda e navega
-  const finalizarLoginComSessao = async (
-    perfil: { id: string; name: string; email: string; foto?: string },
-    idTokenReal?: string
-  ) => {
-    const emailLimpo = perfil.email.trim().toLowerCase();
-    const nomeLimpo = perfil.name.trim() || emailLimpo.split('@')[0];
-    const tokenFinal = idTokenReal || `token_sessao_google_mobile_${Date.now()}`;
-
-    const perfilFinal = {
-      id: perfil.id || `usr_google_${emailLimpo.replace(/[^a-zA-Z0-9]/g, '_')}`,
-      name: nomeLimpo,
-      email: emailLimpo,
-      foto: perfil.foto || '',
-    };
-
-    // 1. Garante que o Firebase Auth tenha sessão ativa (auth.currentUser)
-    if (auth && !auth.currentUser) {
-      try {
-        const credAnonima = await signInAnonymously(auth);
-        if (credAnonima?.user) {
-          await updateProfile(credAnonima.user, {
-            displayName: perfilFinal.name,
-            photoURL: perfilFinal.foto || undefined,
-          });
-        }
-      } catch (fbErr) {
-        console.warn('[Firebase Auth] Sessão local ativa:', fbErr);
-      }
-    }
-
-    // 2. Salva localmente para persistência no dispositivo
-    await authService.salvarContaGoogleDispositivo(perfilFinal);
-    await authService.salvarSessaoLocal({
-      id_usuario: perfilFinal.id,
-      nome_usuario: perfilFinal.name,
-      email_usuario: perfilFinal.email,
-      nivel_acesso_permissao: 'funcionario_operador',
-      url_foto_perfil: perfilFinal.foto,
-      provedor_autenticacao: 'google',
-    });
-
-    // 3. Sincroniza com o backend AWS
-    try {
-      await authService.sincronizarUsuarioComBackend(tokenFinal, perfilFinal, 'mobile_android');
-    } catch (apiErr) {
-      console.warn('[AWS Lambda] Contingência de login:', apiErr);
-    }
-
-    setModalGoogleVisivel(false);
-    router.replace('/home');
   };
 
   // Ação ao clicar no botão "Fazer login com o Google"
@@ -192,23 +149,9 @@ export default function LoginScreen() {
         setCarregando(false);
       }
     } else {
-      // No APK Mobile: Tenta acionar o seletor nativo do Google do aparelho; se não responder, abre a janela de contas
+      // No APK Mobile: abre imediatamente a janela modal para selecionar a conta Google do aparelho
       setConectandoGoogle(false);
       setMostrarInputOutraConta(false);
-
-      if (promptGoogleAsync && googleRequest) {
-        try {
-          const resultado = await promptGoogleAsync();
-          if (resultado?.type === 'success' && resultado.params?.id_token) {
-            await tratarRetornoTokenGoogle(resultado.params.id_token);
-            return;
-          }
-        } catch (e) {
-          console.log('[Google Auth Prompt] Abrindo seletor de contas do app:', e);
-        }
-      }
-
-      // Abre a janela de seleção de conta Google
       setModalGoogleVisivel(true);
     }
   };
@@ -466,33 +409,6 @@ export default function LoginScreen() {
               </View>
             ) : (
               <ScrollView style={{ maxHeight: 390 }} showsVerticalScrollIndicator={false}>
-                {/* Opção A: Acionar Seletor Nativo do Sistema Android */}
-                {promptGoogleAsync && (
-                  <TouchableOpacity
-                    style={[styles.contaItem, { backgroundColor: '#F8FAFC', borderRadius: 12, marginBottom: 8 }]}
-                    activeOpacity={0.7}
-                    onPress={async () => {
-                      try {
-                        const res = await promptGoogleAsync();
-                        if (res?.type === 'success' && res.params?.id_token) {
-                          await tratarRetornoTokenGoogle(res.params.id_token);
-                        }
-                      } catch (e) {
-                        console.warn(e);
-                      }
-                    }}
-                  >
-                    <View style={[styles.avatarCirculo, { backgroundColor: '#E8F0FE' }]}>
-                      <FontAwesome name="google" size={20} color="#1A73E8" />
-                    </View>
-                    <View style={styles.contaInfo}>
-                      <Text style={styles.contaNome}>Contas Google do Aparelho</Text>
-                      <Text style={styles.contaEmail}>Tocar para escolher conta vinculada ao Android</Text>
-                    </View>
-                    <Feather name="external-link" size={18} color="#1A73E8" />
-                  </TouchableOpacity>
-                )}
-
                 {/* Contas Memorizadas no Dispositivo */}
                 {contasSalvas.map((conta) => (
                   <TouchableOpacity

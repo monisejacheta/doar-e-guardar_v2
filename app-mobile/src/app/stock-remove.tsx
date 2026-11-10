@@ -192,22 +192,6 @@ export default function StockRemoveScreen() {
 
   const abrirScannerBusca = async () => {
     try {
-      if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
-        leituraProcessadaRef.current = false;
-        try {
-          const sub = CameraView.onModernBarcodeScanned((event) => {
-            sub?.remove();
-            aoEscanearCodigoParaSaida(event as any);
-          });
-          await CameraView.launchScanner({
-            barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
-          });
-          return;
-        } catch (e) {
-          console.warn('[Scanner Saída] Fallback para câmera:', e);
-        }
-      }
-
       if (!permissaoCamera?.granted) {
         const resp = await solicitarPermissaoCamera();
         if (!resp.granted) {
@@ -496,7 +480,7 @@ export default function StockRemoveScreen() {
             barcodeScannerSettings={{
               barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
             }}
-            onBarcodeScanned={aoEscanearCodigoParaSaida}
+            onBarcodeScanned={leituraProcessadaRef.current ? undefined : aoEscanearCodigoParaSaida}
           />
           <View style={estilosCameraSaida.topo}>
             <TouchableOpacity

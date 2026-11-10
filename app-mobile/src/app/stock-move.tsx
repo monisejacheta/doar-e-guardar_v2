@@ -251,22 +251,6 @@ export default function StockMoveScreen() {
   };
 
   const abrirLeitorCodigoBarras = async () => {
-    if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
-      bloqueioLeituraRef.current = false;
-      try {
-        const sub = CameraView.onModernBarcodeScanned((event) => {
-          sub?.remove();
-          aoLerCodigoCamera({ data: event.data });
-        });
-        await CameraView.launchScanner({
-          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
-        });
-        return;
-      } catch (err) {
-        console.warn('Google scanner não disponível no move:', err);
-      }
-    }
-
     if (!permissaoCamera?.granted) {
       const permissao = await solicitarPermissaoCamera();
       if (!permissao.granted) {
@@ -844,7 +828,7 @@ export default function StockMoveScreen() {
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
                 }}
-                onBarcodeScanned={aoLerCodigoCamera}
+                onBarcodeScanned={bloqueioLeituraRef.current ? undefined : aoLerCodigoCamera}
               />
             </View>
             <View style={{ padding: 16 }}>
