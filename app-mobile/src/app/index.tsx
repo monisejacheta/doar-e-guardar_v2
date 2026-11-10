@@ -16,9 +16,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather, FontAwesome } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
+  signInWithCredential,
+  GoogleAuthProvider,
   signInAnonymously,
   updateProfile,
 } from 'firebase/auth';
@@ -26,6 +30,9 @@ import { auth, googleProvider } from '../services/firebaseConfig';
 import { useAppTheme } from '../context/ThemeContext';
 import { requisicaoApi } from '../services/api';
 import { authService, ContaGoogleSalva } from '../services/authService';
+
+// Notifica a sessão web do navegador para concluir o redirecionamento OAuth quando necessário
+WebBrowser.maybeCompleteAuthSession();
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -45,6 +52,20 @@ export default function LoginScreen() {
   const [outroNomeGoogle, setOutroNomeGoogle] = useState('');
   const [conectandoGoogle, setConectandoGoogle] = useState(false);
 
+  // Configuração Nativa do Google Auth via Expo AuthSession (Account Chooser Oficial)
+  const googleClientIdFallback =
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+    '206062751062-web.apps.googleusercontent.com';
+
+  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
+    clientId: googleClientIdFallback,
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || googleClientIdFallback,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || googleClientIdFallback,
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || googleClientIdFallback,
+    selectAccount: true, // Aciona o Account Chooser (seletor de contas oficial do Google)
+  });
+
   // Carrega contas Google memorizadas no dispositivo
   useEffect(() => {
     const carregarContas = async () => {
@@ -57,6 +78,101 @@ export default function LoginScreen() {
     };
     carregarContas();
   }, []);
+
+  // Processa o retorno nativo do Seletor de Contas Google
+  useEffect(() => {
+    const processarRetornoGoogleNativo = async () => {
+      if (response?.type === 'success') {
+        setCarregando(true);
+        try {
+          const params = (response.params || {}) as Record<string, string>;
+          const authObj = response.authentication;
+          const idTokenRecebido = params?.id_token || authObj?.idToken;
+          const accessTokenRecebido = params?.access_token || authObj?.accessToken;
+
+          let perfilUsuario = {
+            id: '',
+            name: '',
+            email: '',
+            foto: '',
+          };
+
+          // 1. Tenta buscar informações detalhadas do perfil via Google UserInfo API
+          if (accessTokenRecebido) {
+            try {
+              const resInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${accessTokenRecebido}` },
+              });
+              if (resInfo.ok) {
+                const dados = await resInfo.json();
+                perfilUsuario.id = dados.sub || '';
+                perfilUsuario.name = dados.name || dados.given_name || '';
+                perfilUsuario.email = dados.email || '';
+                perfilUsuario.foto = dados.picture || '';
+              }
+            } catch (errUser) {
+              console.warn('[Google UserInfo] Aviso:', errUser);
+            }
+          }
+
+          // 2. Se não obtiver pelo UserInfo, decodifica o payload do id_token (JWT)
+          if ((!perfilUsuario.email || !perfilUsuario.name) && idTokenRecebido) {
+            try {
+              const partes = idTokenRecebido.split('.');
+              if (partes.length === 3) {
+                const base64Limpo = partes[1].replace(/-/g, '+').replace(/_/g, '/');
+                const jsonDecodificado = decodeURIComponent(
+                  escape(atob(base64Limpo))
+                );
+                const jwtData = JSON.parse(jsonDecodificado);
+                if (!perfilUsuario.id) perfilUsuario.id = jwtData.sub || '';
+                if (!perfilUsuario.name) perfilUsuario.name = jwtData.name || jwtData.given_name || '';
+                if (!perfilUsuario.email) perfilUsuario.email = jwtData.email || '';
+                if (!perfilUsuario.foto) perfilUsuario.foto = jwtData.picture || '';
+              }
+            } catch (jwtErr) {
+              console.warn('[JWT Decode] Falha ao decodificar id_token:', jwtErr);
+            }
+          }
+
+          // 3. Autentica no Firebase com a credencial nativa obtida
+          if (idTokenRecebido && auth) {
+            try {
+              const credential = GoogleAuthProvider.credential(idTokenRecebido, accessTokenRecebido);
+              const credencialFirebase = await signInWithCredential(auth, credential);
+              if (credencialFirebase.user) {
+                if (!perfilUsuario.id) perfilUsuario.id = credencialFirebase.user.uid;
+                if (!perfilUsuario.name) perfilUsuario.name = credencialFirebase.user.displayName || perfilUsuario.name;
+                if (!perfilUsuario.email) perfilUsuario.email = credencialFirebase.user.email || perfilUsuario.email;
+                if (!perfilUsuario.foto) perfilUsuario.foto = credencialFirebase.user.photoURL || perfilUsuario.foto;
+              }
+            } catch (fbErr) {
+              console.warn('[Firebase Auth] Erro ao autenticar credencial Google:', fbErr);
+            }
+          }
+
+          if (!perfilUsuario.email) {
+            throw new Error('Não foi possível identificar o e-mail da conta Google selecionada.');
+          }
+
+          await finalizarLoginComSessao(perfilUsuario, idTokenRecebido || accessTokenRecebido);
+        } catch (erro: any) {
+          Alert.alert('Erro no Login Google', erro?.message || 'Falha ao processar os dados da conta Google.');
+        } finally {
+          setCarregando(false);
+        }
+      } else if (response?.type === 'error') {
+        setCarregando(false);
+        Alert.alert('Autenticação Google', response.error?.message || 'Erro ao autenticar com o Google.');
+      } else if (response?.type === 'cancel' || response?.type === 'dismiss') {
+        setCarregando(false);
+      }
+    };
+
+    if (response) {
+      processarRetornoGoogleNativo();
+    }
+  }, [response]);
 
   // Finaliza a sessão tanto no Firebase Auth quanto na AWS Lambda e navega
   const finalizarLoginComSessao = async (
@@ -149,10 +265,22 @@ export default function LoginScreen() {
         setCarregando(false);
       }
     } else {
-      // No APK Mobile: abre imediatamente a janela modal para selecionar a conta Google do aparelho
-      setConectandoGoogle(false);
-      setMostrarInputOutraConta(false);
-      setModalGoogleVisivel(true);
+      // No APK Mobile Android/iOS: Aciona o seletor de contas nativo do Google (Account Chooser)
+      setCarregando(true);
+      try {
+        const resultadoPrompt = await promptAsync();
+        if (resultadoPrompt?.type === 'cancel' || resultadoPrompt?.type === 'dismiss') {
+          setCarregando(false);
+          return;
+        }
+      } catch (erroPrompt: any) {
+        setCarregando(false);
+        console.warn('[Google Sign-In] Erro no prompt nativo:', erroPrompt);
+        // Em caso de falha no acoplamento do navegador nativo, abre a opção de contingência
+        setConectandoGoogle(false);
+        setMostrarInputOutraConta(false);
+        setModalGoogleVisivel(true);
+      }
     }
   };
 

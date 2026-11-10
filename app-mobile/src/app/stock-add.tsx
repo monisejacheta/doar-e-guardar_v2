@@ -111,6 +111,10 @@ export default function StockAddScreen() {
   const [permissaoCamera, solicitarPermissaoCamera] = useCameraPermissions();
   const [modalCameraVisivel, setModalCameraVisivel] = useState(false);
   const [lanternaAtiva, setLanternaAtiva] = useState(false);
+  const [modalLeituraManualVisivel, setModalLeituraManualVisivel] = useState(false);
+  const [codigoDigitadoManual, setCodigoDigitadoManual] = useState('');
+  const [forcandoLeitura, setForcandoLeitura] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
   const leituraProcessadaRef = useRef(false);
   const animLaser = useRef(new Animated.Value(0)).current;
 
@@ -418,7 +422,7 @@ export default function StockAddScreen() {
     const apenasDigitos = raw.replace(/\D/g, '');
     const codigoIdentificado = apenasDigitos.length >= 6 ? apenasDigitos : raw;
 
-    // Retorna para a tela de cadastro com o número do código de barras preenchido no campo
+    // Retorna para a tela de cadastro com o número do código de barras preenchido no campo correspondente
     setCodigoBarras(codigoIdentificado);
 
     // Se possui formato padrão EAN (8 a 14 dígitos numéricos), consulta nas 3 APIs em cascata
@@ -429,6 +433,30 @@ export default function StockAddScreen() {
       setEtapa(2);
       rolarParaAbaixo();
     }
+  };
+
+  // Força a leitura do frame atual ou engatilha a confirmação manual caso o scanner automático falhe por foco ou iluminação
+  const handleForcarLeituraCadastro = async () => {
+    setForcandoLeitura(true);
+    try {
+      if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
+        leituraProcessadaRef.current = false;
+        const sub = CameraView.onModernBarcodeScanned((event) => {
+          sub?.remove();
+          aoLerCodigoCamera(event);
+        });
+        await CameraView.launchScanner({
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'itf14', 'qr'],
+        });
+        setForcandoLeitura(false);
+        return;
+      }
+    } catch (err: any) {
+      console.warn('[Forçar Leitura Entrada] Erro:', err);
+    }
+    setForcandoLeitura(false);
+    setCodigoDigitadoManual(codigoBarras || '');
+    setModalLeituraManualVisivel(true);
   };
 
   // FLUXO REAL: Consulta o backend AWS Lambda (/api/estoque -> verificar_produto)
@@ -1266,6 +1294,7 @@ export default function StockAddScreen() {
       >
         <SafeAreaView style={estilosCamera.container}>
           <CameraView
+            ref={cameraRef}
             style={StyleSheet.absoluteFill}
             facing="back"
             autofocus="on"
@@ -1282,7 +1311,7 @@ export default function StockAddScreen() {
                 'qr',
               ],
             }}
-            onBarcodeScanned={leituraProcessadaRef.current ? undefined : aoLerCodigoCamera}
+            onBarcodeScanned={aoLerCodigoCamera}
           />
 
           <View style={estilosCamera.topoBarra}>
@@ -1294,11 +1323,11 @@ export default function StockAddScreen() {
               }}
               accessible={true}
               accessibilityRole="button"
-              accessibilityLabel="Fechar câmera"
-              style={estilosCamera.botaoControle}
+              accessibilityLabel="Voltar para a tela de cadastro"
+              style={estilosCamera.botaoVoltarCamera}
             >
-              <Feather name="x" size={22} color="#FFFFFF" />
-              <Text style={estilosCamera.textoBotaoControle}>Fechar</Text>
+              <Feather name="arrow-left" size={22} color="#FFFFFF" />
+              <Text style={estilosCamera.textoBotaoVoltarCamera}>Voltar</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1330,31 +1359,102 @@ export default function StockAddScreen() {
             <Text style={[estilosCamera.instrucaoScanner, { fontSize: 14 * fontScale }]}>
               Posicione o código de barras (EAN) da embalagem dentro do quadro
             </Text>
+          </View>
 
-            <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
-              {Platform.OS === 'android' && (
-                <TouchableOpacity
-                  onPress={abrirScannerGoogleNativo}
-                  style={estilosCamera.botaoManual}
-                >
-                  <Feather name="maximize-2" size={18} color="#10B981" />
-                  <Text style={estilosCamera.textoBotaoManual}>Google Code Scanner</Text>
-                </TouchableOpacity>
+          <View style={estilosCamera.rodape}>
+            <TouchableOpacity
+              onPress={handleForcarLeituraCadastro}
+              disabled={forcandoLeitura}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Realizar Leitura do código de barras"
+              style={estilosCamera.botaoRealizarLeitura}
+              activeOpacity={0.8}
+            >
+              {forcandoLeitura ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Feather name="maximize-2" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={estilosCamera.textoBotaoRealizarLeitura}>Realizar Leitura</Text>
+                </>
               )}
+            </TouchableOpacity>
 
+            <TouchableOpacity
+              onPress={() => {
+                setCodigoDigitadoManual(codigoBarras || '');
+                setModalLeituraManualVisivel(true);
+              }}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Digitar código de barras manualmente"
+              style={estilosCamera.botaoManualRapido}
+              activeOpacity={0.8}
+            >
+              <Feather name="edit-3" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={estilosCamera.textoBotaoManualRapido}>Digitar Manualmente</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Modal>
+
+      {/* MODAL DE CONFIRMAÇÃO MANUAL SE O SCANNER AUTOMÁTICO FALHAR */}
+      <Modal
+        visible={modalLeituraManualVisivel}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalLeituraManualVisivel(false)}
+      >
+        <View style={estilosCamera.modalOverlay}>
+          <View style={[estilosCamera.modalCard, { backgroundColor: theme.surface }]}>
+            <Text style={{ fontSize: 16 * fontScale, fontWeight: 'bold', color: theme.text, marginBottom: 8 }}>
+              Informar Código de Barras (EAN)
+            </Text>
+            <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, marginBottom: 14 }}>
+              Digite os dígitos do código de barras da embalagem para dar andamento ao cadastro do produto:
+            </Text>
+            <TextInput
+              placeholder="Ex: 7891000100103"
+              placeholderTextColor="#94A3B8"
+              keyboardType="numeric"
+              autoFocus={true}
+              value={codigoDigitadoManual}
+              onChangeText={setCodigoDigitadoManual}
+              style={{
+                borderWidth: 1.5,
+                borderColor: theme.border,
+                borderRadius: 10,
+                padding: 12,
+                fontSize: 16,
+                color: theme.text,
+                marginBottom: 16,
+                backgroundColor: theme.background,
+              }}
+            />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => setModalLeituraManualVisivel(false)}
+                style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}
+              >
+                <Text style={{ color: theme.subtext, fontWeight: '600' }}>Cancelar</Text>
+              </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => {
-                  setModalCameraVisivel(false);
-                  setEtapa(1);
+                  if (!codigoDigitadoManual.trim()) {
+                    Alert.alert('Atenção', 'Informe o código de barras para continuar.');
+                    return;
+                  }
+                  setModalLeituraManualVisivel(false);
+                  aoLerCodigoCamera({ data: codigoDigitadoManual.trim() });
                 }}
-                style={[estilosCamera.botaoManual, { borderColor: '#6B7280' }]}
+                style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: theme.primary, alignItems: 'center' }}
               >
-                <Feather name="edit-3" size={18} color="#FFFFFF" />
-                <Text style={estilosCamera.textoBotaoManual}>Digitar Código</Text>
+                <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Confirmar</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </SafeAreaView>
+        </View>
       </Modal>
 
       {/* Modal para Adicionar Nova Categoria na AWS */}
@@ -1617,6 +1717,23 @@ const estilosCamera = StyleSheet.create({
     paddingTop: 16,
     zIndex: 10,
   },
+  botaoVoltarCamera: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(17, 24, 39, 0.85)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 24,
+    minHeight: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  textoBotaoVoltarCamera: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    marginLeft: 8,
+    fontSize: 15,
+  },
   botaoControle: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1668,6 +1785,64 @@ const estilosCamera = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
+  },
+  rodape: {
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    gap: 12,
+    zIndex: 10,
+  },
+  botaoRealizarLeitura: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#10B981',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    minHeight: 52,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  textoBotaoRealizarLeitura: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.2,
+  },
+  botaoManualRapido: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.85)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  textoBotaoManualRapido: {
+    color: '#E2E8F0',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 380,
+    borderRadius: 16,
+    padding: 20,
+    elevation: 6,
   },
   botaoManual: {
     flexDirection: 'row',

@@ -64,6 +64,10 @@ export default function StockRemoveScreen() {
   // Scanner de código de barras para localização rápida na baixa
   const [permissaoCamera, solicitarPermissaoCamera] = useCameraPermissions();
   const [modalCameraVisivel, setModalCameraVisivel] = useState(false);
+  const [modalLeituraManualVisivel, setModalLeituraManualVisivel] = useState(false);
+  const [codigoDigitadoManual, setCodigoDigitadoManual] = useState('');
+  const [forcandoLeitura, setForcandoLeitura] = useState(false);
+  const cameraRef = useRef<CameraView>(null);
   const leituraProcessadaRef = useRef(false);
 
   // Modais e Seleções
@@ -77,19 +81,20 @@ export default function StockRemoveScreen() {
   const [modalSucessoVisivel, setModalSucessoVisivel] = useState(false);
   const [resumoBaixa, setResumoBaixa] = useState<{ qtd: number; saldoNovo: number; motivo: string } | null>(null);
 
-  // Estados do Formulário
+  // Estados do Formulário - Motivos de Saída simplificados para duas opções exatas
+  const motivosDisponiveis = [
+    'saida regular',
+    'perda de produto',
+  ];
+
   const [quantidadeSaida, setQuantidadeSaida] = useState('');
-  const [motivoSaida, setMotivoSaida] = useState('saída para consumo');
+  const [motivoSaida, setMotivoSaida] = useState('saida regular');
   const [justificativa, setJustificativa] = useState('');
   const [palavraTravaPerda, setPalavraTravaPerda] = useState('');
   const [processandoBaixa, setProcessandoBaixa] = useState(false);
 
-  const motivosDisponiveis = [
-    'saída para consumo',
-    'perda - descarte vencido',
-    'perda - descarte',
-    'saída - outro motivo',
-  ];
+  // Variável booleana da trava de segurança (exigida e exibida estritamente para "perda de produto")
+  const exigeTravaSeguranca = motivoSaida === 'perda de produto';
 
   // Converte data para timestamp para a rigorosa ordenação FEFO
   const converterDataParaMs = (dataStr: string) => {
@@ -206,9 +211,12 @@ export default function StockRemoveScreen() {
     }
   };
 
-  const aoEscanearCodigoParaSaida = (resultado: BarcodeScanningResult) => {
+  // Leitura Automática Contínua: Assim que detectado com sucesso, captura o número e retorna automaticamente
+  const aoEscanearCodigoParaSaida = (resultado: any) => {
     if (leituraProcessadaRef.current) return;
-    const raw = String(resultado?.data || resultado?.raw || '').trim();
+    const raw = String(resultado?.data || (resultado as any)?.raw || '').trim();
+    if (!raw) return;
+
     const apenasDigitos = raw.replace(/\D/g, '');
     const eanLido = apenasDigitos.length >= 6 ? apenasDigitos : raw;
     if (!eanLido) return;
@@ -217,6 +225,7 @@ export default function StockRemoveScreen() {
     try {
       Vibration.vibrate(100);
     } catch {}
+
     setModalCameraVisivel(false);
     setTermoBusca(eanLido);
 
@@ -225,8 +234,35 @@ export default function StockRemoveScreen() {
       setProdutoSelecionado(encontrado);
       setModalLotesVisivel(true);
     } else {
-      Alert.alert('Produto Não Localizado', `Nenhum lote com saldo ativo foi encontrado para o código EAN ${eanLido}.`);
+      Alert.alert(
+        'Produto Localizado',
+        `Código EAN ${eanLido} identificado. O número foi preenchido na busca de saída.`
+      );
     }
+  };
+
+  // Força a captura do frame atual ou engatilha a confirmação manual caso o scanner automático falhe
+  const handleForcarLeituraSaida = async () => {
+    setForcandoLeitura(true);
+    try {
+      if (Platform.OS === 'android' && CameraView.isModernBarcodeScannerAvailable) {
+        leituraProcessadaRef.current = false;
+        const sub = CameraView.onModernBarcodeScanned((event) => {
+          sub?.remove();
+          aoEscanearCodigoParaSaida(event);
+        });
+        await CameraView.launchScanner({
+          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+        });
+        setForcandoLeitura(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('[Forçar Leitura Saída] Erro:', e);
+    }
+    setForcandoLeitura(false);
+    setCodigoDigitadoManual(termoBusca || '');
+    setModalLeituraManualVisivel(true);
   };
 
   const handleSelecionarLote = (lote: LoteItem) => {
@@ -252,7 +288,7 @@ export default function StockRemoveScreen() {
   const abrirFormularioSaida = (lote: LoteItem) => {
     setLoteSelecionado(lote);
     setQuantidadeSaida('');
-    setMotivoSaida('saída para consumo');
+    setMotivoSaida('saida regular');
     setJustificativa('');
     setPalavraTravaPerda('');
     setModalLotesVisivel(false);
@@ -277,17 +313,17 @@ export default function StockRemoveScreen() {
       return;
     }
 
-    const ehDescarte = motivoSaida.toLowerCase().includes('perda');
-    if (ehDescarte) {
+    // Trava de segurança obrigatória: exigida exclusivamente para "perda de produto"
+    if (exigeTravaSeguranca) {
       if (palavraTravaPerda.trim() !== 'PERDA') {
         Alert.alert(
-          'Trava de Segurança',
-          'Digite exatamente a palavra "PERDA" em letras maiúsculas para autorizar o descarte.'
+          'Trava de Segurança Obrigatória',
+          'Para autorizar o descarte por perda de produto, digite exatamente a palavra "PERDA" em letras maiúsculas.'
         );
         return;
       }
       if (!justificativa.trim()) {
-        Alert.alert('Justificativa Obrigatória', 'Por favor, descreva o motivo do descarte para o registro de auditoria.');
+        Alert.alert('Justificativa Obrigatória', 'Por favor, descreva o motivo da perda do produto para o registro de auditoria.');
         return;
       }
     }
@@ -470,34 +506,138 @@ export default function StockRemoveScreen() {
         visible={modalCameraVisivel}
         transparent={false}
         animationType="slide"
-        onRequestClose={() => setModalCameraVisivel(false)}
+        onRequestClose={() => {
+          leituraProcessadaRef.current = false;
+          setModalCameraVisivel(false);
+        }}
       >
         <SafeAreaView style={estilosCameraSaida.container}>
           <CameraView
+            ref={cameraRef}
             style={StyleSheet.absoluteFill}
             facing="back"
             autofocus="on"
             barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
+              barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'itf14', 'qr'],
             }}
-            onBarcodeScanned={leituraProcessadaRef.current ? undefined : aoEscanearCodigoParaSaida}
+            onBarcodeScanned={aoEscanearCodigoParaSaida}
           />
           <View style={estilosCameraSaida.topo}>
             <TouchableOpacity
-              onPress={() => setModalCameraVisivel(false)}
-              style={estilosCameraSaida.botaoFechar}
+              onPress={() => {
+                leituraProcessadaRef.current = false;
+                setModalCameraVisivel(false);
+              }}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Voltar para a tela de saída de produtos"
+              style={estilosCameraSaida.botaoVoltar}
             >
-              <Feather name="x" size={22} color="#FFFFFF" />
-              <Text style={{ color: '#FFFFFF', fontWeight: '700', marginLeft: 6 }}>Fechar</Text>
+              <Feather name="arrow-left" size={22} color="#FFFFFF" />
+              <Text style={estilosCameraSaida.textoBotaoVoltar}>Voltar</Text>
             </TouchableOpacity>
           </View>
+
           <View style={estilosCameraSaida.centro}>
             <View style={estilosCameraSaida.mira} />
             <Text style={estilosCameraSaida.texto}>
-              Aponte a câmera para o código de barras do alimento que será retirado
+              Aponte a câmera para o código de barras (EAN) do item
             </Text>
           </View>
+
+          <View style={estilosCameraSaida.rodape}>
+            <TouchableOpacity
+              onPress={handleForcarLeituraSaida}
+              disabled={forcandoLeitura}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Realizar Leitura do código de barras"
+              style={estilosCameraSaida.botaoRealizarLeitura}
+              activeOpacity={0.8}
+            >
+              {forcandoLeitura ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <>
+                  <Feather name="maximize-2" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+                  <Text style={estilosCameraSaida.textoBotaoRealizarLeitura}>Realizar Leitura</Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                setCodigoDigitadoManual(termoBusca || '');
+                setModalLeituraManualVisivel(true);
+              }}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Digitar código de barras manualmente"
+              style={estilosCameraSaida.botaoManualRapido}
+              activeOpacity={0.8}
+            >
+              <Feather name="edit-3" size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
+              <Text style={estilosCameraSaida.textoBotaoManualRapido}>Digitar Manualmente</Text>
+            </TouchableOpacity>
+          </View>
         </SafeAreaView>
+      </Modal>
+
+      {/* MODAL DE CONFIRMAÇÃO MANUAL SE O SCANNER AUTOMÁTICO FALHAR */}
+      <Modal
+        visible={modalLeituraManualVisivel}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalLeituraManualVisivel(false)}
+      >
+        <View style={estilosStockRemove.modalOverlay}>
+          <View style={[estilosStockRemove.modalCard, { padding: 20 }]}>
+            <Text style={{ fontSize: 16 * fontScale, fontWeight: 'bold', color: theme.text, marginBottom: 8 }}>
+              Informar Código de Barras (EAN)
+            </Text>
+            <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, marginBottom: 14 }}>
+              Digite os dígitos do código de barras da embalagem para dar andamento ao fluxo de saída:
+            </Text>
+            <TextInput
+              placeholder="Ex: 7891000100103"
+              placeholderTextColor="#94A3B8"
+              keyboardType="numeric"
+              autoFocus={true}
+              value={codigoDigitadoManual}
+              onChangeText={setCodigoDigitadoManual}
+              style={{
+                borderWidth: 1.5,
+                borderColor: theme.border,
+                borderRadius: 10,
+                padding: 12,
+                fontSize: 16,
+                color: theme.text,
+                marginBottom: 16,
+              }}
+            />
+            <View style={{ flexDirection: 'row', gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => setModalLeituraManualVisivel(false)}
+                style={{ flex: 1, padding: 12, borderRadius: 10, borderWidth: 1, borderColor: theme.border, alignItems: 'center' }}
+              >
+                <Text style={{ color: theme.subtext, fontWeight: '600' }}>Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  if (!codigoDigitadoManual.trim()) {
+                    Alert.alert('Atenção', 'Informe o código de barras para continuar.');
+                    return;
+                  }
+                  setModalLeituraManualVisivel(false);
+                  aoEscanearCodigoParaSaida({ data: codigoDigitadoManual.trim() } as any);
+                }}
+                style={{ flex: 1, padding: 12, borderRadius: 10, backgroundColor: theme.danger, alignItems: 'center' }}
+              >
+                <Text style={{ color: '#FFFFFF', fontWeight: 'bold' }}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
 
       {/* Modal 1: Lista de Lotes (FEFO) */}
@@ -617,39 +757,53 @@ export default function StockRemoveScreen() {
                 Motivo da Saída:
               </Text>
               <View style={estilosStockRemove.gradeMotivos}>
-                {motivosDisponiveis.map((mot) => (
-                  <TouchableOpacity
-                    key={mot}
-                    onPress={() => setMotivoSaida(mot)}
-                    style={[
-                      estilosStockRemove.botaoMotivo,
-                      {
-                        backgroundColor: motivoSaida === mot ? `${theme.danger}15` : theme.background,
-                        borderColor: motivoSaida === mot ? theme.danger : theme.border,
-                      },
-                    ]}
-                  >
-                    <Text style={[estilosStockRemove.textoMotivo, { color: motivoSaida === mot ? theme.danger : theme.text }]}>
-                      {mot}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+                {motivosDisponiveis.map((mot) => {
+                  const estaSelecionado = motivoSaida === mot;
+                  const ehPerda = mot === 'perda de produto';
+                  const corDestaque = ehPerda ? theme.danger : theme.primary;
+
+                  return (
+                    <TouchableOpacity
+                      key={mot}
+                      onPress={() => setMotivoSaida(mot)}
+                      style={[
+                        estilosStockRemove.botaoMotivo,
+                        {
+                          backgroundColor: estaSelecionado ? `${corDestaque}18` : theme.background,
+                          borderColor: estaSelecionado ? corDestaque : theme.border,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          estilosStockRemove.textoMotivo,
+                          {
+                            color: estaSelecionado ? corDestaque : theme.text,
+                            fontWeight: estaSelecionado ? '700' : '500',
+                          },
+                        ]}
+                      >
+                        {mot}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
 
               <AppInput
                 rotulo="Justificativa / Observações"
-                placeholder="Ex: Preparo do almoço / Embalagem avariada"
+                placeholder={exigeTravaSeguranca ? "Ex: Embalagem avariada / Validade expirada" : "Ex: Preparo de refeições / Atendimento regular"}
                 value={justificativa}
                 onChangeText={setJustificativa}
               />
 
-              {motivoSaida.toLowerCase().includes('perda') && (
+              {exigeTravaSeguranca && (
                 <View style={[estilosStockRemove.blocoTravaPerda, { backgroundColor: `${theme.danger}10`, borderColor: theme.danger }]}>
                   <Text style={[estilosStockRemove.textoAvisoPerda, { color: theme.danger, fontSize: 12 * fontScale }]}>
-                    🔒 Trava de Segurança
+                    🔒 Trava de Segurança Obrigatória
                   </Text>
                   <Text style={[estilosStockRemove.instrucaoPerda, { color: theme.text }]}>
-                    Para autorizar o descarte, digite a palavra <Text style={{ fontWeight: 'bold', color: theme.danger }}>PERDA</Text> em maiúsculas:
+                    Para autorizar a baixa por perda de produto, digite a palavra <Text style={{ fontWeight: 'bold', color: theme.danger }}>PERDA</Text> em maiúsculas:
                   </Text>
 
                   <AppInput
@@ -667,8 +821,8 @@ export default function StockRemoveScreen() {
                   <ActivityIndicator size="large" color={theme.danger} />
                 ) : (
                   <AppButton
-                    title={motivoSaida.toLowerCase().includes('perda') ? 'Confirmar Descarte por Perda' : 'Confirmar Saída do Estoque'}
-                    variant="danger"
+                    title={exigeTravaSeguranca ? 'Confirmar Descarte por Perda' : 'Confirmar Saída Regular'}
+                    variant={exigeTravaSeguranca ? 'danger' : 'primary'}
                     onPress={confirmarBaixa}
                   />
                 )}
@@ -716,8 +870,8 @@ export default function StockRemoveScreen() {
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
                   <Text style={{ color: theme.text, fontWeight: '600' }}>Quantidade Removida:</Text>
-                  <Text style={{ color: resumoBaixa.motivo.includes('perda') ? theme.danger : theme.secondary, fontWeight: '900' }}>
-                    {resumoBaixa.qtd} pacotes
+                  <Text style={{ color: resumoBaixa.motivo === 'perda de produto' ? theme.danger : theme.secondary, fontWeight: '900' }}>
+                    {resumoBaixa.qtd} pacotes ({resumoBaixa.motivo})
                   </Text>
                 </View>
 
@@ -750,18 +904,27 @@ const estilosCameraSaida = StyleSheet.create({
   },
   topo: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 24,
     flexDirection: 'row',
     justifyContent: 'flex-start',
+    zIndex: 10,
   },
-  botaoFechar: {
+  botaoVoltar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(17, 24, 39, 0.78)',
+    backgroundColor: 'rgba(17, 24, 39, 0.85)',
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 24,
     minHeight: 48,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  textoBotaoVoltar: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    marginLeft: 8,
+    fontSize: 15,
   },
   centro: {
     flex: 1,
@@ -786,6 +949,50 @@ const estilosCameraSaida = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 12,
+  },
+  rodape: {
+    paddingHorizontal: 20,
+    paddingBottom: 28,
+    gap: 12,
+    zIndex: 10,
+  },
+  botaoRealizarLeitura: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EF4444',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    minHeight: 52,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  textoBotaoRealizarLeitura: {
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.2,
+  },
+  botaoManualRapido: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(30, 41, 59, 0.85)',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    minHeight: 44,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  textoBotaoManualRapido: {
+    color: '#E2E8F0',
+    fontWeight: '600',
+    fontSize: 13,
   },
 });
 
