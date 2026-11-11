@@ -1,232 +1,509 @@
-// src/app/notifications.tsx
-import React, { useState, useEffect, useCallback } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
+import { estilosNotificacoes } from '../styles/notifications.styles';
 import { requisicaoApi } from '../services/api';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
+import { diasAteVencimento } from '../utils/dateValidation';
 
-interface ItemNotificacao {
+type TipoNotificacao =
+  | 'vencido'
+  | 'vencimento_proximo'
+  | 'estoque_baixo'
+  | 'entrada'
+  | 'saida'
+  | 'movimentacao'
+  | 'ajuste'
+  | 'campanha';
+
+interface NotificacaoSistema {
   id: string;
-  titulo: string;
-  conteudo: string;
-  dataHora: string;
-  lido: boolean;
+  tipo: TipoNotificacao;
+  etiqueta: string;
+  icone: React.ComponentProps<typeof Feather>['name'];
   cor: string;
-  rotaDestino?: string;
+  titulo: string;
+  mensagem: string;
+  dataLabel: string;
+  prioridade: number;
+  rotaDestino: string;
 }
+
+const CHAVE_DISPENSADAS = '@dg_notificacoes_dispensadas_v1';
+
+const formatarDataCurta = (bruto?: string): string => {
+  if (!bruto) return 'Hoje';
+  const dt = new Date(bruto);
+  if (isNaN(dt.getTime())) return String(bruto).slice(0, 16);
+  const dia = String(dt.getDate()).padStart(2, '0');
+  const mes = String(dt.getMonth() + 1).padStart(2, '0');
+  const hh = String(dt.getHours()).padStart(2, '0');
+  const mm = String(dt.getMinutes()).padStart(2, '0');
+  return `${dia}/${mes} • ${hh}:${mm}`;
+};
 
 export default function NotificationsScreen() {
   const roteador = useRouter();
-  const { theme, tokens, fontScale } = useAppTheme();
+  const { theme, fontScale } = useAppTheme();
+
+  const [notificacoesBrutas, setNotificacoesBrutas] = useState<NotificacaoSistema[]>([]);
+  const [idsDispensados, setIdsDispensados] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [listaNotificacoes, setListaNotificacoes] = useState<ItemNotificacao[]>([]);
+  const [atualizando, setAtualizando] = useState(false);
 
-  const calcularDiasAteVencimento = (dataIso?: string): number => {
-    if (!dataIso) return 999;
-    const partes = String(dataIso).split('T')[0].split('-');
-    if (partes.length !== 3) return 999;
-    const [ano, mes, dia] = partes.map(Number);
-    const dataVal = new Date(ano, mes - 1, dia);
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
-    return Math.ceil((dataVal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-  };
-
-  const carregarAlertasReaisAws = useCallback(async () => {
-    setCarregando(true);
+  const carregarDispensadas = useCallback(async (): Promise<string[]> => {
     try {
-      const resposta: any = await requisicaoApi('/api/estoque', {
-        metodo: 'POST',
-        dados: { modulo: 'estoque', acao: 'consultar_estoque' },
+      const json = await AsyncStorage.getItem(CHAVE_DISPENSADAS);
+      const parsed = json ? JSON.parse(json) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const buscarNotificacoesSistema = useCallback(async () => {
+    try {
+      const [dispensadasSalvas, resEst, resMov, resCamp] = await Promise.all([
+        carregarDispensadas(),
+        requisicaoApi<any>('/api/estoque', {
+          metodo: 'POST',
+          dados: { modulo: 'estoque', acao: 'consultar_estoque' },
+        }).catch(() => ({})),
+        requisicaoApi<any>('/api/estoque', {
+          metodo: 'POST',
+          dados: { modulo: 'estoque', acao: 'consultar_movimentacoes' },
+        }).catch(() => ({})),
+        requisicaoApi<any>('/api/estoque', {
+          metodo: 'POST',
+          dados: { modulo: 'estoque', acao: 'consultar_campanhas' },
+        }).catch(() => ({})),
+      ]);
+
+      setIdsDispensados(dispensadasSalvas);
+
+      const lista: NotificacaoSistema[] = [];
+
+      const lotes: any[] = Array.isArray(resEst?.lotes)
+        ? resEst.lotes
+        : Array.isArray(resEst?.dados)
+          ? resEst.dados
+          : [];
+
+      // 1. Produtos vencidos e próximos do vencimento + agrupamento para estoque baixo
+      const mapaProdutosSaldo = new Map<
+        string,
+        { nome: string; total: number; minimo: number }
+      >();
+
+      lotes.forEach((lote, idx) => {
+        const qtd = Number(lote.quantidade_atual_pacote || 0);
+        if (qtd <= 0) return;
+
+        const chaveProd = String(lote.id_produto || lote.nome_produto || idx);
+        const nomeProd = String(lote.nome_produto || 'Alimento');
+        const minimo = Number(lote.estoque_minimo_pacote || 5);
+        const atual = mapaProdutosSaldo.get(chaveProd) || { nome: nomeProd, total: 0, minimo };
+        atual.total += qtd;
+        mapaProdutosSaldo.set(chaveProd, atual);
+
+        const dataValStr = String(
+          lote.data_validade_lote || lote.data_validade_rotulo || '',
+        ).trim();
+        const dias = diasAteVencimento(dataValStr);
+        const localDesc = normalizarDescricaoPrateleira(
+          lote.local_descricao || lote.id_local_armazenamento || 'Estoque Geral',
+        );
+
+        if (dias !== null && dias < 0) {
+          lista.push({
+            id: `notif-vencido-${lote.id_lote_produto || idx}`,
+            tipo: 'vencido',
+            etiqueta: 'Produto Vencido',
+            icone: 'alert-octagon',
+            cor: '#DC2626',
+            titulo: `${nomeProd} está vencido`,
+            mensagem: `${qtd} pacote(s) em ${localDesc} (venceu há ${Math.abs(dias)} dia(s)). Remova do consumo imediatamente.`,
+            dataLabel: 'Urgente',
+            prioridade: 1,
+            rotaDestino: '/stock-remove',
+          });
+        } else if (dias !== null && dias <= 7) {
+          lista.push({
+            id: `notif-prox-${lote.id_lote_produto || idx}`,
+            tipo: 'vencimento_proximo',
+            etiqueta: 'Próximo do Vencimento',
+            icone: 'clock',
+            cor: '#F59E0B',
+            titulo: `${nomeProd} vence ${dias === 0 ? 'hoje' : `em ${dias} dia(s)`}`,
+            mensagem: `Lote ${lote.numero_codigo_lote || 'S/N'} (${qtd} pcts) guardado em ${localDesc}. Priorize a saída (FEFO).`,
+            dataLabel: dias === 0 ? 'Hoje' : `Em ${dias}d`,
+            prioridade: 2,
+            rotaDestino: '/stock-remove',
+          });
+        }
       });
 
-      const alertas: ItemNotificacao[] = [];
+      // 2. Estoque baixo
+      mapaProdutosSaldo.forEach((info, chave) => {
+        if (info.total <= info.minimo) {
+          lista.push({
+            id: `notif-baixo-${chave}`,
+            tipo: 'estoque_baixo',
+            etiqueta: 'Estoque Baixo',
+            icone: 'trending-down',
+            cor: '#D97706',
+            titulo: `Estoque baixo de ${info.nome}`,
+            mensagem: `Restam apenas ${info.total} pacote(s) (mínimo recomendado: ${info.minimo}).`,
+            dataLabel: 'Reposição',
+            prioridade: 3,
+            rotaDestino: '/stock-add',
+          });
+        }
+      });
 
-      if (resposta?.sucesso && Array.isArray(resposta.lotes)) {
-        const ativos = resposta.lotes.filter((l: any) => (Number(l.quantidade_atual_pacote) || 0) > 0);
+      // 3. Movimentações do sistema: entradas, saídas, transferências e ajustes
+      const movs: any[] = Array.isArray(resMov?.movimentacoes)
+        ? resMov.movimentacoes
+        : Array.isArray(resEst?.movimentacoes)
+          ? resEst.movimentacoes
+          : [];
 
-        ativos.forEach((l: any) => {
-          const dias = calcularDiasAteVencimento(l.data_validade_rotulo);
-          const prateleira = normalizarDescricaoPrateleira(
-            l.local_descricao || l.id_local_armazenamento || 'Sem Local Definido'
-          );
-          const qtd = Number(l.quantidade_atual_pacote) || 0;
-          const min = Number(l.estoque_minimo_pacote) || 5;
+      movs.slice(0, 25).forEach((mov, idx) => {
+        const tipoOp = String(
+          mov.tipo_operacao || mov.operacao || mov.acao || 'movimentacao',
+        ).toLowerCase();
+        const nomeProd = String(mov.nome_produto || mov.nome || 'Produto');
+        const qtd = Number(mov.quantidade_movimentada_pacote || mov.qtd || 0);
+        const localDesc = normalizarDescricaoPrateleira(
+          mov.local_descricao || mov.local || 'Despensa Principal',
+        );
+        const responsavel = String(
+          mov.id_usuario_responsavel || mov.responsavel || 'Equipe',
+        );
+        const dataHora = mov.data_hora_movimentacao || mov.data || '';
+        const idBase = String(mov.id_movimentacao || mov.id_movimentacao_estoque || idx);
 
-          if (dias < 0) {
-            alertas.push({
-              id: `vencido-${l.id_lote_produto || l.numero_codigo_lote}`,
-              titulo: '🚨 Lote Vencido no Estoque',
-              conteudo: `O lote ${l.numero_codigo_lote} de ${l.nome_produto} (${qtd} un.) está vencido há ${Math.abs(dias)} dia(s) em "${prateleira}".`,
-              dataHora: 'Prioridade Máxima',
-              lido: false,
-              cor: theme.danger,
-              rotaDestino: '/stock-remove',
-            });
-          } else if (dias <= 15) {
-            alertas.push({
-              id: `vence-${l.id_lote_produto || l.numero_codigo_lote}`,
-              titulo: '⚠️ Lote Próximo do Vencimento (FEFO)',
-              conteudo: `O lote ${l.numero_codigo_lote} de ${l.nome_produto} (${qtd} un.) vence em ${dias} dia(s) na prateleira "${prateleira}".`,
-              dataHora: 'Alerta Preventivo',
-              lido: false,
-              cor: tokens.colors.accentAmber500,
-              rotaDestino: '/dora',
-            });
-          }
+        if (tipoOp.includes('entrada') || tipoOp.includes('cadastr')) {
+          lista.push({
+            id: `notif-mov-${idBase}`,
+            tipo: 'entrada',
+            etiqueta: 'Entrada no Estoque',
+            icone: 'arrow-down-left',
+            cor: '#10B981',
+            titulo: `Entrada de ${nomeProd} (+${qtd} pcts)`,
+            mensagem: `Registrado em ${localDesc} por ${responsavel}.`,
+            dataLabel: formatarDataCurta(dataHora),
+            prioridade: 4,
+            rotaDestino: '/stock-details',
+          });
+        } else if (tipoOp.includes('saida') || tipoOp.includes('baixa') || tipoOp.includes('perda')) {
+          lista.push({
+            id: `notif-mov-${idBase}`,
+            tipo: 'saida',
+            etiqueta: tipoOp.includes('perda') ? 'Baixa por Perda' : 'Saída do Estoque',
+            icone: 'arrow-up-right',
+            cor: '#DC2626',
+            titulo: `Saída de ${nomeProd} (-${qtd} pcts)`,
+            mensagem: `${mov.justificativa_detalhe || mov.motivo_saida || 'Retirada registrada'} • por ${responsavel}.`,
+            dataLabel: formatarDataCurta(dataHora),
+            prioridade: 4,
+            rotaDestino: '/audit',
+          });
+        } else if (tipoOp.includes('ajuste')) {
+          lista.push({
+            id: `notif-mov-${idBase}`,
+            tipo: 'ajuste',
+            etiqueta: 'Ajuste de Auditoria',
+            icone: 'sliders',
+            cor: '#1E3A8A',
+            titulo: `Ajuste físico em ${nomeProd}`,
+            mensagem: `${mov.justificativa_detalhe || 'Conferência de prateleira'} • ${responsavel}.`,
+            dataLabel: formatarDataCurta(dataHora),
+            prioridade: 5,
+            rotaDestino: '/audit',
+          });
+        } else {
+          lista.push({
+            id: `notif-mov-${idBase}`,
+            tipo: 'movimentacao',
+            etiqueta: 'Movimentação Interna',
+            icone: 'repeat',
+            cor: '#1E3A8A',
+            titulo: `Transferência de ${nomeProd} (${qtd} pcts)`,
+            mensagem: `Movido para ${localDesc} por ${responsavel}.`,
+            dataLabel: formatarDataCurta(dataHora),
+            prioridade: 5,
+            rotaDestino: '/stock-move',
+          });
+        }
+      });
 
-          if (qtd <= min) {
-            alertas.push({
-              id: `min-${l.id_lote_produto || l.numero_codigo_lote}`,
-              titulo: '📉 Estoque Mínimo Atingido',
-              conteudo: `${l.nome_produto} possui apenas ${qtd} un. em "${prateleira}" (mínimo: ${min} un.).`,
-              dataHora: 'Reposição',
-              lido: true,
-              cor: theme.primary,
-              rotaDestino: '/stock',
-            });
-          }
+      // 4. Campanhas de doação
+      const campanhas: any[] = Array.isArray(resCamp?.campanhas) ? resCamp.campanhas : [];
+      campanhas.forEach((camp, idx) => {
+        const tituloCamp = String(camp.nome_campanha || camp.titulo || 'Campanha Solidária');
+        const statusCamp = String(camp.status_campanha || 'Ativa');
+        const idCamp = String(camp.id_campanha_doacao || idx);
+        lista.push({
+          id: `notif-camp-${idCamp}`,
+          tipo: 'campanha',
+          etiqueta: 'Campanha de Doação',
+          icone: 'award',
+          cor: '#1E3A8A',
+          titulo: tituloCamp,
+          mensagem: `${camp.objetivo_descricao_campanha || 'Campanha ativa para arrecadação de alimentos.'} (Status: ${statusCamp})`,
+          dataLabel: formatarDataCurta(camp.criada_em || camp.data_inicio_campanha),
+          prioridade: 6,
+          rotaDestino: '/settings-campaigns',
         });
-      }
+      });
 
-      if (alertas.length === 0) {
-        alertas.push({
-          id: 'notif-ok',
-          titulo: '✅ Estoque Regularizado na AWS',
-          conteudo: 'Não há lotes vencidos ou em estado crítico nas prateleiras cadastradas.',
-          dataHora: 'Sincronizado agora',
-          lido: true,
-          cor: theme.secondary,
-        });
-      }
-
-      setListaNotificacoes(alertas);
-    } catch {
-      setListaNotificacoes([
-        {
-          id: 'notif-offline',
-          titulo: '⚠️ Sem Conexão com a Nuvem AWS',
-          conteudo: 'Toque em atualizar para sincronizar os alertas reais das prateleiras.',
-          dataHora: 'Agora',
-          lido: false,
-          cor: theme.danger,
-        },
-      ]);
+      lista.sort((a, b) => a.prioridade - b.prioridade);
+      setNotificacoesBrutas(lista);
     } finally {
       setCarregando(false);
+      setAtualizando(false);
     }
-  }, [theme.danger, theme.primary, theme.secondary, tokens.colors.accentAmber500]);
+  }, [carregarDispensadas]);
 
   useEffect(() => {
-    carregarAlertasReaisAws();
-  }, [carregarAlertasReaisAws]);
+    buscarNotificacoesSistema();
+  }, [buscarNotificacoesSistema]);
 
-  const marcarComoLida = (item: ItemNotificacao) => {
-    setListaNotificacoes((anterior) =>
-      anterior.map((n) => (n.id === item.id ? { ...n, lido: true } : n))
-    );
-    if (item.rotaDestino) {
-      roteador.push(item.rotaDestino as any);
+  const dispensarNotificacao = async (id: string) => {
+    const atualizadas = idsDispensados.includes(id)
+      ? idsDispensados
+      : [...idsDispensados, id];
+    setIdsDispensados(atualizadas);
+    try {
+      await AsyncStorage.setItem(CHAVE_DISPENSADAS, JSON.stringify(atualizadas));
+    } catch {
+      // Silencioso
     }
   };
 
+  const restaurarDispensadas = async () => {
+    setIdsDispensados([]);
+    try {
+      await AsyncStorage.removeItem(CHAVE_DISPENSADAS);
+    } catch {
+      // Silencioso
+    }
+  };
+
+  const notificacoesVisiveis = useMemo(
+    () => notificacoesBrutas.filter((item) => !idsDispensados.includes(item.id)),
+    [notificacoesBrutas, idsDispensados],
+  );
+
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+    <SafeAreaView style={[estilosNotificacoes.container, { backgroundColor: theme.background }]}>
+      <View
+        style={[
+          estilosNotificacoes.header,
+          { backgroundColor: theme.surface, borderBottomColor: theme.border },
+        ]}
+      >
+        <View style={estilosNotificacoes.headerEsquerda}>
           <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Voltar para a tela anterior"
             onPress={() => roteador.back()}
-            style={{ flexDirection: 'row', alignItems: 'center', minHeight: 44 }}
+            style={estilosNotificacoes.botaoIcone}
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
           >
-            <Feather name="arrow-left" size={20} color={theme.primary} />
-            <Text style={{ color: theme.primary, fontWeight: 'bold', marginLeft: 8, fontSize: 15 * fontScale }}>
-              Voltar
-            </Text>
+            <Feather name="arrow-left" size={22} color="#1E3A8A" />
           </TouchableOpacity>
 
-          <View style={{ flexDirection: 'row', gap: 8 }}>
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Configurar alertas"
-              onPress={() => roteador.push('/notifications-config' as any)}
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 10,
-                backgroundColor: theme.surface,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
+          <View style={estilosNotificacoes.tituloWrapper}>
+            <Text
+              style={[
+                estilosNotificacoes.titulo,
+                { color: '#1E3A8A', fontSize: 19 * fontScale },
+              ]}
             >
-              <Text style={{ color: theme.primary, fontWeight: '700', fontSize: 12 * fontScale }}>Ajustes</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Atualizar alertas AWS"
-              onPress={carregarAlertasReaisAws}
-              style={{
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 10,
-                backgroundColor: theme.surface,
-                borderWidth: 1,
-                borderColor: theme.border,
-              }}
+              Notificações
+            </Text>
+            <Text
+              style={[
+                estilosNotificacoes.subtitulo,
+                { color: theme.subtext, fontSize: 12 * fontScale },
+              ]}
             >
-              <Feather name="refresh-cw" size={14} color={theme.secondary} />
-            </TouchableOpacity>
+              {notificacoesVisiveis.length} aviso(s) do sistema
+            </Text>
           </View>
         </View>
 
-        <View style={{ marginBottom: 16 }}>
-          <Text style={{ fontWeight: 'bold', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }}>
-            Avisos e Notificações
-          </Text>
-          <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }}>
-            Alertas gerados em tempo real a partir dos lotes e prateleiras na AWS.
-          </Text>
-        </View>
+        <TouchableOpacity
+          onPress={() => roteador.push('/notifications-config')}
+          style={estilosNotificacoes.botaoIcone}
+          accessibilityRole="button"
+          accessibilityLabel="Configurar alertas de notificações"
+        >
+          <Feather name="settings" size={20} color="#1E3A8A" />
+        </TouchableOpacity>
+      </View>
 
+      <ScrollView
+        contentContainerStyle={estilosNotificacoes.scrollConteudo}
+        refreshControl={
+          <RefreshControl
+            refreshing={atualizando}
+            onRefresh={() => {
+              setAtualizando(true);
+              buscarNotificacoesSistema();
+            }}
+            colors={['#1E3A8A', '#10B981']}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
         {carregando ? (
-          <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 40 }} />
-        ) : (
-          listaNotificacoes.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel={`${item.titulo}. ${item.conteudo}. ${item.lido ? 'Lido' : 'Não lido'}`}
-              onPress={() => marcarComoLida(item)}
+          <ActivityIndicator size="large" color="#1E3A8A" style={{ marginTop: 32 }} />
+        ) : notificacoesVisiveis.length === 0 ? (
+          <View
+            style={[
+              estilosNotificacoes.estadoVazio,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <Feather name="bell-off" size={32} color="#10B981" />
+            <Text
               style={{
-                borderWidth: 1.5,
-                borderRadius: 14,
-                padding: 14,
-                marginBottom: 12,
-                backgroundColor: item.lido ? theme.surface : `${item.cor}12`,
-                borderColor: item.lido ? theme.border : item.cor,
+                color: theme.text,
+                fontWeight: '800',
+                fontSize: 15 * fontScale,
+                marginTop: 12,
               }}
             >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                <Text style={{ fontWeight: 'bold', color: item.cor, fontSize: 14 * fontScale, flex: 1 }}>
+              Nenhuma notificação pendente
+            </Text>
+            <Text
+              style={{
+                color: theme.subtext,
+                fontSize: 12.5 * fontScale,
+                textAlign: 'center',
+                marginTop: 4,
+              }}
+            >
+              Todos os avisos recentes de entradas, saídas, validades e campanhas foram lidos.
+            </Text>
+          </View>
+        ) : (
+          notificacoesVisiveis.map((item) => (
+            <View
+              key={item.id}
+              style={[
+                estilosNotificacoes.cardNotificacao,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  borderLeftColor: item.cor,
+                },
+              ]}
+            >
+              <View
+                style={[
+                  estilosNotificacoes.iconeTipoBox,
+                  { backgroundColor: `${item.cor}16` },
+                ]}
+              >
+                <Feather name={item.icone} size={20} color={item.cor} />
+              </View>
+
+              <TouchableOpacity
+                onPress={() => roteador.push(item.rotaDestino as any)}
+                style={estilosNotificacoes.conteudoCard}
+                activeOpacity={0.75}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.etiqueta}: ${item.titulo}`}
+              >
+                <View style={estilosNotificacoes.topoCardRow}>
+                  <View
+                    style={[
+                      estilosNotificacoes.badgeTipo,
+                      { backgroundColor: `${item.cor}18` },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        estilosNotificacoes.badgeTipoTexto,
+                        { color: item.cor, fontSize: 10.5 * fontScale },
+                      ]}
+                    >
+                      {item.etiqueta}
+                    </Text>
+                  </View>
+
+                  <Text
+                    style={[
+                      estilosNotificacoes.dataTexto,
+                      { color: theme.subtext, fontSize: 11 * fontScale },
+                    ]}
+                  >
+                    {item.dataLabel}
+                  </Text>
+                </View>
+
+                <Text
+                  style={[
+                    estilosNotificacoes.tituloCard,
+                    { color: theme.text, fontSize: 14 * fontScale },
+                  ]}
+                >
                   {item.titulo}
                 </Text>
-                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>{item.dataHora}</Text>
-              </View>
-              <Text style={{ color: theme.text, fontSize: 13 * fontScale, lineHeight: 19 }}>
-                {item.conteudo}
-              </Text>
-            </TouchableOpacity>
+
+                <Text
+                  style={[
+                    estilosNotificacoes.mensagemCard,
+                    { color: theme.subtext, fontSize: 12.5 * fontScale },
+                  ]}
+                >
+                  {item.mensagem}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => dispensarNotificacao(item.id)}
+                style={estilosNotificacoes.botaoDismiss}
+                accessibilityRole="button"
+                accessibilityLabel={`Dispensar notificação ${item.titulo}`}
+              >
+                <Feather name="x" size={19} color={theme.subtext} />
+              </TouchableOpacity>
+            </View>
           ))
+        )}
+
+        {idsDispensados.length > 0 && (
+          <TouchableOpacity
+            onPress={restaurarDispensadas}
+            style={[
+              estilosNotificacoes.botaoRestaurar,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Restaurar notificações dispensadas"
+          >
+            <Feather name="rotate-ccw" size={16} color="#1E3A8A" />
+            <Text style={{ color: '#1E3A8A', fontWeight: '700', fontSize: 12.5 * fontScale }}>
+              Restaurar {idsDispensados.length} aviso(s) dispensado(s)
+            </Text>
+          </TouchableOpacity>
         )}
       </ScrollView>
     </SafeAreaView>
   );
 }
-

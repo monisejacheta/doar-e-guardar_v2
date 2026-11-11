@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAppTheme } from '../context/ThemeContext';
 import { estilosStockRemove } from '../styles/stock-remove.styles';
 import { requisicaoApi } from '../services/api';
@@ -26,6 +26,7 @@ import { resolverFotoProduto } from '../utils/imageUtils';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 import { auth } from '../services/firebaseConfig';
 import { AppInput } from '../components/common/AppInput';
+import { AppNumericInput } from '../components/common/AppNumericInput';
 import { AppButton } from '../components/common/AppButton';
 
 interface LoteItem {
@@ -135,7 +136,10 @@ export default function StockRemoveScreen() {
   }, []);
 
   useEffect(() => {
-    carregarEstoque();
+    const timer = setTimeout(() => {
+      void carregarEstoque();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [carregarEstoque]);
 
   // Agrupa os produtos e ordena FEFO internamente
@@ -745,12 +749,13 @@ export default function StockRemoveScreen() {
                 </Text>
               </View>
 
-              <AppInput
+              <AppNumericInput
                 rotulo={`Quantidade a retirar (Disponível: ${loteSelecionado?.quantidade_atual_pacote})`}
                 placeholder="0"
-                keyboardType="numeric"
+                min={0}
+                max={Number(loteSelecionado?.quantidade_atual_pacote) || undefined}
                 value={quantidadeSaida}
-                onChangeText={(txt) => setQuantidadeSaida(txt.replace(/\D/g, ''))}
+                onChangeText={setQuantidadeSaida}
               />
 
               <Text style={[estilosStockRemove.labelForm, { color: theme.text, fontSize: 12 * fontScale }]}>

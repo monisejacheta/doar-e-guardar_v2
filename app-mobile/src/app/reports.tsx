@@ -1,329 +1,311 @@
 // src/app/reports.tsx
-import React, { useState, useEffect } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import Svg, { Circle, G } from 'react-native-svg';
 import { useAppTheme } from '../context/ThemeContext';
-import { AppInput } from '../components/common/AppInput';
-import { AppButton } from '../components/common/AppButton';
-import { estilosReports } from '../styles/reports.styles';
+import { estilosRelatorios } from '../styles/reports.styles';
 import { requisicaoApi } from '../services/api';
-import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 
-const TIPOS_GRAFICO = [
-  { id: 'Barras', icone: 'bar-chart-2' },
-  { id: 'Colunas', icone: 'bar-chart' },
-  { id: 'Proporção', icone: 'pie-chart' },
-] as const;
+interface ItemProporcao {
+  categoria: string;
+  quantidade: number;
+  percentual: number;
+  cor: string;
+}
+
+const PALETA_PROPORCAO = [
+  '#1E3A8A', // Azul Guardar
+  '#10B981', // Verde Doar
+  '#3B82F6',
+  '#059669',
+  '#F59E0B',
+  '#0EA5E9',
+  '#DC2626',
+  '#64748B',
+];
 
 export default function ReportsScreen() {
-  const roteador = useRouter();
   const { theme, tokens, fontScale } = useAppTheme();
+  const [itensProporcao, setItensProporcao] = useState<ItemProporcao[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [atualizando, setAtualizando] = useState(false);
 
-  const [tipoGrafico, setTipoGrafico] = useState<string>('Barras');
-  const [mostrarPorcentagem, setMostrarPorcentagem] = useState<boolean>(true);
-  const [emailsDestino, setEmailsDestino] = useState('');
-
-  const [dadosGrafico, setDadosGrafico] = useState<any[]>([]);
-  const [lotesCompletos, setLotesCompletos] = useState<any[]>([]);
-  const [carregandoDados, setCarregandoDados] = useState(true);
-  const [enviandoEmail, setEnviandoEmail] = useState(false);
-
-  // Busca de dados reais da AWS (DynamoDB) com normalização de prateleira e filtro de saldo positivo
-  useEffect(() => {
-    const carregarEstatisticasReais = async () => {
-      try {
-        setCarregandoDados(true);
-        const resposta: any = await requisicaoApi('/api/estoque', {
-          metodo: 'POST',
-          dados: { modulo: 'estoque', acao: 'consultar_estoque' },
-        });
-
-        if (resposta?.sucesso && Array.isArray(resposta.lotes)) {
-          const lotesAtivos = resposta.lotes
-            .filter((lote: any) => (parseInt(String(lote.quantidade_atual_pacote), 10) || 0) > 0)
-            .map((lote: any) => ({
-              ...lote,
-              local_descricao: normalizarDescricaoPrateleira(
-                lote.local_descricao || lote.id_local_armazenamento || 'Sem Local Definido'
-              ),
-            }));
-
-          setLotesCompletos(lotesAtivos);
-
-          const agregacao: Record<string, number> = {};
-          let totalPacotes = 0;
-
-          lotesAtivos.forEach((lote: any) => {
-            const categoria = lote.categoria || 'Outros';
-            const qtd = parseInt(String(lote.quantidade_atual_pacote), 10) || 0;
-            agregacao[categoria] = (agregacao[categoria] || 0) + qtd;
-            totalPacotes += qtd;
-          });
-
-          const paletaCores = [
-            theme.primary,
-            tokens.colors.accentAmber500,
-            theme.secondary,
-            theme.danger,
-            tokens.colors.neutral600,
-          ];
-
-          const novosDados = Object.keys(agregacao)
-            .map((cat, index) => ({
-              label: cat,
-              valor: totalPacotes > 0 ? Math.round((agregacao[cat] / totalPacotes) * 100) : 0,
-              quantidade: agregacao[cat],
-              cor: paletaCores[index % paletaCores.length],
-            }))
-            .sort((a, b) => b.valor - a.valor);
-
-          setDadosGrafico(novosDados);
-        }
-      } catch (erro) {
-        console.log('Erro AWS:', erro);
-      } finally {
-        setCarregandoDados(false);
-      }
-    };
-
-    carregarEstatisticasReais();
-  }, [theme.danger, theme.primary, theme.secondary, tokens.colors.accentAmber500, tokens.colors.neutral600]);
-
-  const exportarPdfPorEmail = async () => {
-    if (!emailsDestino.trim() || !emailsDestino.includes('@')) {
-      Alert.alert('E-mail Inválido', 'Por favor, digite um endereço de e-mail válido.');
-      return;
-    }
-
+  const carregarProporcaoEstoque = useCallback(async () => {
     try {
-      setEnviandoEmail(true);
-      const resposta: any = await requisicaoApi('/api/relatorios', {
+      const resp: any = await requisicaoApi('/api/estoque', {
         metodo: 'POST',
-        dados: {
-          modulo: 'relatorios',
-          acao: 'enviar_relatorio_completo_email',
-          relatorio_completo: true,
-          dados_consolidados: dadosGrafico,
-          total_itens: lotesCompletos.length,
-          destinatarios: emailsDestino.split(',').map((e) => e.trim()),
-          tipo_grafico: tipoGrafico,
-        },
+        dados: { modulo: 'estoque', acao: 'consultar_estoque' },
       });
 
-      if (resposta?.sucesso) {
-        Alert.alert(
-          'E-mail Enviado com Sucesso!',
-          `O relatório completo com todas as informações dos produtos e prateleiras na AWS foi gerado e enviado para:\n\n${emailsDestino}`
-        );
-        setEmailsDestino('');
-      } else {
-        Alert.alert('Erro', resposta.mensagem || 'Falha ao gerar o relatório completo.');
-      }
+      const lotes: any[] = Array.isArray(resp?.lotes)
+        ? resp.lotes
+        : Array.isArray(resp?.dados)
+          ? resp.dados
+          : [];
+
+      const agrupado = new Map<string, number>();
+      lotes.forEach((lote) => {
+        const qtd = Number(lote.quantidade_atual_pacote || 0);
+        if (qtd <= 0) return;
+        const cat = String(lote.categoria || 'Outros').trim() || 'Outros';
+        agrupado.set(cat, (agrupado.get(cat) || 0) + qtd);
+      });
+
+      const total = Array.from(agrupado.values()).reduce((s, v) => s + v, 0);
+      const listaOrdenada: ItemProporcao[] = Array.from(agrupado.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([categoria, quantidade], idx) => ({
+          categoria,
+          quantidade,
+          percentual: total > 0 ? Math.round((quantidade / total) * 1000) / 10 : 0,
+          cor: PALETA_PROPORCAO[idx % PALETA_PROPORCAO.length],
+        }));
+
+      setItensProporcao(listaOrdenada);
     } catch {
-      Alert.alert('Erro de Conexão', 'Não foi possível conectar com os servidores da AWS.');
+      setItensProporcao([]);
     } finally {
-      setEnviandoEmail(false);
+      setCarregando(false);
+      setAtualizando(false);
     }
-  };
+  }, []);
 
-  const renderizarVisualizacaoGrafica = () => {
-    if (carregandoDados) {
-      return <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 40 }} />;
-    }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      void carregarProporcaoEstoque();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [carregarProporcaoEstoque]);
 
-    if (dadosGrafico.length === 0) {
-      return <Text style={{ color: theme.subtext, textAlign: 'center', marginVertical: 20 }}>Estoque vazio.</Text>;
-    }
+  const totalGeral = useMemo(
+    () => itensProporcao.reduce((acc, item) => acc + item.quantidade, 0),
+    [itensProporcao],
+  );
 
-    const formatarMetrica = (item: any) => (mostrarPorcentagem ? `${item.valor}%` : `${item.quantidade} itens`);
+  // Parâmetros geométricos do gráfico circular proporcional (Donut SVG)
+  const tamanhoSvg = 216;
+  const raio = 82;
+  const espessura = 28;
+  const circunferencia = 2 * Math.PI * raio;
 
-    return (
-      <View style={estilosReports.areaGraficoSegura}>
-        {tipoGrafico === 'Colunas' && (
-          <View style={{ flexDirection: 'row', height: 180, alignItems: 'flex-end', justifyContent: 'space-around' }}>
-            {dadosGrafico.map((item) => (
-              <View key={item.label} style={{ alignItems: 'center', flex: 1, height: '100%', justifyContent: 'flex-end' }}>
-                <Text style={{ fontSize: 11 * fontScale, color: theme.subtext, marginBottom: 4, fontWeight: 'bold' }}>
-                  {formatarMetrica(item)}
-                </Text>
-                <View
-                  style={{
-                    width: '50%',
-                    height: `${Math.max(item.valor, 5)}%`,
-                    backgroundColor: item.cor,
-                    borderTopLeftRadius: 4,
-                    borderTopRightRadius: 4,
-                  }}
-                />
-                <Text style={{ fontSize: 10 * fontScale, color: theme.text, marginTop: 8, textAlign: 'center' }} numberOfLines={1}>
-                  {item.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-        )}
-
-        {tipoGrafico === 'Proporção' && (
-          <View>
-            <View style={{ height: 30, borderRadius: 8, flexDirection: 'row', overflow: 'hidden', marginBottom: 16 }}>
-              {dadosGrafico.map((item) => (
-                <View key={item.label} style={{ width: `${item.valor}%`, backgroundColor: item.cor, justifyContent: 'center', alignItems: 'center' }} />
-              ))}
-            </View>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 12 }}>
-              {dadosGrafico.map((item) => (
-                <View key={item.label} style={{ flexDirection: 'row', alignItems: 'center', width: '45%' }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: item.cor, marginRight: 8 }} />
-                  <Text style={{ fontSize: 11 * fontScale, color: theme.text }}>
-                    {item.label} ({formatarMetrica(item)})
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {tipoGrafico === 'Barras' && (
-          <View style={{ gap: 12 }}>
-            {dadosGrafico.map((item) => (
-              <View key={item.label}>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <Text style={{ color: theme.text, fontSize: 12 * fontScale, fontWeight: '600' }}>{item.label}</Text>
-                  <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, fontWeight: 'bold' }}>
-                    {formatarMetrica(item)}
-                  </Text>
-                </View>
-                <View style={{ height: 10, borderRadius: 5, backgroundColor: theme.border, width: '100%', overflow: 'hidden' }}>
-                  <View style={{ width: `${item.valor}%`, height: '100%', backgroundColor: item.cor }} />
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-    );
-  };
-
-  const MiniCard = ({ titulo, icone, corDestaque, rota }: any) => {
-    return (
-      <TouchableOpacity
-        accessible={true}
-        accessibilityRole="button"
-        accessibilityLabel={`Abrir relatório de ${titulo}`}
-        onPress={() => roteador.push(rota)}
-        style={[estilosReports.miniCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
-      >
-        <View style={[estilosReports.miniCardIcone, { backgroundColor: `${corDestaque}15` }]}>
-          <Feather name={icone} size={20} color={corDestaque} />
-        </View>
-        <Text style={[estilosReports.miniCardTitulo, { color: theme.text, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-          {titulo}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
+  const fatiasSvg = useMemo(() => {
+    return itensProporcao.map((item, idx) => {
+      const somaAnterior = itensProporcao
+        .slice(0, idx)
+        .reduce((acc, prev) => acc + (totalGeral > 0 ? prev.quantidade / totalGeral : 0), 0);
+      const fracao = totalGeral > 0 ? item.quantidade / totalGeral : 0;
+      const comprimento = fracao * circunferencia;
+      const deslocamento = -(somaAnterior * circunferencia);
+      return {
+        ...item,
+        comprimento,
+        deslocamento,
+      };
+    });
+  }, [itensProporcao, totalGeral, circunferencia]);
 
   return (
-    <SafeAreaView style={[estilosReports.container, { backgroundColor: theme.background }]}>
-      <ScrollView contentContainerStyle={estilosReports.rolagem} keyboardShouldPersistTaps="handled">
-        <View style={estilosReports.cabecalho}>
-          <Text style={[estilosReports.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-            Central de Relatórios
+    <SafeAreaView style={[estilosRelatorios.container, { backgroundColor: theme.background }]}>
+      <ScrollView
+        contentContainerStyle={estilosRelatorios.conteudoScroll}
+        refreshControl={
+          <RefreshControl
+            refreshing={atualizando}
+            onRefresh={() => {
+              setAtualizando(true);
+              carregarProporcaoEstoque();
+            }}
+            colors={['#1E3A8A', '#10B981']}
+          />
+        }
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={estilosRelatorios.cabecalho}>
+          <Text
+            style={[
+              estilosRelatorios.tituloPagina,
+              {
+                color: '#1E3A8A',
+                fontSize: tokens.typography.fontSize.xl * fontScale,
+              },
+            ]}
+          >
+            Relatório de Proporção
           </Text>
-          <Text style={[estilosReports.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Acompanhe a situação atual do estoque e envie relatórios operacionais completos em PDF.
+          <Text
+            style={[
+              estilosRelatorios.subtituloPagina,
+              {
+                color: theme.subtext,
+                fontSize: tokens.typography.fontSize.sm * fontScale,
+              },
+            ]}
+          >
+            Participação percentual de cada categoria no estoque ativo
           </Text>
         </View>
 
-        {/* 1. GRÁFICOS NO TOPO DA TELA */}
-        <View style={[estilosReports.secaoCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={[estilosReports.tituloSecao, { color: theme.text, fontSize: tokens.typography.fontSize.md * fontScale, marginBottom: 0 }]}>
-              Gráfico da Situação Atual
-            </Text>
-
-            <TouchableOpacity
-              accessible={true}
-              accessibilityRole="button"
-              accessibilityLabel="Alternar visualização entre porcentagem e quantidade real"
-              onPress={() => setMostrarPorcentagem(!mostrarPorcentagem)}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: `${theme.primary}15`,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 12,
-              }}
-            >
-              <Feather name="refresh-ccw" size={12} color={theme.primary} style={{ marginRight: 6 }} />
-              <Text style={{ color: theme.primary, fontSize: 11 * fontScale, fontWeight: '700' }}>
-                Ver {mostrarPorcentagem ? 'Qtd. Real' : 'Porcentagem'}
+        <View
+          style={[
+            estilosRelatorios.cartaoProporcao,
+            {
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+            },
+          ]}
+        >
+          {carregando ? (
+            <ActivityIndicator size="large" color="#1E3A8A" style={{ marginVertical: 40 }} />
+          ) : totalGeral === 0 ? (
+            <View style={estilosRelatorios.estadoVazio}>
+              <Feather name="pie-chart" size={34} color={theme.subtext} />
+              <Text
+                style={{
+                  color: theme.text,
+                  fontWeight: '700',
+                  fontSize: 14 * fontScale,
+                  marginTop: 12,
+                }}
+              >
+                Sem dados proporcionais no estoque
               </Text>
-            </TouchableOpacity>
-          </View>
+              <Text
+                style={{
+                  color: theme.subtext,
+                  fontSize: 12 * fontScale,
+                  textAlign: 'center',
+                  marginTop: 4,
+                }}
+              >
+                Cadastre lotes em Entrada de Alimentos para visualizar as proporções.
+              </Text>
+            </View>
+          ) : (
+            <>
+              <View style={estilosRelatorios.donutContainer}>
+                <Svg width={tamanhoSvg} height={tamanhoSvg} viewBox={`0 0 ${tamanhoSvg} ${tamanhoSvg}`}>
+                  <G rotation="-90" origin={`${tamanhoSvg / 2}, ${tamanhoSvg / 2}`}>
+                    <Circle
+                      cx={tamanhoSvg / 2}
+                      cy={tamanhoSvg / 2}
+                      r={raio}
+                      stroke={theme.border}
+                      strokeWidth={espessura}
+                      fill="transparent"
+                    />
+                    {fatiasSvg.map((fatia) => (
+                      <Circle
+                        key={fatia.categoria}
+                        cx={tamanhoSvg / 2}
+                        cy={tamanhoSvg / 2}
+                        r={raio}
+                        stroke={fatia.cor}
+                        strokeWidth={espessura}
+                        strokeDasharray={`${fatia.comprimento} ${circunferencia}`}
+                        strokeDashoffset={fatia.deslocamento}
+                        strokeLinecap="butt"
+                        fill="transparent"
+                      />
+                    ))}
+                  </G>
+                </Svg>
 
-          <View style={estilosReports.linhaGraficos}>
-            {TIPOS_GRAFICO.map((tipo) => {
-              const ativo = tipoGrafico === tipo.id;
-              return (
-                <TouchableOpacity
-                  key={tipo.id}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Exibir gráfico de ${tipo.id}`}
-                  onPress={() => setTipoGrafico(tipo.id)}
-                  style={[
-                    estilosReports.botaoTipoGrafico,
-                    {
-                      backgroundColor: ativo ? `${theme.primary}10` : theme.background,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                >
-                  <Feather name={tipo.icone as any} size={16} color={ativo ? theme.primary : theme.text} />
-                  <Text style={{ fontWeight: ativo ? 'bold' : '600', color: ativo ? theme.primary : theme.text, fontSize: 13 * fontScale }}>
-                    {tipo.id}
+                <View style={estilosRelatorios.donutCentroOverlay}>
+                  <Text
+                    style={[
+                      estilosRelatorios.donutTotalValor,
+                      { color: '#1E3A8A', fontSize: 24 * fontScale },
+                    ]}
+                  >
+                    {totalGeral}
                   </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+                  <Text
+                    style={[
+                      estilosRelatorios.donutTotalLabel,
+                      { color: theme.subtext, fontSize: 10 * fontScale },
+                    ]}
+                  >
+                    pacotes
+                  </Text>
+                </View>
+              </View>
 
-          {renderizarVisualizacaoGrafica()}
+              <View
+                style={[
+                  estilosRelatorios.barraEmpilhada,
+                  { backgroundColor: theme.background },
+                ]}
+              >
+                {itensProporcao.map((item) => (
+                  <View
+                    key={`seg-${item.categoria}`}
+                    style={{
+                      flex: item.quantidade,
+                      backgroundColor: item.cor,
+                    }}
+                  />
+                ))}
+              </View>
+
+              <View style={estilosRelatorios.legendaLista}>
+                {itensProporcao.map((item) => (
+                  <View
+                    key={item.categoria}
+                    style={[
+                      estilosRelatorios.legendaLinha,
+                      { borderBottomColor: theme.border },
+                    ]}
+                  >
+                    <View style={estilosRelatorios.legendaEsquerda}>
+                      <View
+                        style={[
+                          estilosRelatorios.pontoCor,
+                          { backgroundColor: item.cor },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          estilosRelatorios.nomeCategoria,
+                          { color: theme.text, fontSize: 13.5 * fontScale },
+                        ]}
+                      >
+                        {item.categoria}
+                      </Text>
+                    </View>
+
+                    <View style={estilosRelatorios.valoresDireita}>
+                      <Text
+                        style={[
+                          estilosRelatorios.quantidadeTexto,
+                          { color: theme.subtext, fontSize: 12 * fontScale },
+                        ]}
+                      >
+                        {item.quantidade} un.
+                      </Text>
+                      <Text
+                        style={[
+                          estilosRelatorios.percentualTexto,
+                          { color: item.cor, fontSize: 14 * fontScale },
+                        ]}
+                      >
+                        {item.percentual.toFixed(1)}%
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </>
+          )}
         </View>
-
-        {/* 2. ATALHOS EM GRADE */}
-        <View style={estilosReports.gradeBotoes}>
-          <MiniCard
-            titulo="Estoque Atual"
-            icone="box"
-            corDestaque={theme.primary}
-            rota="/reports-stock"
-          />
-          <MiniCard
-            titulo="Movimentações"
-            icone="refresh-cw"
-            corDestaque={theme.secondary}
-            rota="/reports-movements"
-          />
-          <MiniCard
-            titulo="Perdas e Descartes"
-            icone="alert-triangle"
-            corDestaque={theme.danger}
-            rota="/reports-losses"
-          />
-          <MiniCard
-            titulo="Validades (FEFO)"
-            icone="clock"
-            corDestaque={tokens.colors.accentAmber500}
-            rota="/reports-expiry"
-          />
-        </View>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
-

@@ -1,140 +1,169 @@
-// src/styles/dora.styles.ts
 import { StyleSheet } from 'react-native';
 
 export const estilosDora = StyleSheet.create({
-  container: {
+  tela: {
     flex: 1,
   },
-  rolagem: {
-    paddingHorizontal: 14,
-    paddingTop: 12,
-    paddingBottom: 28,
-  },
-  cabecalho: {
-    marginBottom: 12,
-  },
-  titulo: {
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  subtitulo: {
-    lineHeight: 18,
-  },
-  // Chaves de retrocompatibilidade
-  cartaoPrincipal: {
-    borderWidth: 1.5,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-  },
-  textoInformativo: {
-    lineHeight: 20,
-    marginBottom: 10,
-  },
-  areaAcao: {
-    marginTop: 8,
-    width: '100%',
-  },
-  campoDigitacao: {
-    borderWidth: 1.5,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    minHeight: 46,
-  },
-  // Faixa de sugestões rápidas
-  faixaExemplos: {
-    marginBottom: 14,
-  },
-  rotuloExemplos: {
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  gradePilulas: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  pilulaSugestao: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 18,
-    borderWidth: 1.5,
-    minHeight: 40,
-    justifyContent: 'center',
-  },
-  textoPilula: {
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  // Linha de conversa com Avatar + Balão
-  linhaMensagem: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    marginBottom: 14,
-    gap: 8,
-    width: '100%',
-  },
-  linhaMensagemDora: {
-    justifyContent: 'flex-start',
-  },
-  linhaMensagemUsuario: {
-    justifyContent: 'flex-end',
-  },
-  avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-    flexShrink: 0,
-  },
-  avatarImagem: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-  },
-  indicadorOnline: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 11,
-    height: 11,
-    borderRadius: 6,
-    backgroundColor: '#16A34A',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-  },
-  balaoMensagem: {
-    borderWidth: 1.5,
-    borderRadius: 18,
-    padding: 13,
-    maxWidth: '81%',
-    flexShrink: 1,
-  },
-  cabecalhoBalao: {
+  cabecalhoWhatsapp: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 5,
-    gap: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.14,
+    shadowRadius: 4,
   },
-  autorBalao: {
+  cabecalhoEsquerda: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 6,
+  },
+  botaoIconeCabecalho: {
+    minWidth: 48,
+    minHeight: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarWrapper: {
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pontoOnline: {
+    position: 'absolute',
+    right: 0,
+    bottom: 0,
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#10B981',
+    borderWidth: 2,
+    borderColor: '#1E3A8A',
+  },
+  cabecalhoInfo: {
+    flex: 1,
+    marginLeft: 4,
+  },
+  cabecalhoTitulo: {
+    color: '#FFFFFF',
     fontWeight: '800',
   },
+  cabecalhoSubtitulo: {
+    color: '#D1FAE5',
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  cabecalhoAcoes: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  listaChat: {
+    flex: 1,
+  },
+  listaChatConteudo: {
+    paddingHorizontal: 12,
+    paddingTop: 12,
+    paddingBottom: 20,
+    gap: 10,
+  },
+  divisorDataWrapper: {
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  divisorDataPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 12,
+    backgroundColor: 'rgba(30, 58, 138, 0.10)',
+  },
+  divisorDataTexto: {
+    fontWeight: '700',
+    letterSpacing: 0.4,
+  },
+  linhaMensagemDora: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-start',
+    gap: 6,
+  },
+  linhaMensagemUsuario: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  balaoDora: {
+    maxWidth: '84%',
+    paddingHorizontal: 13,
+    paddingTop: 10,
+    paddingBottom: 8,
+    borderRadius: 16,
+    borderTopLeftRadius: 4,
+    borderWidth: 1,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+  },
+  balaoUsuario: {
+    maxWidth: '80%',
+    paddingHorizontal: 13,
+    paddingTop: 10,
+    paddingBottom: 8,
+    borderRadius: 16,
+    borderTopRightRadius: 4,
+    borderWidth: 1,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+  },
+  rodapeBalao: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+    marginTop: 6,
+  },
   horarioBalao: {
-    fontSize: 10,
-    opacity: 0.7,
+    fontWeight: '600',
   },
   textoMensagem: {
-    lineHeight: 21,
+    lineHeight: 20,
   },
-  // Card de Receita Culinária Verdadeira
+  tituloBloco: {
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  subtituloBloco: {
+    fontWeight: '700',
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  linhaTopico: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 7,
+    marginBottom: 4,
+    paddingLeft: 2,
+  },
+  marcadorTopico: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 7,
+  },
   cartaoReceita: {
-    marginTop: 12,
+    marginTop: 10,
     padding: 12,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   tituloReceita: {
     fontWeight: '800',
@@ -142,14 +171,13 @@ export const estilosDora = StyleSheet.create({
   },
   topicoReceita: {
     lineHeight: 19,
-    marginBottom: 8,
+    marginBottom: 6,
   },
   linkFonte: {
     fontWeight: '700',
     textDecorationLine: 'underline',
     marginTop: 4,
   },
-  // Card de Predição de Consumo (Machine Learning)
   cartaoPredicoes: {
     marginTop: 10,
     padding: 10,
@@ -162,30 +190,87 @@ export const estilosDora = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
   },
-  // Barra inferior de chat
-  barraInferiorChat: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderTopWidth: 1,
+  botaoAtalho: {
+    marginTop: 10,
+    minHeight: 48,
+    borderRadius: 12,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
   },
-  botaoVoz: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  botaoEnviar: {
-    height: 44,
-    paddingHorizontal: 16,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
+  sugestoesContainer: {
     flexDirection: 'row',
-    gap: 6,
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+    marginLeft: 38,
+  },
+  chipSugestao: {
+    minHeight: 48,
+    paddingHorizontal: 14,
+    borderRadius: 24,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  painelVoz: {
+    borderTopWidth: 1,
+    padding: 12,
+  },
+  gradeVoz: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  chipVoz: {
+    minHeight: 48,
+    paddingHorizontal: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    justifyContent: 'center',
+  },
+  composerDock: {
+    paddingBottom: 68,
+    borderTopWidth: 1,
+  },
+  composerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  composerInputBox: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 48,
+    borderRadius: 24,
+    borderWidth: 1,
+    paddingRight: 10,
+  },
+  botaoMic: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  campoDigitacao: {
+    flex: 1,
+    minHeight: 44,
+    maxHeight: 96,
+    paddingVertical: 8,
+    paddingRight: 6,
+  },
+  botaoEnviarCircular: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

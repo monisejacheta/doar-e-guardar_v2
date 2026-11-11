@@ -555,13 +555,12 @@ export function responderConversaDora(
     const totalPacotes = lotesReais.reduce((s, l) => s + (Number(l.quantidade_atual_pacote) || 0), 0);
     return {
       texto:
-        `Oi! Que alegria conversar com você! 😊✨\n\n` +
-        `Eu sou a Dora, sua parceira virtual aqui na Casa da Criança! No momento estou de olho nos nossos **${totalPacotes} pacotes** distribuídos em **${lotesReais.length} lotes** nas prateleiras.\n\n` +
-        `Posso te ajudar a:\n` +
-        `🍲 Montar **receitas de verdade** combinando só ingredientes que harmonizam entre si\n` +
-        `📈 Fazer **previsões de consumo** para saber quando cada alimento vai acabar\n` +
-        `⏰ Avisar o que está **vencendo primeiro** e onde está guardado\n` +
-        `🧭 Te guiar **passo a passo** em qualquer função do aplicativo!`,
+        `# Olá! Eu sou a Dora\n` +
+        `## Assistente de Estoque • ${totalPacotes} pacotes em ${lotesReais.length} lotes\n` +
+        `• **Receitas inteligentes:** Combino apenas ingredientes disponíveis que harmonizam entre si.\n` +
+        `• **Previsão de consumo:** Calculo quantos dias cada alimento ainda vai durar.\n` +
+        `• **Alerta de validade (FEFO):** Mostro o que vence primeiro e em qual prateleira está.\n` +
+        `• **Guia do app:** Explico o passo a passo de entradas, saídas, trocas e auditoria.`,
       sugestoesContinuacao: [
         '📈 Previsão de consumo do estoque',
         '🍲 Me sugere uma receita gostosa?',
@@ -574,7 +573,10 @@ export function responderConversaDora(
   if (p.includes('obrigad') || p.includes('valeu') || p.includes('ajudou muito') || p.includes('perfeito')) {
     return {
       texto:
-        'Imagina! É sempre um prazer enorme ajudar você a cuidar tão bem dos alimentos da Casa da Criança! 💛🙌 Se precisar de mais alguma dica de receita, previsão do estoque ou ajuda com o app, é só me chamar!',
+        `# Disponha sempre!\n` +
+        `## Conte comigo na cozinha e na despensa\n` +
+        `• **Receitas rápidas:** Peça novas ideias com os ingredientes atuais.\n` +
+        `• **Saldo e prazos:** Consulte validades ou previsão de consumo a qualquer momento.`,
       sugestoesContinuacao: [
         '🍲 Quero outra ideia de receita',
         '📦 Como está nosso estoque hoje?',
@@ -601,7 +603,10 @@ export function responderConversaDora(
     if (lotesReais.length === 0) {
       return {
         texto:
-          'Olhei nossas prateleiras agora mesmo e ainda não temos pacotes cadastrados para eu calcular a previsão de consumo. 📦✨ Que tal cadastrar nossa primeira entrada de alimentos?',
+          `# Previsão de Consumo\n` +
+          `## Estoque vazio no momento\n` +
+          `• **Status atual:** Nenhum pacote ativo encontrado nas prateleiras.\n` +
+          `• **Próximo passo:** Cadastre uma nova entrada para gerar previsões automáticas.`,
         atalho: { rotulo: 'Ir para Entrada de Alimentos', rota: '/stock-add', icone: 'plus-circle' },
       };
     }
@@ -610,25 +615,25 @@ export function responderConversaDora(
     const destaques = predicoes.slice(0, 5);
     const linhas = destaques.map((item) => {
       const alertaRisco = item.riscoVencerAntesDeAcabar
-        ? ` ⚠️ *Atenção: vence em ${item.menorValidadeDias}d, antes de acabar pelo ritmo normal!*`
+        ? ` — Atenção: vence em ${item.menorValidadeDias}d antes do fim do estoque`
         : item.precisaReposicaoBreve
-        ? ` 🔔 *Estoque baixinho, vale planejar reposição!*`
-        : ' ✅';
-      return (
-        `• **${item.nomeProduto}** (${item.saldoTotal} pcts): uso médio de ~${item.consumoDiarioEstimado} por dia → dura cerca de **${item.diasAutonomia} dias**${alertaRisco}`
-      );
+        ? ` — Reposição recomendada em breve`
+        : '';
+      return `• **${item.nomeProduto}** (${item.saldoTotal} pcts): ~${item.consumoDiarioEstimado}/dia • dura **${item.diasAutonomia} dias**${alertaRisco}`;
     });
 
     const comRiscoVencimento = predicoes.filter((x) => x.riscoVencerAntesDeAcabar);
     const dicaFinal =
       comRiscoVencimento.length > 0
-        ? `\n\n💡 **Dica inteligente da Dora:** Notei que **${comRiscoVencimento[0].nomeProduto}** tem mais pacotes do que costumamos gastar até a data de validade. Vale muito a pena incluir esse item no cardápio desta semana!`
-        : `\n\n✨ Nosso ritmo de uso está bem equilibrado com os prazos de validade atuais!`;
+        ? `## Recomendação Prioritária\n• Priorize **${comRiscoVencimento[0].nomeProduto}** no cardápio da semana para evitar desperdício.`
+        : `## Diagnóstico Geral\n• O ritmo de uso atual está equilibrado com os prazos de validade.`;
 
     return {
       texto:
-        `Fiz os cálculos analisando nosso histórico de uso e a quantidade atual nas prateleiras! 📊🤖 Aqui está a estimativa de duração dos nossos alimentos:\n\n` +
+        `# Previsão de Consumo e Autonomia\n` +
+        `## Estimativa baseada no histórico real\n` +
         linhas.join('\n') +
+        `\n` +
         dicaFinal,
       predicoes: destaques,
       sugestoesContinuacao: [
@@ -639,7 +644,7 @@ export function responderConversaDora(
     };
   }
 
-  // 3. Sugestão de Receitas Verdadeiras (Sem juntar itens aleatórios!)
+  // 3. Sugestão de Receitas Verdadeiras
   if (
     p.includes('receita') ||
     p.includes('cozinhar') ||
@@ -656,7 +661,10 @@ export function responderConversaDora(
     if (lotesReais.length === 0) {
       return {
         texto:
-          'Puxa, dei uma olhadinha na despensa e na geladeira e não encontrei nenhum alimento cadastrado no momento! 🥺 Assim que você registrar os produtos lá em **Entrada de Alimentos**, eu monto receitas deliciosas para você!',
+          `# Sugestão de Receita\n` +
+          `## Sem ingredientes disponíveis\n` +
+          `• **Despensa vazia:** Cadastre alimentos em **Entrada de Alimentos**.\n` +
+          `• **Automático:** Assim que houver saldo, monto receitas com os lotes FEFO.`,
         atalho: { rotulo: 'Registrar Entrada de Alimentos', rota: '/stock-add', icone: 'plus-circle' },
       };
     }
@@ -665,7 +673,10 @@ export function responderConversaDora(
     if (!resultadoReceita) {
       return {
         texto:
-          'Dei uma olhada com carinho no nosso estoque, mas os itens cadastrados no momento já passaram da validade. ⚠️ Que tal conferir as prateleiras antes de prepararmos o cardápio?',
+          `# Atenção às Validades\n` +
+          `## Lotes atuais fora do prazo de consumo\n` +
+          `• **Status:** Os lotes encontrados estão com a validade expirada.\n` +
+          `• **Ação recomendada:** Realize a conferência e baixa em **Saída do Estoque**.`,
         atalho: { rotulo: 'Ver Saída e Descartes', rota: '/stock-remove', icone: 'minus-circle' },
       };
     }
@@ -675,8 +686,11 @@ export function responderConversaDora(
 
     return {
       texto:
-        `Separei uma receita de verdade, super gostosa e pensada só com ingredientes que combinam entre si! 😋🍲\n\n` +
-        `Dei prioridade para usar o **${itemFoco.nome_produto}** que está guardado em **${itemFoco.local_descricao}** (${formatarPrazoAmigavel(itemFoco.diasRestantes)}):`,
+        `# Receita Selecionada pelo Estoque (FEFO)\n` +
+        `## Prioridade de uso imediato\n` +
+        `• **Ingrediente foco:** ${itemFoco.nome_produto}\n` +
+        `• **Localização:** ${itemFoco.local_descricao}\n` +
+        `• **Prazo:** ${formatarPrazoAmigavel(itemFoco.diasRestantes)}`,
       receita,
       atalho: { rotulo: 'Registrar Saída após Cozinhar', rota: '/stock-remove', icone: 'check-circle' },
       sugestoesContinuacao: [
@@ -700,7 +714,10 @@ export function responderConversaDora(
   ) {
     if (lotesReais.length === 0) {
       return {
-        texto: 'Nosso estoque está vazio no momento, então não temos nenhum item perto de vencer! 😊✨',
+        texto:
+          `# Controle de Validades\n` +
+          `## Nenhum lote cadastrado\n` +
+          `• **Status:** Não há alimentos perto de vencer no momento.`,
       };
     }
 
@@ -712,20 +729,21 @@ export function responderConversaDora(
     const linhas = alvos
       .map(
         (l) =>
-          `• **${l.nome_produto}** (${l.quantidade_atual_pacote} pcts) — guardado em **${l.local_descricao}** → ${formatarPrazoAmigavel(l.diasRestantes)}`
+          `• **${l.nome_produto}** (${l.quantidade_atual_pacote} pcts) • **${l.local_descricao}** → ${formatarPrazoAmigavel(l.diasRestantes)}`
       )
       .join('\n');
 
-    const introducao =
+    const subtitulo =
       vencidos.length > 0 || proximos.length > 0
-        ? `Dei uma conferida nas datas de validade para ninguém perder nada! ⏰👀 Olha só o que pede nossa atenção primeiro:\n\n`
-        : `Boas notícias! 🎉 Não temos nenhum produto vencendo nos próximos dias. Os lotes com validade mais próxima são estes:\n\n`;
+        ? `## Itens prioritários na fila FEFO`
+        : `## Sem vencimentos urgentes — próximos lotes da fila`;
 
     return {
       texto:
-        introducao +
+        `# Monitoramento de Validades\n` +
+        `${subtitulo}\n` +
         linhas +
-        `\n\n💡 Sempre que for cozinhar, vale pegar primeiro esses pacotes que estão na frente da fila!`,
+        `\n## Dica Prática\n• Retire sempre primeiro os pacotes do topo da lista ao preparar refeições.`,
       atalho:
         vencidos.length > 0
           ? { rotulo: 'Dar Baixa em Item Vencido', rota: '/stock-remove', icone: 'trash-2' }
@@ -738,7 +756,7 @@ export function responderConversaDora(
     };
   }
 
-  // 5. Guia de Funções do Aplicativo (Como usar / Entrada / Saída / Transferência / Auditoria / Relatórios)
+  // 5. Guia de Funções do Aplicativo
   if (
     p.includes('como ') ||
     p.includes('ajuda') ||
@@ -760,11 +778,12 @@ export function responderConversaDora(
     if (p.includes('entrada') || p.includes('cadastrar') || p.includes('adicionar') || p.includes('codigo de barras')) {
       return {
         texto:
-          `Guardar um produto novo no estoque é super simples! 📦✨ Olha o passo a passo:\n\n` +
-          `1️⃣ Toque em **Entrada de Alimentos** no menu de Estoque.\n` +
-          `2️⃣ Toque no botão **Ler Código de Barras com a Câmera** 📷 e aponte para a embalagem (eu busco o nome e a foto automaticamente para você!).\n` +
-          `3️⃣ Informe a **quantidade de pacotes**, a **data de validade** e escolha em qual **armário ou geladeira** vai guardar.\n` +
-          `4️⃣ Toque em **Confirmar Entrada** e prontinho! 🎉`,
+          `# Passo a Passo: Entrada no Estoque\n` +
+          `## Como cadastrar novos lotes\n` +
+          `• **1. Acesse:** Toque em **Entrada de Alimentos** no menu Estoque.\n` +
+          `• **2. Escaneie:** Leia o código de barras com a câmera ou digite o EAN.\n` +
+          `• **3. Preencha:** Use os botões **-1 / +1** para quantidade e o calendário para validade.\n` +
+          `• **4. Segurança:** O sistema bloqueia automaticamente produtos com validade vencida.`,
         atalho: { rotulo: 'Abrir Entrada de Alimentos', rota: '/stock-add', icone: 'plus-circle' },
         sugestoesContinuacao: ['🧭 Como faço para dar saída?', '🧭 Como mudo um item de prateleira?'],
       };
@@ -773,11 +792,11 @@ export function responderConversaDora(
     if (p.includes('transfer') || p.includes('mover') || p.includes('mudar')) {
       return {
         texto:
-          `Quer mudar pacotes de um armário ou geladeira para outro lugar? Eu te explico! 🔄😊\n\n` +
-          `1️⃣ Vá em **Movimentação Interna** (ou toque no botão aqui embaixo).\n` +
-          `2️⃣ Escolha o produto na lista (ou leia o código de barras com a câmera) e toque no lote que você quer mudar.\n` +
-          `3️⃣ Digite quantos pacotes vai levar — se for só uma parte, o app divide o lote direitinho para você saber quanto ficou em cada lugar!\n` +
-          `4️⃣ Escolha a **nova prateleira** e confirme! ✨`,
+          `# Passo a Passo: Movimentação Interna\n` +
+          `## Como transferir pacotes entre prateleiras\n` +
+          `• **1. Acesse:** Abra **Movimentação Interna**.\n` +
+          `• **2. Selecione o lote:** Escolha o produto ou leia o código de barras.\n` +
+          `• **3. Defina a quantidade:** Ajuste com **-1 / +1** e escolha a prateleira destino.`,
         atalho: { rotulo: 'Abrir Movimentação Interna', rota: '/stock-move', icone: 'repeat' },
         sugestoesContinuacao: ['📦 O que temos em cada prateleira?', '🧭 Como faço uma contagem do estoque?'],
       };
@@ -786,11 +805,11 @@ export function responderConversaDora(
     if (p.includes('auditoria') || p.includes('contagem') || p.includes('conferencia')) {
       return {
         texto:
-          `A **Contagem Física (Auditoria)** serve para quando a gente olha a prateleira de verdade e quer ajustar a quantidade no aplicativo! 📋🔍\n\n` +
-          `1️⃣ Abra a tela de **Auditoria de Estoque**.\n` +
-          `2️⃣ Toque no produto que você acabou de contar na prateleira.\n` +
-          `3️⃣ Digite a quantidade real que encontrou e escreva rapidinho o motivo do ajuste.\n` +
-          `4️⃣ Salve e o saldo já fica certinho na hora! ✅`,
+          `# Passo a Passo: Auditoria Física\n` +
+          `## Como conferir e ajustar quantidades\n` +
+          `• **1. Acesse:** Abra a tela **Auditoria**.\n` +
+          `• **2. Escolha o item:** Toque no lote conferido na prateleira.\n` +
+          `• **3. Ajuste:** Informe a contagem física com **-1 / +1** e registre a justificativa.`,
         atalho: { rotulo: 'Abrir Auditoria de Estoque', rota: '/audit', icone: 'clipboard' },
       };
     }
@@ -798,8 +817,10 @@ export function responderConversaDora(
     if (p.includes('relatorio') || p.includes('pdf') || p.includes('historico')) {
       return {
         texto:
-          `Você pode acompanhar tudo o que entrou, saiu ou venceu lá na nossa **Central de Relatórios**! 📊📄\n\n` +
-          `Lá você encontra o resumo de validades, histórico de movimentações e relatórios de perdas bem fáceis de ler!`,
+          `# Central de Relatórios\n` +
+          `## Indicadores proporcionais em tempo real\n` +
+          `• **Gráfico proporcional:** Visualize a distribuição do estoque por categoria.\n` +
+          `• **Atualização imediata:** Os dados refletem os lotes ativos do banco AWS.`,
         atalho: { rotulo: 'Abrir Central de Relatórios', rota: '/reports', icone: 'bar-chart-2' },
       };
     }
@@ -807,23 +828,23 @@ export function responderConversaDora(
     if (p.includes('baixa') || p.includes('saida') || p.includes('perda') || p.includes('descarte')) {
       return {
         texto:
-          `Para registrar que um alimento foi usado na cozinha ou precisou ser descartado, faça assim: 📤😊\n\n` +
-          `1️⃣ Abra a tela de **Saída / Baixa do Estoque**.\n` +
-          `2️⃣ Escolha o produto (o app já mostra no topo qual pacote vence primeiro!).\n` +
-          `3️⃣ Informe a quantidade e o motivo: **Consumo na cozinha**, **Doação** ou **Descarte por vencimento/avaria**.\n` +
-          `4️⃣ Se for um descarte por perda, basta digitar a palavra **PERDA** em letras maiúsculas para confirmar com segurança! 🔒`,
+          `# Passo a Passo: Saída do Estoque\n` +
+          `## Consumo, doação ou descarte seguro\n` +
+          `• **1. Acesse:** Abra **Saída / Baixa do Estoque**.\n` +
+          `• **2. Prioridade FEFO:** Escolha o lote indicado no topo.\n` +
+          `• **3. Trava de perda:** Para descartes, digite **PERDA** para confirmar.`,
         atalho: { rotulo: 'Abrir Saída do Estoque', rota: '/stock-remove', icone: 'minus-circle' },
       };
     }
 
     return {
       texto:
-        `Claro! Eu adoro ajudar você a navegar pelo aplicativo! 🧭💛 Aqui estão as funções principais que você pode usar:\n\n` +
-        `📥 **Entrada de Alimentos:** para cadastrar doações ou compras lendo o código de barras.\n` +
-        `📤 **Saída / Baixa:** para anotar o que foi usado na cozinha ou descartado.\n` +
-        `🔄 **Movimentação Interna:** para mudar pacotes de um armário ou geladeira para outro.\n` +
-        `📋 **Auditoria:** para corrigir a quantidade quando fizer contagem nas prateleiras.\n\n` +
-        `Sobre qual delas você quer saber mais? 😊`,
+        `# Guia Rápido do Aplicativo\n` +
+        `## Funcionalidades principais\n` +
+        `• **Entrada de Alimentos:** Cadastro com leitor EAN e trava anti-vencidos.\n` +
+        `• **Saída / Baixa:** Baixas para cozinha, repasse ou descarte.\n` +
+        `• **Movimentação Interna:** Troca entre armários e geladeiras.\n` +
+        `• **Auditoria:** Linha do tempo de ações e contagem física.`,
       sugestoesContinuacao: [
         '🧭 Como cadastro uma entrada?',
         '🧭 Como dou saída ou baixa?',
@@ -850,7 +871,8 @@ export function responderConversaDora(
 
     return {
       texto:
-        `Achei sim! 🔍✨ Temos ao todo **${totalProd} pacote(s)** de **${nomeExib}** guardados agora:\n\n` +
+        `# Consulta de Produto: ${nomeExib}\n` +
+        `## Total disponível: ${totalProd} pacote(s)\n` +
         detalhes,
       sugestoesContinuacao: [
         `🍲 Tem receita com ${nomeExib}?`,
@@ -873,7 +895,10 @@ export function responderConversaDora(
   ) {
     if (lotesReais.length === 0) {
       return {
-        texto: 'Nossas prateleiras estão vazias no momento! 📦 Que tal cadastrar uma nova entrada de alimentos?',
+        texto:
+          `# Estoque por Prateleira\n` +
+          `## Nenhum lote ativo no momento\n` +
+          `• **Status:** Prateleiras livres para novos recebimentos.`,
         atalho: { rotulo: 'Cadastrar Entrada', rota: '/stock-add', icone: 'plus-circle' },
       };
     }
@@ -891,7 +916,7 @@ export function responderConversaDora(
     const resumo = Object.entries(mapaPrateleiras)
       .map(
         ([local, info]) =>
-          `• **${local}**: ${info.pacotes} pacotes (${Array.from(info.itens).slice(0, 3).join(', ')})`
+          `• **${local}:** ${info.pacotes} pcts (${Array.from(info.itens).slice(0, 3).join(', ')})`
       )
       .join('\n');
 
@@ -899,7 +924,8 @@ export function responderConversaDora(
 
     return {
       texto:
-        `Hoje estamos com **${totalGeral} pacotes** organizados com muito carinho nas nossas prateleiras! 📦✨ Olha onde cada coisa está guardada:\n\n` +
+        `# Mapa das Prateleiras\n` +
+        `## ${totalGeral} pacotes distribuídos atualmente\n` +
         resumo,
       atalho: { rotulo: 'Mudar Itens de Prateleira', rota: '/stock-move', icone: 'repeat' },
       sugestoesContinuacao: [
@@ -910,17 +936,21 @@ export function responderConversaDora(
     };
   }
 
-  // 7. Resposta amigável padrão com inteligência contextual
+  // 7. Resposta amigável padrão com tópicos estruturados
   const totalPacotes = lotesReais.reduce((s, l) => s + (Number(l.quantidade_atual_pacote) || 0), 0);
   const maisProximo = lotesReais[0];
   const destaqueValidade = maisProximo
-    ? `\n\nAproveitando: o item que pede mais carinho hoje é o **${maisProximo.nome_produto}** guardado em **${maisProximo.local_descricao}** (${formatarPrazoAmigavel(maisProximo.diasRestantes)}).`
-    : '';
+    ? `• **Atenção prioritária:** **${maisProximo.nome_produto}** em **${maisProximo.local_descricao}** (${formatarPrazoAmigavel(maisProximo.diasRestantes)}).`
+    : `• **Estoque:** Nenhum lote próximo ao vencimento no momento.`;
 
   return {
     texto:
-      `Estou aqui para te ajudar com tudo na nossa cozinha e despensa! 😊💛 Hoje contamos com **${totalPacotes} pacotes** no estoque.${destaqueValidade}\n\n` +
-      `Você pode me pedir uma **receita gostosa**, perguntar a **previsão de quando os itens vão acabar**, ver **o que vence logo** ou pedir **ajuda para usar qualquer tela do app**!`,
+      `# Como posso ajudar agora?\n` +
+      `## Estoque monitorado: ${totalPacotes} pacotes ativos\n` +
+      `${destaqueValidade}\n` +
+      `• **Receitas:** Peça pratos reais com os ingredientes disponíveis.\n` +
+      `• **Previsões:** Descubra a duração estimada de cada produto.\n` +
+      `• **Operações:** Tire dúvidas sobre entradas, saídas e auditoria.`,
     sugestoesContinuacao: [
       '🍲 Me sugere uma receita verdadeira?',
       '📈 Qual a previsão de consumo?',

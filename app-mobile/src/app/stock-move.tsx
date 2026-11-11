@@ -12,14 +12,13 @@ import {
   useWindowDimensions,
   Modal,
   RefreshControl,
-  Platform,
   Vibration,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
-import { AppInput } from '../components/common/AppInput';
+import { AppNumericInput } from '../components/common/AppNumericInput';
 import { AppButton } from '../components/common/AppButton';
 import { estilosStockMove } from '../styles/stock-move.styles';
 import { requisicaoApi } from '../services/api';
@@ -192,7 +191,10 @@ export default function StockMoveScreen() {
   }, []);
 
   useEffect(() => {
-    carregarEstoqueEPrateleiras();
+    const timer = setTimeout(() => {
+      void carregarEstoqueEPrateleiras();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [carregarEstoqueEPrateleiras]);
 
   const catalogoAgrupado = useMemo(() => {
@@ -828,7 +830,7 @@ export default function StockMoveScreen() {
                 barcodeScannerSettings={{
                   barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39'],
                 }}
-                onBarcodeScanned={bloqueioLeituraRef.current ? undefined : aoLerCodigoCamera}
+                onBarcodeScanned={aoLerCodigoCamera}
               />
             </View>
             <View style={{ padding: 16 }}>
@@ -990,10 +992,11 @@ export default function StockMoveScreen() {
                   </Text>
                 </View>
 
-                <AppInput
+                <AppNumericInput
                   rotulo={`Quantidade a transferir (Máx: ${loteSelecionado?.quantidade_atual_pacote}) *`}
                   placeholder="Ex: 5"
-                  keyboardType="numeric"
+                  min={0}
+                  max={Number(loteSelecionado?.quantidade_atual_pacote) || undefined}
                   value={quantidadeMover}
                   onChangeText={(val) => {
                     setQuantidadeMover(val);
@@ -1012,7 +1015,7 @@ export default function StockMoveScreen() {
                     <Text style={[estilosStockMove.textoAvisoDivisao, { color: '#B45309' }]}>
                       Atenção: Este lote será dividido em 2 locais físicos.{' '}
                       {(loteSelecionado?.quantidade_atual_pacote || 0) - qtdNumerica} pacote(s) permanecerão em{' '}
-                      "{loteSelecionado?.local_descricao}" e {qtdNumerica} pacote(s) irão para o novo destino.
+                      &ldquo;{loteSelecionado?.local_descricao}&rdquo; e {qtdNumerica} pacote(s) irão para o novo destino.
                     </Text>
                   </View>
                 )}

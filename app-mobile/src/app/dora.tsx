@@ -1,36 +1,34 @@
-
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Text,
-  View,
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
   SafeAreaView,
   ScrollView,
+  Text,
   TextInput,
   TouchableOpacity,
-  Linking,
-  Image,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
+  View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { auth } from '../services/firebaseConfig';
 import { useAppTheme } from '../context/ThemeContext';
-import { AppIcon } from '../components/common/AppIcon';
 import { estilosDora } from '../styles/dora.styles';
 import { requisicaoApi } from '../services/api';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 import {
+  AtalhoNavegacaoDora,
   LoteEstoqueDora,
   MovimentacaoEstoqueDora,
-  ReceitaSugerida,
   PredicaoProdutoML,
-  AtalhoNavegacaoDora,
+  ReceitaSugerida,
   calcularDiasAteVencimento,
   responderConversaDora,
 } from '../services/doraService';
+
+const AVATAR_DORA_ASSET = require('../../assets/images/dora-avatar.png');
 
 interface MensagemChat {
   id: string;
@@ -43,44 +41,22 @@ interface MensagemChat {
   sugestoesContinuacao?: string[];
 }
 
-const CORES_DORA = {
-  fundo: '#E6F0FA',
-  fundoSecundario: '#E6F0FA',
-  branco: '#FFFFFF',
-  laranja: '#A8C5E0',
-  laranjaPrincipal: '#315A7D',
-  laranjaEscuro: '#315A7D',
-  laranjaMuitoClaro: '#E6F0FA',
-  borda: '#A8C5E0',
-  texto: '#594334',
-  textoSuave: '#987B64',
-  amarelo: '#FFF0C2',
-  verde: '#16A34A',
-  vermelho: '#DC2626',
-};
-
 const obterHorarioAtual = (): string => {
   const agora = new Date();
-  const h = String(agora.getHours()).padStart(2, '0');
-  const m = String(agora.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
+  return `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`;
 };
 
-const criarMensagemBoasVindas = (): MensagemChat => ({
-  id: `msg-boas-vindas-${Date.now()}`,
+const criarMensagemBoasVindas = (sufixo = 'inicial'): MensagemChat => ({
+  id: `msg-boas-vindas-${sufixo}`,
   autor: 'dora',
   horario: obterHorarioAtual(),
   texto:
-    'Olá! Que alegria ter você por aqui! 🥰💛\n\n' +
-    'Eu sou a **Dora**, sua assistente inteligente da Casa da Criança! 👩🏽‍🍳\n\n' +
-    'Estou aqui para ajudar a cuidar do nosso estoque e facilitar o dia a dia da nossa equipe. Juntas, podemos:\n\n' +
-    '🍲 **Descobrir receitas** com os ingredientes que temos disponíveis.\n\n' +
-    '📊 **Acompanhar o consumo** e prever quanto tempo os alimentos vão durar.\n\n' +
-    '⏰ **Ficar de olho nas validades** para evitar desperdícios.\n\n' +
-    '📦 **Consultar nossas prateleiras** e encontrar os produtos armazenados.\n\n' +
-    '🧭 **Aprender a usar o aplicativo** com orientações simples, passo a passo.\n\n' +
-    '✨ Estou pronta para ajudar!\n\n' +
-    '💬 **Quando quiser conversar comigo, é só tocar no botão "Fale com a Dora", aqui embaixo da tela.** Vou adorar ajudar você!',
+    `# Olá! Eu sou a Dora\n` +
+    `## Assistente de Estoque • Casa da Criança\n` +
+    `• **Receitas reais:** Sugiro preparos com ingredientes compatíveis do estoque.\n` +
+    `• **Previsão de consumo:** Calculo a duração estimada de cada alimento.\n` +
+    `• **Alerta de validade (FEFO):** Indico o que precisa sair primeiro.\n` +
+    `• **Localização:** Mostro exatamente em qual prateleira cada lote está.`,
   sugestoesContinuacao: [
     '🍲 Me sugere uma receita?',
     '📈 Como está nosso estoque?',
@@ -90,95 +66,80 @@ const criarMensagemBoasVindas = (): MensagemChat => ({
   ],
 });
 
+const COMANDOS_VOZ_RAPIDOS = [
+  '🍲 Me sugere uma receita com o que temos?',
+  '📈 Previsão de quando vão acabar os alimentos',
+  '⏰ Quais produtos vencem primeiro?',
+  '📦 O que está guardado nas prateleiras?',
+  '🧭 Como cadastro uma entrada no estoque?',
+];
+
 export default function DoraScreen() {
   const roteador = useRouter();
-  const { theme, tokens, fontScale } = useAppTheme();
+  const { theme, tokens, mode, fontScale } = useAppTheme();
   const scrollRef = useRef<any>(null);
   const geracaoConversaRef = useRef(0);
+  const contadorIdRef = useRef(1);
 
-  const [nomeUsuario, setNomeUsuario] = useState('Você');
-  const [fotoUsuario, setFotoUsuario] = useState<string | null>(null);
-  const [erroFotoUsuario, setErroFotoUsuario] = useState(false);
-
-  const [entradaTexto, setEntradaTexto] = useState('');
-  const [processandoIa, setProcessandoIa] = useState(false);
   const [lotesReais, setLotesReais] = useState<LoteEstoqueDora[]>([]);
   const [movimentacoesReais, setMovimentacoesReais] = useState<MovimentacaoEstoqueDora[]>([]);
   const [carregandoEstoque, setCarregandoEstoque] = useState(true);
-  const [exibirComandosVoz, setExibirComandosVoz] = useState(false);
-  const [exibirCaixaTextoFlutuante, setExibirCaixaTextoFlutuante] = useState(false);
+  const [processandoIa, setProcessandoIa] = useState(false);
   const [ultimaReceitaId, setUltimaReceitaId] = useState<string | undefined>(undefined);
+  const [entradaTexto, setEntradaTexto] = useState('');
+  const [exibirComandosVoz, setExibirComandosVoz] = useState(false);
+  const [historico, setHistorico] = useState<MensagemChat[]>(() => [criarMensagemBoasVindas()]);
 
-  const [historico, setHistorico] = useState<MensagemChat[]>([
-    criarMensagemBoasVindas(),
-  ]);
+  const coresChat = useMemo(() => {
+    const modoEscuroOuContraste = mode === 'dark' || mode === 'high-contrast';
+    return {
+      cabecalho: mode === 'high-contrast' ? theme.surface : '#1E3A8A',
+      canvas: modoEscuroOuContraste ? theme.background : '#EFEAE2',
+      balaoDoraBg: mode === 'high-contrast' ? theme.surface : theme.surface,
+      balaoDoraBorda: modoEscuroOuContraste ? theme.border : '#E2E8F0',
+      balaoUsuarioBg: modoEscuroOuContraste ? '#064E3B' : '#DCF8C6',
+      balaoUsuarioBorda: modoEscuroOuContraste ? '#10B981' : '#B7E89E',
+      balaoUsuarioTexto: modoEscuroOuContraste ? '#FFFFFF' : '#111827',
+      checkColor: '#10B981',
+      composerDockBg: mode === 'high-contrast' ? theme.surface : '#F0F2F5',
+    };
+  }, [mode, theme]);
 
-  const comandosRapidos = [
-    '🍲 Receita com itens do estoque',
-    '📈 Previsão de consumo',
-    '⏰ O que vence logo?',
-    '📦 Resumo das prateleiras',
-    '🧭 Como cadastrar entrada?',
-    '🔄 Como mudar de prateleira?',
-  ];
-
-  useEffect(() => {
-    const desinscrever = auth.onAuthStateChanged((user) => {
-      if (user) {
-        const primeiroNome = (
-          user.displayName || user.email?.split('@')[0] || 'Você'
-        ).split(' ')[0];
-
-        setNomeUsuario(primeiroNome);
-
-        if (user.photoURL) {
-          setFotoUsuario(user.photoURL);
-          setErroFotoUsuario(false);
-        }
-      }
-    });
-
-    return () => desinscrever();
-  }, []);
+  const totalPacotesAtivos = useMemo(
+    () => lotesReais.reduce((acc, item) => acc + (Number(item.quantidade_atual_pacote) || 0), 0),
+    [lotesReais],
+  );
 
   const sincronizarEstoqueEMMovimentacoes = useCallback(async () => {
+    setCarregandoEstoque(true);
     try {
-      setCarregandoEstoque(true);
-
       const resposta: any = await requisicaoApi('/api/estoque', {
         metodo: 'POST',
-        dados: {
-          modulo: 'estoque',
-          acao: 'consultar_estoque',
-        },
+        dados: { modulo: 'estoque', acao: 'consultar_estoque' },
       });
 
-      if (resposta?.sucesso && Array.isArray(resposta.lotes)) {
-        const ativos: LoteEstoqueDora[] = resposta.lotes
-          .filter(
-            (l: any) => (Number(l.quantidade_atual_pacote) || 0) > 0
-          )
-          .map((l: any) => {
-            const dataVal =
-              l.data_validade_lote || l.data_validade_rotulo || '';
+      const listaBruta = Array.isArray(resposta?.lotes)
+        ? resposta.lotes
+        : Array.isArray(resposta?.dados)
+          ? resposta.dados
+          : [];
 
+      if (resposta?.sucesso && Array.isArray(listaBruta)) {
+        const ativos: LoteEstoqueDora[] = listaBruta
+          .filter((l: any) => (Number(l.quantidade_atual_pacote) || 0) > 0)
+          .map((l: any) => {
+            const dataVal = l.data_validade_lote || l.data_validade_rotulo || '';
             return {
               ...l,
-              quantidade_atual_pacote:
-                Number(l.quantidade_atual_pacote) || 0,
+              quantidade_atual_pacote: Number(l.quantidade_atual_pacote) || 0,
               data_validade_lote: dataVal,
               local_descricao: normalizarDescricaoPrateleira(
-                l.local_descricao ||
-                  l.id_local_armazenamento ||
-                  'Armário A - Prateleira 1'
+                l.local_descricao || l.id_local_armazenamento || 'Armário A - Prateleira 1',
               ),
               diasRestantes: calcularDiasAteVencimento(dataVal),
             };
           })
-          .sort(
-            (a: LoteEstoqueDora, b: LoteEstoqueDora) =>
-              a.diasRestantes - b.diasRestantes
-          );
+          .sort((a: LoteEstoqueDora, b: LoteEstoqueDora) => a.diasRestantes - b.diasRestantes);
 
         setLotesReais(ativos);
       }
@@ -187,14 +148,17 @@ export default function DoraScreen() {
         setMovimentacoesReais(resposta.movimentacoes);
       }
     } catch {
-      // Mantém o estado atual caso ocorra uma falha de conexão.
+      // Mantém estado local caso offline
     } finally {
       setCarregandoEstoque(false);
     }
   }, []);
 
   useEffect(() => {
-    sincronizarEstoqueEMMovimentacoes();
+    const timer = setTimeout(() => {
+      void sincronizarEstoqueEMMovimentacoes();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [sincronizarEstoqueEMMovimentacoes]);
 
   const rolarParaFinal = () => {
@@ -205,37 +169,28 @@ export default function DoraScreen() {
 
   const limparConversa = () => {
     geracaoConversaRef.current += 1;
-
-    setHistorico([criarMensagemBoasVindas()]);
+    contadorIdRef.current += 1;
+    setHistorico([criarMensagemBoasVindas(String(contadorIdRef.current))]);
     setEntradaTexto('');
     setUltimaReceitaId(undefined);
     setExibirComandosVoz(false);
-    setExibirCaixaTextoFlutuante(false);
     setProcessandoIa(false);
-
     setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        y: 0,
-        animated: true,
-      });
-    }, 100);
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }, 80);
   };
 
   const enviarMensagem = async (textoManual?: string) => {
     const perguntaFinal = (textoManual ?? entradaTexto).trim();
-
     if (!perguntaFinal || processandoIa) return;
 
     const geracaoAtual = geracaoConversaRef.current;
-
-    if (!textoManual) {
-      setEntradaTexto('');
-    }
-
+    if (!textoManual) setEntradaTexto('');
     setExibirComandosVoz(false);
 
+    contadorIdRef.current += 1;
     const msgUsuario: MensagemChat = {
-      id: `usr-${Date.now()}`,
+      id: `usr-${contadorIdRef.current}`,
       autor: 'usuario',
       horario: obterHorarioAtual(),
       texto: perguntaFinal,
@@ -250,7 +205,7 @@ export default function DoraScreen() {
         perguntaFinal,
         lotesReais,
         movimentacoesReais,
-        ultimaReceitaId
+        ultimaReceitaId,
       );
 
       if (respostaLocal.receita?.id) {
@@ -267,19 +222,20 @@ export default function DoraScreen() {
             pergunta: perguntaFinal,
             lotes_estoque: lotesReais,
           },
+          timeoutMs: 6000,
         });
       } catch {
-        // Continua normalmente com a resposta do motor local.
+        // Segue com a resposta estruturada local
       }
 
-      if (geracaoAtual !== geracaoConversaRef.current) {
-        return;
-      }
+      if (geracaoAtual !== geracaoConversaRef.current) return;
 
+      contadorIdRef.current += 1;
+      const idRespDora = `dora-${contadorIdRef.current}`;
       setHistorico((anterior) => [
         ...anterior,
         {
-          id: `dora-${Date.now()}`,
+          id: idRespDora,
           autor: 'dora',
           horario: obterHorarioAtual(),
           texto: respostaLocal.texto,
@@ -292,13 +248,18 @@ export default function DoraScreen() {
       rolarParaFinal();
     } catch {
       if (geracaoAtual === geracaoConversaRef.current) {
+        contadorIdRef.current += 1;
+        const idErroDora = `erro-${contadorIdRef.current}`;
         setHistorico((anterior) => [
           ...anterior,
           {
-            id: `erro-${Date.now()}`,
+            id: idErroDora,
             autor: 'dora',
             horario: obterHorarioAtual(),
-            texto: 'Desculpe, tive um probleminha para responder. Pode tentar novamente? 💛',
+            texto:
+              `# Ops! Algo falhou\n` +
+              `## Não consegui processar agora\n` +
+              `• **Ação recomendada:** Tente enviar sua pergunta novamente.`,
           },
         ]);
       }
@@ -309,765 +270,462 @@ export default function DoraScreen() {
     }
   };
 
-  const renderizarTextoFormatado = (
-    texto: string,
-    corTexto: string
-  ) => {
+  const renderizarTrechosNegrito = (texto: string, corTexto: string) => {
     const partes = texto.split(/(\*\*.*?\*\*)/g);
+    return partes.map((trecho, idx) => {
+      if (trecho.startsWith('**') && trecho.endsWith('**')) {
+        return (
+          <Text key={idx} style={{ fontWeight: '800', color: corTexto }}>
+            {trecho.slice(2, -2)}
+          </Text>
+        );
+      }
+      return (
+        <Text key={idx} style={{ color: corTexto }}>
+          {trecho}
+        </Text>
+      );
+    });
+  };
+
+  /**
+   * Renderiza títulos (#), subtítulos (##) e tópicos em bullet points (• / 1.)
+   * garantindo leitura escaneável estilo mensageria sem blocos de texto corrido.
+   */
+  const renderizarConteudoEstruturado = (texto: string, corBase: string) => {
+    const linhas = texto
+      .split('\n')
+      .map((l) => l.trim())
+      .filter(Boolean);
 
     return (
-      <Text
-        style={[
-          estilosDora.textoMensagem,
-          {
-            color: corTexto,
-            fontSize: tokens.typography.fontSize.sm * fontScale,
-            lineHeight: 21 * fontScale,
-          },
-        ]}
-      >
-        {partes.map((trecho, idx) => {
-          if (trecho.startsWith('**') && trecho.endsWith('**')) {
+      <View style={{ gap: 2 }}>
+        {linhas.map((linha, idx) => {
+          if (linha.startsWith('# ')) {
             return (
-              <Text key={idx} style={{ fontWeight: '800' }}>
-                {trecho.slice(2, -2)}
+              <Text
+                key={idx}
+                style={[
+                  estilosDora.tituloBloco,
+                  {
+                    color: '#1E3A8A',
+                    fontSize: 15 * fontScale,
+                  },
+                ]}
+              >
+                {linha.slice(2)}
               </Text>
             );
           }
 
-          return <Text key={idx}>{trecho}</Text>;
+          if (linha.startsWith('## ')) {
+            return (
+              <Text
+                key={idx}
+                style={[
+                  estilosDora.subtituloBloco,
+                  {
+                    color: '#047857',
+                    fontSize: 12.5 * fontScale,
+                  },
+                ]}
+              >
+                {linha.slice(3)}
+              </Text>
+            );
+          }
+
+          const ehBullet = linha.startsWith('• ') || linha.startsWith('- ');
+          if (ehBullet) {
+            return (
+              <View key={idx} style={estilosDora.linhaTopico}>
+                <View
+                  style={[estilosDora.marcadorTopico, { backgroundColor: '#10B981' }]}
+                />
+                <Text
+                  style={[
+                    estilosDora.textoMensagem,
+                    {
+                      flex: 1,
+                      color: corBase,
+                      fontSize: tokens.typography.fontSize.sm * fontScale,
+                    },
+                  ]}
+                >
+                  {renderizarTrechosNegrito(linha.slice(2), corBase)}
+                </Text>
+              </View>
+            );
+          }
+
+          return (
+            <Text
+              key={idx}
+              style={[
+                estilosDora.textoMensagem,
+                {
+                  color: corBase,
+                  fontSize: tokens.typography.fontSize.sm * fontScale,
+                },
+              ]}
+            >
+              {renderizarTrechosNegrito(linha, corBase)}
+            </Text>
+          );
         })}
-      </Text>
-    );
-  };
-
-  const renderizarAvatarDora = (tamanho = 40) => (
-    <View
-      style={[
-        estilosDora.avatarContainer,
-        {
-          width: tamanho,
-          height: tamanho,
-          borderRadius: tamanho / 2,
-          backgroundColor: CORES_DORA.amarelo,
-          borderWidth: 2,
-          borderColor: CORES_DORA.laranja,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-      ]}
-    >
-      <Text style={{ fontSize: tamanho * 0.52 }}>👩🏽‍🍳</Text>
-      <View style={estilosDora.indicadorOnline} />
-    </View>
-  );
-
-  const renderizarAvatarUsuario = (tamanho = 40) => {
-    const mostrarFoto = Boolean(fotoUsuario && !erroFotoUsuario);
-    const inicial = (nomeUsuario || 'V').charAt(0).toUpperCase();
-
-    return (
-      <View
-        style={[
-          estilosDora.avatarContainer,
-          {
-            width: tamanho,
-            height: tamanho,
-            borderRadius: tamanho / 2,
-            backgroundColor: `${theme.primary}20`,
-            borderWidth: 2,
-            borderColor: theme.primary,
-          },
-        ]}
-      >
-        {mostrarFoto ? (
-          <Image
-            source={{ uri: fotoUsuario! }}
-            style={{
-              width: tamanho - 4,
-              height: tamanho - 4,
-              borderRadius: (tamanho - 4) / 2,
-            }}
-            onError={() => setErroFotoUsuario(true)}
-          />
-        ) : (
-          <Text
-            style={{
-              fontWeight: '800',
-              color: theme.primary,
-              fontSize: tamanho * 0.4,
-            }}
-          >
-            {inicial}
-          </Text>
-        )}
       </View>
     );
   };
 
-  const totalPacotesAtivos = lotesReais.reduce(
-    (acc, l) => acc + (Number(l.quantidade_atual_pacote) || 0),
-    0
+  const renderizarAvatarDora = (tamanho = 40) => (
+    <Image
+      source={AVATAR_DORA_ASSET}
+      style={{
+        width: tamanho,
+        height: tamanho,
+        borderRadius: tamanho / 2,
+        borderWidth: 1.5,
+        borderColor: '#10B981',
+        backgroundColor: '#D1FAE5',
+      }}
+      resizeMode="cover"
+      accessibilityLabel="Avatar da assistente Dora"
+    />
   );
 
   return (
-    <SafeAreaView
-      style={[
-        estilosDora.container,
-        { backgroundColor: CORES_DORA.fundo },
-      ]}
-    >
+    <SafeAreaView style={[estilosDora.tela, { backgroundColor: coresChat.canvas }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Cabeçalho */}
-        <View
-          style={{
-            paddingHorizontal: 16,
-            paddingTop: 12,
-            paddingBottom: 12,
-            backgroundColor: CORES_DORA.branco,
-            borderBottomWidth: 1,
-            borderBottomColor: CORES_DORA.borda,
-            shadowColor: '#A65D20',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 5,
-            elevation: 2,
-          }}
-        >
-          <View
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}
-          >
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 10,
-                flex: 1,
-              }}
+        {/* Cabeçalho nativo estilo WhatsApp */}
+        <View style={[estilosDora.cabecalhoWhatsapp, { backgroundColor: coresChat.cabecalho }]}>
+          <View style={estilosDora.cabecalhoEsquerda}>
+            <TouchableOpacity
+              onPress={() => roteador.back()}
+              style={estilosDora.botaoIconeCabecalho}
+              accessibilityRole="button"
+              accessibilityLabel="Voltar para tela anterior"
             >
-              
+              <Feather name="arrow-left" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
 
-              {renderizarAvatarDora(46)}
-
-              <View style={{ flex: 1 }}>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 6,
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontWeight: '900',
-                      color: CORES_DORA.texto,
-                      fontSize: 17 * fontScale,
-                    }}
-                  >
-                    Dora ✨
-                  </Text>
-
-                  <View
-                    style={{
-                      backgroundColor: CORES_DORA.laranjaMuitoClaro,
-                      paddingHorizontal: 8,
-                      paddingVertical: 3,
-                      borderRadius: 10,
-                      borderWidth: 1,
-                      borderColor: CORES_DORA.borda,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        color: CORES_DORA.laranjaEscuro,
-                        fontWeight: '800',
-                        fontSize: 9.5 * fontScale,
-                      }}
-                    >
-                      IA & Previsões
-                    </Text>
-                  </View>
-                </View>
-
-                <Text
-                  style={{
-                    color: CORES_DORA.textoSuave,
-                    fontSize: 11.5 * fontScale,
-                    marginTop: 3,
-                  }}
-                  numberOfLines={1}
-                >
-                  {carregandoEstoque
-                    ? 'Olhando as prateleiras agora...'
-                    : `Online • ${totalPacotesAtivos} pacotes acompanhados no estoque`}
-                </Text>
-              </View>
+            <View style={estilosDora.avatarWrapper}>
+              {renderizarAvatarDora(42)}
+              <View style={estilosDora.pontoOnline} />
             </View>
 
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-              }}
-            >
-              <TouchableOpacity
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Atualizar informações do estoque"
-                onPress={sincronizarEstoqueEMMovimentacoes}
-                style={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 19,
-                  backgroundColor: CORES_DORA.fundo,
-                  borderWidth: 1,
-                  borderColor: CORES_DORA.borda,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
+            <View style={estilosDora.cabecalhoInfo}>
+              <Text
+                style={[estilosDora.cabecalhoTitulo, { fontSize: 16 * fontScale }]}
+                numberOfLines={1}
               >
-                <Feather
-                  name="refresh-cw"
-                  size={15}
-                  color={CORES_DORA.laranjaEscuro}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Ver meu perfil"
-                onPress={() => roteador.push('/profile' as any)}
+                Dora • Assistente IA
+              </Text>
+              <Text
+                style={[estilosDora.cabecalhoSubtitulo, { fontSize: 11.5 * fontScale }]}
+                numberOfLines={1}
               >
-                {renderizarAvatarUsuario(36)}
-              </TouchableOpacity>
+                {processandoIa
+                  ? 'digitando...'
+                  : carregandoEstoque
+                    ? 'sincronizando despensa...'
+                    : `online • ${totalPacotesAtivos} pcts acompanhados`}
+              </Text>
             </View>
+          </View>
+
+          <View style={estilosDora.cabecalhoAcoes}>
+            <TouchableOpacity
+              onPress={sincronizarEstoqueEMMovimentacoes}
+              style={estilosDora.botaoIconeCabecalho}
+              accessibilityRole="button"
+              accessibilityLabel="Atualizar leitura do estoque"
+            >
+              <Feather name="refresh-cw" size={19} color="#FFFFFF" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={limparConversa}
+              style={estilosDora.botaoIconeCabecalho}
+              accessibilityRole="button"
+              accessibilityLabel="Limpar conversa"
+            >
+              <Feather name="trash-2" size={19} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Área das mensagens */}
+        {/* Área de mensagens estilo chat nativo */}
         <ScrollView
           ref={scrollRef}
-          contentContainerStyle={[
-            estilosDora.rolagem,
-            {
-              paddingHorizontal: 14,
-              paddingTop: 18,
-              paddingBottom: 150,
-              backgroundColor: CORES_DORA.fundo,
-            },
-          ]}
+          style={estilosDora.listaChat}
+          contentContainerStyle={estilosDora.listaChatConteudo}
+          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          onContentSizeChange={rolarParaFinal}
         >
-          {/* Perguntas rápidas */}
-          <View
-            style={[
-              estilosDora.faixaExemplos,
-              {
-                backgroundColor: CORES_DORA.branco,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: CORES_DORA.borda,
-                padding: 12,
-                marginBottom: 16,
-                shadowColor: '#A65D20',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 5,
-                elevation: 1,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                estilosDora.rotuloExemplos,
-                {
-                  color: CORES_DORA.textoSuave,
-                  fontSize: 11.5 * fontScale,
-                  fontWeight: '700',
-                  marginBottom: 8,
-                },
-              ]}
-            >
-              💡 Toque em um assunto para conversar com a Dora:
-            </Text>
-
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{
-                gap: 8,
-                paddingVertical: 2,
-              }}
-            >
-              {comandosRapidos.map((cmd) => (
-                <TouchableOpacity
-                  key={cmd}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Perguntar para a Dora: ${cmd}`}
-                  onPress={() => enviarMensagem(cmd)}
-                  style={[
-                    estilosDora.pilulaSugestao,
-                    {
-                      backgroundColor: CORES_DORA.laranjaMuitoClaro,
-                      borderColor: CORES_DORA.borda,
-                      borderWidth: 1,
-                      borderRadius: 20,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      estilosDora.textoPilula,
-                      {
-                        color: CORES_DORA.texto,
-                        fontSize: 11.5 * fontScale,
-                        fontWeight: '700',
-                      },
-                    ]}
-                  >
-                    {cmd}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+          <View style={estilosDora.divisorDataWrapper}>
+            <View style={estilosDora.divisorDataPill}>
+              <Text
+                style={[
+                  estilosDora.divisorDataTexto,
+                  { color: '#1E3A8A', fontSize: 10.5 * fontScale },
+                ]}
+              >
+                HOJE • DOAR & GUARDAR
+              </Text>
+            </View>
           </View>
 
-          {/* Histórico de mensagens */}
-          {historico.map((msg) => {
+          {historico.map((msg, indice) => {
             const ehDora = msg.autor === 'dora';
+            const ehUltimaMensagem = indice === historico.length - 1;
 
-            return (
-              <View key={msg.id} style={{ marginBottom: 16 }}>
-                <View
-                  accessible={true}
-                  accessibilityLabel={`${
-                    ehDora ? 'Dora disse' : `${nomeUsuario} disse`
-                  }: ${msg.texto}`}
-                  style={[
-                    estilosDora.linhaMensagem,
-                    ehDora
-                      ? estilosDora.linhaMensagemDora
-                      : estilosDora.linhaMensagemUsuario,
-                    {
-                      alignItems: 'flex-end',
-                    },
-                  ]}
-                >
-                  {ehDora && renderizarAvatarDora(38)}
-
+            if (!ehDora) {
+              return (
+                <View key={msg.id} style={estilosDora.linhaMensagemUsuario}>
                   <View
                     style={[
-                      estilosDora.balaoMensagem,
+                      estilosDora.balaoUsuario,
                       {
-                        backgroundColor: ehDora
-                          ? CORES_DORA.branco
-                          : CORES_DORA.laranjaPrincipal,
-                        borderColor: ehDora
-                          ? CORES_DORA.borda
-                          : CORES_DORA.laranjaPrincipal,
-                        borderWidth: 1,
-                        borderRadius: 20,
-                        padding: 14,
-                        borderBottomLeftRadius: ehDora ? 5 : 20,
-                        borderBottomRightRadius: ehDora ? 20 : 5,
-                        shadowColor: '#A65D20',
-                        shadowOffset: { width: 0, height: 3 },
-                        shadowOpacity: ehDora ? 0.07 : 0,
-                        shadowRadius: 7,
-                        elevation: ehDora ? 2 : 0,
+                        backgroundColor: coresChat.balaoUsuarioBg,
+                        borderColor: coresChat.balaoUsuarioBorda,
                       },
                     ]}
                   >
-                    <View style={estilosDora.cabecalhoBalao}>
-                      <Text
-                        style={[
-                          estilosDora.autorBalao,
-                          {
-                            color: ehDora
-                              ? CORES_DORA.laranjaEscuro
-                              : '#FFFFFF',
-                            fontSize: 11.5 * fontScale,
-                            fontWeight: '800',
-                          },
-                        ]}
-                      >
-                        {ehDora ? 'Dora 👩🏽‍🍳' : nomeUsuario}
-                      </Text>
+                    <Text
+                      style={[
+                        estilosDora.textoMensagem,
+                        {
+                          color: coresChat.balaoUsuarioTexto,
+                          fontSize: tokens.typography.fontSize.sm * fontScale,
+                        },
+                      ]}
+                    >
+                      {msg.texto}
+                    </Text>
 
+                    <View style={estilosDora.rodapeBalao}>
                       <Text
                         style={[
                           estilosDora.horarioBalao,
-                          {
-                            color: ehDora ? CORES_DORA.textoSuave : '#FFF0DF',
-                            fontSize: 10 * fontScale,
-                          },
+                          { color: '#4B5563', fontSize: 10 * fontScale },
                         ]}
                       >
                         {msg.horario}
                       </Text>
+                      <Feather name="check" size={13} color="#1E3A8A" />
+                      <Feather
+                        name="check"
+                        size={13}
+                        color="#10B981"
+                        style={{ marginLeft: -8 }}
+                      />
                     </View>
+                  </View>
+                </View>
+              );
+            }
 
-                    {renderizarTextoFormatado(
-                      msg.texto,
-                      ehDora ? CORES_DORA.texto : '#FFFFFF'
-                    )}
+            return (
+              <View key={msg.id}>
+                <View style={estilosDora.linhaMensagemDora}>
+                  {renderizarAvatarDora(32)}
 
-                    {/* Previsões de consumo */}
-                    {msg.predicoes && msg.predicoes.length > 0 && (
-                      <View
-                        style={[
-                          estilosDora.cartaoPredicoes,
-                          {
-                            backgroundColor: CORES_DORA.fundo,
-                            borderColor: CORES_DORA.borda,
-                            borderRadius: 14,
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={{
-                            fontWeight: '800',
-                            color: CORES_DORA.laranjaEscuro,
-                            fontSize: 12 * fontScale,
-                            marginBottom: 8,
-                          }}
-                        >
-                          📊 Resumo Visual de Duração do Estoque:
-                        </Text>
+                  <View
+                    style={[
+                      estilosDora.balaoDora,
+                      {
+                        backgroundColor: coresChat.balaoDoraBg,
+                        borderColor: coresChat.balaoDoraBorda,
+                      },
+                    ]}
+                  >
+                    {renderizarConteudoEstruturado(msg.texto, theme.text)}
 
-                        {msg.predicoes.map((pred) => {
-                          const porcentagemBarra = Math.min(
-                            100,
-                            Math.max(
-                              12,
-                              Math.round((pred.diasAutonomia / 30) * 100)
-                            )
-                          );
-
-                          const corBarra = pred.riscoVencerAntesDeAcabar
-                            ? '#F59E0B'
-                            : pred.precisaReposicaoBreve
-                            ? '#EF4444'
-                            : CORES_DORA.verde;
-
-                          return (
-                            <View
-                              key={pred.nomeProduto}
-                              style={[
-                                estilosDora.itemPredicao,
-                                {
-                                  backgroundColor: CORES_DORA.branco,
-                                  borderColor: CORES_DORA.borda,
-                                  borderRadius: 12,
-                                },
-                              ]}
-                            >
-                              <View
-                                style={{
-                                  flexDirection: 'row',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <Text
-                                  style={{
-                                    fontWeight: '700',
-                                    color: CORES_DORA.texto,
-                                    fontSize: 11.5 * fontScale,
-                                    flex: 1,
-                                  }}
-                                  numberOfLines={1}
-                                >
-                                  {pred.nomeProduto} ({pred.saldoTotal} pcts)
-                                </Text>
-
-                                <Text
-                                  style={{
-                                    fontWeight: '800',
-                                    color: corBarra,
-                                    fontSize: 11 * fontScale,
-                                  }}
-                                >
-                                  ~{pred.diasAutonomia} dias
-                                </Text>
-                              </View>
-
-                              <View
-                                style={{
-                                  height: 7,
-                                  backgroundColor: CORES_DORA.fundoSecundario,
-                                  borderRadius: 4,
-                                  marginTop: 7,
-                                  overflow: 'hidden',
-                                }}
-                              >
-                                <View
-                                  style={{
-                                    width: `${porcentagemBarra}%`,
-                                    height: '100%',
-                                    backgroundColor: corBarra,
-                                    borderRadius: 4,
-                                  }}
-                                />
-                              </View>
-
-                              <Text
-                                style={{
-                                  color: CORES_DORA.textoSuave,
-                                  fontSize: 10 * fontScale,
-                                  marginTop: 5,
-                                }}
-                              >
-                                Guardado em: {pred.prateleiras.join(', ')}
-                              </Text>
-                            </View>
-                          );
-                        })}
-                      </View>
-                    )}
-
-                    {/* Receita */}
                     {msg.receita && (
                       <View
                         style={[
                           estilosDora.cartaoReceita,
                           {
-                            backgroundColor: CORES_DORA.fundo,
-                            borderColor: CORES_DORA.laranja,
-                            borderRadius: 14,
+                            backgroundColor: '#F8FAFC',
+                            borderColor: '#1E3A8A35',
                           },
                         ]}
                       >
                         <Text
                           style={[
                             estilosDora.tituloReceita,
-                            {
-                              color: CORES_DORA.laranjaEscuro,
-                              fontSize: 13.5 * fontScale,
-                            },
+                            { color: '#1E3A8A', fontSize: 14 * fontScale },
                           ]}
                         >
-                          🍲 {msg.receita.titulo}
+                          {msg.receita.titulo}
                         </Text>
-
-                        <View
+                        <Text
                           style={{
-                            flexDirection: 'row',
-                            gap: 12,
+                            color: '#047857',
+                            fontWeight: '700',
+                            fontSize: 11.5 * fontScale,
                             marginBottom: 8,
-                            flexWrap: 'wrap',
                           }}
                         >
-                          <Text
-                            style={{
-                              color: CORES_DORA.textoSuave,
-                              fontSize: 11 * fontScale,
-                              fontWeight: '600',
-                            }}
-                          >
-                            ⏱️ Preparo: {msg.receita.tempoPreparo}
-                          </Text>
-
-                          <Text
-                            style={{
-                              color: CORES_DORA.textoSuave,
-                              fontSize: 11 * fontScale,
-                              fontWeight: '600',
-                            }}
-                          >
-                            🍽️ Rende: {msg.receita.rendimento}
-                          </Text>
-                        </View>
-
-                        <Text
-                          style={[
-                            estilosDora.topicoReceita,
-                            {
-                              color: CORES_DORA.texto,
-                              fontSize: 12 * fontScale,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={{
-                              fontWeight: 'bold',
-                              color: CORES_DORA.laranjaEscuro,
-                            }}
-                          >
-                            📦 O que vamos usar das nossas prateleiras:
-                            {'\n'}
-                          </Text>
-                          {msg.receita.ingredientesEstoque}
+                          Tempo: {msg.receita.tempoPreparo} • Rendimento: {msg.receita.rendimento}
                         </Text>
 
-                        {msg.receita.ingredientesComplementares && (
-                          <Text
-                            style={[
-                              estilosDora.topicoReceita,
-                              {
-                                color: CORES_DORA.texto,
-                                fontSize: 12 * fontScale,
-                              },
-                            ]}
-                          >
-                            <Text style={{ fontWeight: 'bold' }}>
-                              🧂 Para completar na cozinha:
-                              {'\n'}
-                            </Text>
-                            {msg.receita.ingredientesComplementares}
-                          </Text>
-                        )}
+                        <Text
+                          style={[
+                            estilosDora.subtituloBloco,
+                            { color: '#1E3A8A', fontSize: 12 * fontScale },
+                          ]}
+                        >
+                          Ingredientes do Estoque (FEFO)
+                        </Text>
+                        {renderizarConteudoEstruturado(msg.receita.ingredientesEstoque, theme.text)}
 
                         <Text
                           style={[
-                            estilosDora.topicoReceita,
-                            {
-                              color: CORES_DORA.texto,
-                              fontSize: 12 * fontScale,
-                            },
+                            estilosDora.subtituloBloco,
+                            { color: '#1E3A8A', fontSize: 12 * fontScale },
                           ]}
                         >
-                          <Text style={{ fontWeight: 'bold' }}>
-                            👩🏽‍🍳 Passo a passo com carinho:
-                            {'\n'}
-                          </Text>
+                          Modo de Preparo
+                        </Text>
+                        <Text
+                          style={[
+                            estilosDora.topicoReceita,
+                            { color: theme.text, fontSize: 12 * fontScale },
+                          ]}
+                        >
                           {msg.receita.modoPreparo}
                         </Text>
 
-                        {msg.receita.dicaDora && (
-                          <View
-                            style={{
-                              backgroundColor: CORES_DORA.amarelo,
-                              padding: 9,
-                              borderRadius: 10,
-                              marginBottom: 8,
-                            }}
-                          >
-                            <Text
-                              style={{
-                                color: CORES_DORA.laranjaEscuro,
-                                fontSize: 11 * fontScale,
-                                fontWeight: '600',
-                              }}
-                            >
-                              💡 {msg.receita.dicaDora}
-                            </Text>
-                          </View>
-                        )}
-
                         <TouchableOpacity
-                          accessible={true}
+                          onPress={() => Linking.openURL(msg.receita!.fonteUrl)}
+                          style={{ minHeight: 48, justifyContent: 'center' }}
                           accessibilityRole="link"
-                          accessibilityLabel={`Abrir receita completa em ${msg.receita.fonteNome}`}
-                          onPress={() =>
-                            Linking.openURL(msg.receita!.fonteUrl).catch(
-                              () => {}
-                            )
-                          }
                         >
                           <Text
                             style={[
                               estilosDora.linkFonte,
-                              {
-                                color: CORES_DORA.laranjaEscuro,
-                                fontSize: 11.5 * fontScale,
-                              },
+                              { color: '#1E3A8A', fontSize: 12 * fontScale },
                             ]}
                           >
-                            🔗 Ver inspiração completa: {msg.receita.fonteNome}
+                            Ver fonte: {msg.receita.fonteNome}
                           </Text>
                         </TouchableOpacity>
                       </View>
                     )}
 
-                    {/* Atalho para outra tela */}
-                    {msg.atalho && msg.atalho.rota !== '/dora' && (
-                      <TouchableOpacity
-                        accessible={true}
-                        accessibilityRole="button"
-                        accessibilityLabel={msg.atalho.rotulo}
-                        onPress={() =>
-                          roteador.push(msg.atalho!.rota as any)
-                        }
-                        style={{
-                          marginTop: 10,
-                          flexDirection: 'row',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8,
-                          backgroundColor: CORES_DORA.laranjaMuitoClaro,
-                          borderColor: CORES_DORA.laranja,
-                          borderWidth: 1,
-                          borderRadius: 12,
-                          paddingVertical: 10,
-                          paddingHorizontal: 12,
-                        }}
+                    {Array.isArray(msg.predicoes) && msg.predicoes.length > 0 && (
+                      <View
+                        style={[
+                          estilosDora.cartaoPredicoes,
+                          {
+                            backgroundColor: '#F8FAFC',
+                            borderColor: '#1E3A8A30',
+                          },
+                        ]}
                       >
-                        <Feather
-                          name={msg.atalho.icone as any}
-                          size={15}
-                          color={CORES_DORA.laranjaEscuro}
-                        />
-
                         <Text
                           style={{
-                            color: CORES_DORA.laranjaEscuro,
+                            color: '#1E3A8A',
                             fontWeight: '800',
                             fontSize: 12 * fontScale,
+                          }}
+                        >
+                          Resumo de Autonomia Estimada
+                        </Text>
+                        {msg.predicoes.map((pred) => (
+                          <View
+                            key={pred.nomeProduto}
+                            style={[
+                              estilosDora.itemPredicao,
+                              {
+                                backgroundColor: '#FFFFFF',
+                                borderColor: pred.riscoVencerAntesDeAcabar ? '#DC2626' : '#E2E8F0',
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={{
+                                fontWeight: '800',
+                                color: theme.text,
+                                fontSize: 12 * fontScale,
+                              }}
+                            >
+                              {pred.nomeProduto}
+                            </Text>
+                            <Text
+                              style={{
+                                color: theme.subtext,
+                                fontSize: 11 * fontScale,
+                                marginTop: 2,
+                              }}
+                            >
+                              • Saldo: {pred.saldoTotal} pcts • ~{pred.consumoDiarioEstimado}/dia •
+                              Duração: {pred.diasAutonomia}d
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+
+                    {msg.atalho && (
+                      <TouchableOpacity
+                        onPress={() => roteador.push(msg.atalho!.rota as any)}
+                        style={[estilosDora.botaoAtalho, { backgroundColor: '#10B981' }]}
+                        accessibilityRole="button"
+                        accessibilityLabel={msg.atalho.rotulo}
+                      >
+                        <Feather name={(msg.atalho.icone as any) || 'arrow-right'} size={17} color="#FFFFFF" />
+                        <Text
+                          style={{
+                            color: '#FFFFFF',
+                            fontWeight: '800',
+                            fontSize: 13 * fontScale,
                           }}
                         >
                           {msg.atalho.rotulo}
                         </Text>
                       </TouchableOpacity>
                     )}
-                  </View>
 
-                  {!ehDora && renderizarAvatarUsuario(38)}
+                    <View style={estilosDora.rodapeBalao}>
+                      <Text
+                        style={[
+                          estilosDora.horarioBalao,
+                          { color: theme.subtext, fontSize: 10 * fontScale },
+                        ]}
+                      >
+                        {msg.horario}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
 
-                {/* Sugestões de continuação */}
-                {ehDora &&
-                  msg.sugestoesContinuacao &&
+                {ehUltimaMensagem &&
+                  Array.isArray(msg.sugestoesContinuacao) &&
                   msg.sugestoesContinuacao.length > 0 && (
-                    <View
-                      style={{
-                        flexDirection: 'row',
-                        flexWrap: 'wrap',
-                        gap: 6,
-                        marginLeft: 46,
-                        marginTop: 8,
-                      }}
-                    >
+                    <View style={estilosDora.sugestoesContainer}>
                       {msg.sugestoesContinuacao.map((sug) => (
                         <TouchableOpacity
-                          key={`${msg.id}-${sug}`}
+                          key={sug}
                           onPress={() => enviarMensagem(sug)}
-                          style={{
-                            paddingHorizontal: 11,
-                            paddingVertical: 7,
-                            borderRadius: 18,
-                            backgroundColor: CORES_DORA.branco,
-                            borderWidth: 1,
-                            borderColor: CORES_DORA.borda,
-                          }}
+                          style={[
+                            estilosDora.chipSugestao,
+                            {
+                              backgroundColor: theme.surface,
+                              borderColor: '#1E3A8A55',
+                            },
+                          ]}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Perguntar: ${sug}`}
                         >
                           <Text
                             style={{
-                              color: CORES_DORA.texto,
-                              fontSize: 11 * fontScale,
+                              color: '#1E3A8A',
                               fontWeight: '700',
+                              fontSize: 12 * fontScale,
                             }}
                           >
                             {sug}
@@ -1080,100 +738,66 @@ export default function DoraScreen() {
             );
           })}
 
-          {/* Indicador de processamento */}
           {processandoIa && (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 10,
-                paddingVertical: 8,
-              }}
-            >
+            <View style={estilosDora.linhaMensagemDora}>
               {renderizarAvatarDora(32)}
-
               <View
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  gap: 8,
-                  backgroundColor: CORES_DORA.branco,
-                  borderRadius: 18,
-                  paddingHorizontal: 14,
-                  paddingVertical: 11,
-                  borderWidth: 1,
-                  borderColor: CORES_DORA.borda,
-                  elevation: 1,
-                }}
+                style={[
+                  estilosDora.balaoDora,
+                  {
+                    backgroundColor: coresChat.balaoDoraBg,
+                    borderColor: coresChat.balaoDoraBorda,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 8,
+                  },
+                ]}
               >
-                <ActivityIndicator
-                  size="small"
-                  color={CORES_DORA.laranjaPrincipal}
-                />
-
-                <Text
-                  style={{
-                    color: CORES_DORA.textoSuave,
-                    fontSize: 12 * fontScale,
-                    fontWeight: '600',
-                  }}
-                >
-                  Dora está pensando com carinho... ✨
+                <ActivityIndicator size="small" color="#10B981" />
+                <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, fontWeight: '600' }}>
+                  Dora está preparando a resposta...
                 </Text>
               </View>
             </View>
           )}
         </ScrollView>
 
-        {/* Painel de comandos de voz */}
+        {/* Painel rápido de comandos por voz / frases prontas */}
         {exibirComandosVoz && (
           <View
-            style={{
-              backgroundColor: CORES_DORA.branco,
-              borderTopWidth: 1.5,
-              borderColor: CORES_DORA.borda,
-              padding: 12,
-            }}
+            style={[
+              estilosDora.painelVoz,
+              {
+                backgroundColor: theme.surface,
+                borderTopColor: theme.border,
+              },
+            ]}
           >
             <Text
               style={{
-                fontWeight: 'bold',
-                color: CORES_DORA.texto,
+                fontWeight: '800',
+                color: '#1E3A8A',
                 fontSize: 12 * fontScale,
                 marginBottom: 8,
               }}
             >
-              🎙️ Toque em uma frase pronta ou use o microfone do seu teclado
-              para falar comigo:
+              Toque em uma pergunta pronta ou use o ditado do teclado:
             </Text>
-
-            <View
-              style={{
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                gap: 8,
-              }}
-            >
-              {comandosRapidos.map((cmd) => (
+            <View style={estilosDora.gradeVoz}>
+              {COMANDOS_VOZ_RAPIDOS.map((cmd) => (
                 <TouchableOpacity
-                  key={`voz-${cmd}`}
+                  key={cmd}
                   onPress={() => enviarMensagem(cmd)}
-                  style={{
-                    paddingHorizontal: 10,
-                    paddingVertical: 8,
-                    borderRadius: 14,
-                    backgroundColor: CORES_DORA.laranjaMuitoClaro,
-                    borderWidth: 1,
-                    borderColor: CORES_DORA.borda,
-                  }}
+                  style={[
+                    estilosDora.chipVoz,
+                    {
+                      backgroundColor: '#F8FAFC',
+                      borderColor: '#1E3A8A45',
+                    },
+                  ]}
+                  accessibilityRole="button"
                 >
-                  <Text
-                    style={{
-                      color: CORES_DORA.texto,
-                      fontSize: 11.5 * fontScale,
-                      fontWeight: '600',
-                    }}
-                  >
+                  <Text style={{ color: theme.text, fontWeight: '600', fontSize: 12 * fontScale }}>
                     {cmd}
                   </Text>
                 </TouchableOpacity>
@@ -1182,289 +806,75 @@ export default function DoraScreen() {
           </View>
         )}
 
-        {/* Barra inferior */}
+        {/* Composer único nativo estilo WhatsApp */}
         <View
           style={[
-            estilosDora.barraInferiorChat,
+            estilosDora.composerDock,
             {
-              backgroundColor: CORES_DORA.branco,
-              borderTopColor: CORES_DORA.borda,
-              borderTopWidth: 1,
-              paddingVertical: 10,
+              backgroundColor: coresChat.composerDockBg,
+              borderTopColor: theme.border,
             },
           ]}
         >
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Abrir opções de comando de voz"
-            onPress={() =>
-              setExibirComandosVoz((ant) => !ant)
-            }
-            style={[
-              estilosDora.botaoVoz,
-              {
-                backgroundColor: exibirComandosVoz
-                  ? CORES_DORA.amarelo
-                  : CORES_DORA.fundo,
-                borderColor: exibirComandosVoz
-                  ? CORES_DORA.laranja
-                  : CORES_DORA.borda,
-                borderRadius: 14,
-              },
-            ]}
-          >
-            <Feather
-              name="mic"
-              size={18}
-              color={CORES_DORA.laranjaEscuro}
-            />
-          </TouchableOpacity>
-
-          <TextInput
-            placeholder="Converse com a Dora..."
-            placeholderTextColor={CORES_DORA.textoSuave}
-            value={entradaTexto}
-            onChangeText={setEntradaTexto}
-            onSubmitEditing={() => enviarMensagem()}
-            accessible={true}
-            accessibilityLabel="Campo de conversa com a assistente Dora"
-            style={[
-              estilosDora.campoDigitacao,
-              {
-                flex: 1,
-                backgroundColor: CORES_DORA.fundo,
-                borderColor: CORES_DORA.borda,
-                borderRadius: 14,
-                color: CORES_DORA.texto,
-                fontSize: tokens.typography.fontSize.sm * fontScale,
-              },
-            ]}
-          />
-
-          <TouchableOpacity
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Enviar mensagem para a Dora"
-            disabled={processandoIa}
-            onPress={() => enviarMensagem()}
-            style={[
-              estilosDora.botaoEnviar,
-              {
-                backgroundColor: CORES_DORA.laranjaPrincipal,
-                borderRadius: 14,
-                opacity: processandoIa ? 0.6 : 1,
-              },
-            ]}
-          >
-            <AppIcon name="send" size={16} color="#FFFFFF" />
-            <Text
-              style={{
-                color: '#FFFFFF',
-                fontWeight: 'bold',
-                fontSize: 13 * fontScale,
-              }}
-            >
-              Enviar
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Caixa de texto flutuante */}
-        {exibirCaixaTextoFlutuante && (
-          <View
-            style={{
-              position: 'absolute',
-              right: 16,
-              alignSelf: 'flex-end',
-              bottom: 138,
-              width: '88%',
-              maxWidth: 380,
-              zIndex: 21,
-              elevation: 10,
-              padding: 14,
-              borderRadius: 20,
-              backgroundColor: CORES_DORA.branco,
-              borderWidth: 1.5,
-              borderColor: CORES_DORA.borda,
-              shadowColor: '#A65D20',
-              shadowOffset: { width: 0, height: 3 },
-              shadowOpacity: 0.16,
-              shadowRadius: 8,
-            }}
-          >
-            <Text
-              style={{
-                color: CORES_DORA.texto,
-                fontWeight: '800',
-                fontSize: 13 * fontScale,
-                marginBottom: 8,
-              }}
-            >
-              💬 Converse com a Dora
-            </Text>
-
+          <View style={estilosDora.composerRow}>
             <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 8,
-              }}
+              style={[
+                estilosDora.composerInputBox,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                },
+              ]}
             >
+              <TouchableOpacity
+                onPress={() => setExibirComandosVoz((v) => !v)}
+                style={estilosDora.botaoMic}
+                accessibilityRole="button"
+                accessibilityLabel="Alternar sugestões rápidas"
+              >
+                <Feather
+                  name="mic"
+                  size={20}
+                  color={exibirComandosVoz ? '#10B981' : '#1E3A8A'}
+                />
+              </TouchableOpacity>
+
               <TextInput
-                autoFocus
-                placeholder="Digite sua mensagem..."
-                placeholderTextColor={CORES_DORA.textoSuave}
+                placeholder="Mensagem para a Dora..."
+                placeholderTextColor={theme.subtext}
                 value={entradaTexto}
                 onChangeText={setEntradaTexto}
                 onSubmitEditing={() => enviarMensagem()}
                 returnKeyType="send"
-                accessibilityLabel="Digite uma mensagem para a Dora"
-                style={{
-                  flex: 1,
-                  minHeight: 44,
-                  maxHeight: 100,
-                  paddingHorizontal: 12,
-                  paddingVertical: 9,
-                  borderRadius: 12,
-                  borderWidth: 1,
-                  borderColor: CORES_DORA.borda,
-                  backgroundColor: CORES_DORA.fundo,
-                  color: CORES_DORA.texto,
-                  fontSize: tokens.typography.fontSize.sm * fontScale,
-                }}
+                accessibilityLabel="Campo de mensagem para a assistente Dora"
+                style={[
+                  estilosDora.campoDigitacao,
+                  {
+                    color: theme.text,
+                    fontSize: tokens.typography.fontSize.sm * fontScale,
+                  },
+                ]}
               />
-
-              <TouchableOpacity
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel="Enviar mensagem para a Dora"
-                disabled={!entradaTexto.trim() || processandoIa}
-                onPress={() => enviarMensagem()}
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 12,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: CORES_DORA.laranjaPrincipal,
-                  opacity:
-                    !entradaTexto.trim() || processandoIa ? 0.55 : 1,
-                }}
-              >
-                <Feather
-                  name="send"
-                  size={17}
-                  color="#FFFFFF"
-                />
-              </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              onPress={() => enviarMensagem()}
+              disabled={!entradaTexto.trim() || processandoIa}
+              style={[
+                estilosDora.botaoEnviarCircular,
+                {
+                  backgroundColor: entradaTexto.trim() ? '#10B981' : '#1E3A8A',
+                  opacity: !entradaTexto.trim() || processandoIa ? 0.6 : 1,
+                },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Enviar mensagem para a Dora"
+            >
+              <Feather name="send" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-        )}
-
-        {/* Botões flutuantes */}
-        <View
-          pointerEvents="box-none"
-          style={{
-            position: 'absolute',
-            right: 16,
-            bottom: 78,
-            zIndex: 9999,
-            elevation: 20,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 8,
-          }}
-        >
-          <Pressable
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Limpar conversa com a Dora"
-            onPress={limparConversa}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              paddingHorizontal: 13,
-              paddingVertical: 13,
-              borderRadius: 28,
-              backgroundColor: CORES_DORA.vermelho,
-              borderWidth: 2,
-              borderColor: '#FFFFFF',
-              opacity: pressed ? 0.75 : 1,
-              cursor: 'pointer',
-              boxShadow: '0px 3px 6px rgba(0,0,0,0.22)',
-            } as any)}
-          >
-            <Feather
-              name="trash-2"
-              size={16}
-              color="#FFFFFF"
-            />
-
-            <Text
-              style={{
-                color: '#FFFFFF',
-                fontWeight: '800',
-                fontSize: 12 * fontScale,
-              }}
-            >
-              Limpar
-            </Text>
-          </Pressable>
-
-          <Pressable
-            accessible={true}
-            accessibilityRole="button"
-            accessibilityLabel="Falar com a Dora"
-            onPress={() => {
-              setExibirCaixaTextoFlutuante((aberto) => !aberto);
-              setExibirComandosVoz(false);
-              rolarParaFinal();
-            }}
-            style={({ pressed }) => ({
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 9,
-              paddingHorizontal: 19,
-              paddingVertical: 14,
-              borderRadius: 30,
-              backgroundColor: CORES_DORA.laranjaPrincipal,
-              borderWidth: 2,
-              borderColor: '#FFFFFF',
-              opacity: pressed ? 0.8 : 1,
-              cursor: 'pointer',
-              elevation: 8,
-              shadowColor: '#A65D20',
-              shadowOffset: { width: 0, height: 4 },
-              shadowOpacity: 0.22,
-              shadowRadius: 6,
-            } as any)}
-          >
-            <Feather
-              name={
-                exibirCaixaTextoFlutuante
-                  ? 'x'
-                  : 'message-circle'
-              }
-              size={19}
-              color="#FFFFFF"
-            />
-
-            <Text
-              style={{
-                color: '#FFFFFF',
-                fontWeight: '800',
-                fontSize: 12 * fontScale,
-              }}
-            >
-              Fale com a Dora
-            </Text>
-          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
-

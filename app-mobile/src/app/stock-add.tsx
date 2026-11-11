@@ -18,12 +18,22 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useAppTheme } from '../context/ThemeContext';
 import { AppInput } from '../components/common/AppInput';
+import { AppNumericInput } from '../components/common/AppNumericInput';
+import { AppDateInput } from '../components/common/AppDateInput';
 import { AppButton } from '../components/common/AppButton';
 import { requisicaoApi } from '../services/api';
 import { auth } from '../services/firebaseConfig';
+import {
+  CategoriaAlimentoItem,
+  CATEGORIAS_PADRAO_SISTEMA,
+  alternarVisibilidadeCategoria,
+  carregarCategoriasComEstado,
+  criarEPersistirCategoria,
+} from '../services/categoriesService';
+import { converterParaIso, estaVencido } from '../utils/dateValidation';
 import {
   LOCAIS_HOMOLOGADOS_PADRAO,
   carregarPrateleirasAws,
@@ -51,7 +61,7 @@ interface RespostaVerificacaoProduto {
   permitir_cadastro_manual?: boolean;
   produto?: ProdutoRetornadoApi | null;
   erros?: string[];
-  tentativas_apis?: Array<{ api: string; status: string; origem?: string }>;
+  tentativas_apis?: { api: string; status: string; origem?: string }[];
   mensagem?: string;
 }
 
@@ -116,7 +126,7 @@ export default function StockAddScreen() {
   const [forcandoLeitura, setForcandoLeitura] = useState(false);
   const cameraRef = useRef<CameraView>(null);
   const leituraProcessadaRef = useRef(false);
-  const animLaser = useRef(new Animated.Value(0)).current;
+  const [animLaser] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     if (modalCameraVisivel) {
@@ -149,7 +159,16 @@ export default function StockAddScreen() {
   const [nomeProduto, setNomeProduto] = useState('');
   const [marcaProduto, setMarcaProduto] = useState('');
   const [categoria, setCategoria] = useState('Grãos e Cereais');
-  const [categorias, setCategorias] = useState<string[]>(CATEGORIAS_INSTITUCIONAIS);
+  const [categoriasItens, setCategoriasItens] = useState<CategoriaAlimentoItem[]>(() =>
+    CATEGORIAS_PADRAO_SISTEMA.map((nome, indice) => ({
+      id: `init-${indice}`,
+      nome,
+      oculta: false,
+      origem: 'local',
+    }))
+  );
+  const [carregandoCategorias, setCarregandoCategorias] = useState(true);
+  const [mostrarCategoriasOcultas, setMostrarCategoriasOcultas] = useState(false);
   const [modalNovaCategoriaVisivel, setModalNovaCategoriaVisivel] = useState(false);
   const [nomeNovaCategoria, setNomeNovaCategoria] = useState('');
   const [salvandoCategoria, setSalvandoCategoria] = useState(false);
@@ -211,25 +230,22 @@ export default function StockAddScreen() {
     }
   }, []);
 
-  // Carrega categorias de alimentos já cadastradas na AWS
+  // Carrega todas as categorias de alimentos registradas no AWS DynamoDB + estado oculto local
   const carregarCategoriasDoBackend = useCallback(async () => {
+    setCarregandoCategorias(true);
     try {
-      const resp: any = await requisicaoApi('/api/estoque', {
-        metodo: 'POST',
-        dados: { modulo: 'estoque', acao: 'listar_categorias' },
-      });
-      if (resp?.sucesso && Array.isArray(resp.categorias) && resp.categorias.length > 0) {
-        const nomesServidor: string[] = resp.categorias
-          .map((c: any) => (typeof c === 'string' ? c : c.nome_categoria || c.nome))
-          .filter(Boolean);
-
-        setCategorias((atuais) => {
-          const conjunto = new Set([...atuais, ...nomesServidor]);
-          return Array.from(conjunto);
-        });
+      const resultado = await carregarCategoriasComEstado();
+      setCategoriasItens(resultado.categorias);
+      const primeiraVisivel = resultado.categorias.find((c) => !c.oculta);
+      if (primeiraVisivel) {
+        setCategoria((atual) =>
+          resultado.categorias.some((c) => !c.oculta && c.nome === atual)
+            ? atual
+            : primeiraVisivel.nome
+        );
       }
-    } catch {
-      // Mantém categorias iniciais
+    } finally {
+      setCarregandoCategorias(false);
     }
   }, []);
 
@@ -242,44 +258,78 @@ export default function StockAddScreen() {
 
     setSalvandoCategoria(true);
     try {
-      const resp: any = await requisicaoApi('/api/estoque', {
-        metodo: 'POST',
-        dados: {
-          modulo: 'estoque',
-          acao: 'cadastrar_categoria',
-          nome_categoria: nomeLimpo,
-        },
-      });
+      const res = await criarEPersistirCategoria(nomeLimpo);
+      if (!res.sucesso) {
+        Alert.alert('Atenção', res.mensagem || 'Informe um nome válido.');
+        return;
+      }
 
-      setCategorias((atuais) => {
-        if (!atuais.includes(nomeLimpo)) {
-          return [...atuais, nomeLimpo];
+      setCategoriasItens((atuais) => {
+        const existe = atuais.some((c) => c.nome.toLowerCase() === res.nomeFinal.toLowerCase());
+        if (existe) {
+          return atuais.map((c) =>
+            c.nome.toLowerCase() === res.nomeFinal.toLowerCase() ? { ...c, oculta: false } : c
+          );
         }
-        return atuais;
+        return [
+          {
+            id: `nova-${Date.now()}`,
+            nome: res.nomeFinal,
+            oculta: false,
+            origem: res.sincronizadaAws ? 'dynamodb' : 'local',
+          },
+          ...atuais,
+        ];
       });
-      setCategoria(nomeLimpo);
+      setCategoria(res.nomeFinal);
       setNomeNovaCategoria('');
       setModalNovaCategoriaVisivel(false);
-      Alert.alert('Sucesso', resp?.mensagem || `Categoria "${nomeLimpo}" cadastrada na AWS com sucesso!`);
-    } catch (err: any) {
-      setCategorias((atuais) => {
-        if (!atuais.includes(nomeLimpo)) {
-          return [...atuais, nomeLimpo];
-        }
-        return atuais;
-      });
-      setCategoria(nomeLimpo);
-      setNomeNovaCategoria('');
-      setModalNovaCategoriaVisivel(false);
-      Alert.alert('Categoria Cadastrada', `Categoria "${nomeLimpo}" adicionada e selecionada.`);
+      Alert.alert(
+        'Nova Categoria Salva',
+        res.sincronizadaAws
+          ? `Categoria "${res.nomeFinal}" salva no AWS DynamoDB e exibida na tela!`
+          : `Categoria "${res.nomeFinal}" adicionada e persistida no dispositivo.`
+      );
     } finally {
       setSalvandoCategoria(false);
     }
   };
 
+  const lidarAlternarOcultarCategoria = async (item: CategoriaAlimentoItem) => {
+    const novoOcultar = !item.oculta;
+    setCategoriasItens((atuais) =>
+      atuais.map((c) => (c.nome === item.nome ? { ...c, oculta: novoOcultar } : c))
+    );
+    if (novoOcultar && categoria === item.nome) {
+      const proxima = categoriasItens.find((c) => !c.oculta && c.nome !== item.nome);
+      if (proxima) setCategoria(proxima.nome);
+    }
+    await alternarVisibilidadeCategoria(item.nome, novoOcultar);
+  };
+
+  const categoriasVisiveis = useMemo(
+    () => categoriasItens.filter((c) => !c.oculta),
+    [categoriasItens]
+  );
+
+  const categoriasOcultas = useMemo(
+    () => categoriasItens.filter((c) => c.oculta),
+    [categoriasItens]
+  );
+
+  const categoriasParaExibir = useMemo(
+    () => (mostrarCategoriasOcultas ? categoriasItens : categoriasVisiveis),
+    [mostrarCategoriasOcultas, categoriasItens, categoriasVisiveis]
+  );
+
+  const validadeVencida = useMemo(() => estaVencido(dataValidade), [dataValidade]);
+
   useEffect(() => {
-    carregarLocaisDoBackend();
-    carregarCategoriasDoBackend();
+    const timer = setTimeout(() => {
+      void carregarLocaisDoBackend();
+      void carregarCategoriasDoBackend();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [carregarLocaisDoBackend, carregarCategoriasDoBackend]);
 
   // Estruturação organizada dos locais de armazenamento para facilitar a navegação
@@ -328,17 +378,6 @@ export default function StockAddScreen() {
   }, [locaisFiltrados]);
 
   // Máscaras de entrada
-  const lidarComMascaraData = (texto: string) => {
-    const apenasNumeros = texto.replace(/\D/g, '').slice(0, 8);
-    let formatado = apenasNumeros;
-    if (apenasNumeros.length > 2 && apenasNumeros.length <= 4) {
-      formatado = `${apenasNumeros.slice(0, 2)}/${apenasNumeros.slice(2)}`;
-    } else if (apenasNumeros.length > 4) {
-      formatado = `${apenasNumeros.slice(0, 2)}/${apenasNumeros.slice(2, 4)}/${apenasNumeros.slice(4)}`;
-    }
-    setDataValidade(formatado);
-  };
-
   const lidarComMascaraEan = (texto: string) => {
     const limpo = texto.replace(/\D/g, '').slice(0, 14);
     setCodigoBarras(limpo);
@@ -384,24 +423,6 @@ export default function StockAddScreen() {
         'Câmera Indisponível',
         erro?.message || 'Não foi possível iniciar a câmera neste dispositivo. Digite o código EAN manualmente.'
       );
-    }
-  };
-
-  const abrirScannerGoogleNativo = async () => {
-    try {
-      if (CameraView.launchScanner) {
-        leituraProcessadaRef.current = false;
-        const sub = CameraView.onModernBarcodeScanned((event) => {
-          sub?.remove();
-          aoLerCodigoCamera(event);
-        });
-        await CameraView.launchScanner({
-          barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'itf14', 'qr'],
-        });
-      }
-    } catch (err: any) {
-      console.warn('Google Code Scanner não disponível:', err);
-      Alert.alert('Google Scanner', 'Utilize o visor da câmera com foco automático integrado.');
     }
   };
 
@@ -555,21 +576,7 @@ export default function StockAddScreen() {
   };
 
   const validarDataReal = (dataStr: string): string | null => {
-    if (!dataStr || dataStr.length !== 10) return null;
-    const partes = dataStr.split('/');
-    if (partes.length !== 3) return null;
-    const dia = Number(partes[0]);
-    const mes = Number(partes[1]);
-    const ano = Number(partes[2]);
-    if (isNaN(dia) || isNaN(mes) || isNaN(ano) || mes < 1 || mes > 12 || dia < 1 || dia > 31 || ano < 2020 || ano > 2100) {
-      return null;
-    }
-    const iso = `${String(ano).padStart(4, '0')}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-    const dt = new Date(`${iso}T00:00:00`);
-    if (isNaN(dt.getTime()) || dt.getUTCMonth() + 1 !== mes || dt.getUTCDate() !== dia) {
-      return null;
-    }
-    return iso;
+    return converterParaIso(dataStr);
   };
 
   const salvarLoteNoBackend = async () => {
@@ -592,6 +599,14 @@ export default function StockAddScreen() {
     const validadeIso = validarDataReal(dataValidade.trim());
     if (!validadeIso) {
       Alert.alert('Validade Inválida', 'Informe uma data de validade real no formato DD/MM/AAAA.');
+      return;
+    }
+
+    if (estaVencido(dataValidade.trim())) {
+      Alert.alert(
+        'Bloqueio de Segurança — Produto Vencido',
+        'Não é permitido cadastrar ou aceitar a entrada de produtos que já estejam com a data de validade vencida.',
+      );
       return;
     }
 
@@ -684,6 +699,168 @@ export default function StockAddScreen() {
     }
     return obterPlaceholderPorCategoria(catNome || categoria);
   };
+
+  const renderBlocoCategorias = (permitirSelecionar: boolean) => (
+    <View style={{ marginBottom: 14 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 8,
+          marginBottom: 10,
+        }}
+      >
+        <View style={{ flex: 1, minWidth: 160 }}>
+          <Text style={{ fontSize: 13 * fontScale, fontWeight: '800', color: theme.text }}>
+            Categorias de Alimentos (DynamoDB)
+          </Text>
+          <Text style={{ fontSize: 11 * fontScale, color: theme.subtext, marginTop: 2 }}>
+            {categoriasVisiveis.length} categoria(s) ativa(s) • toque no olho para ocultar
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => setModalNovaCategoriaVisivel(true)}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Adicionar Nova Categoria"
+          style={{
+            minHeight: 48,
+            paddingHorizontal: 14,
+            borderRadius: 12,
+            backgroundColor: '#10B981',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+          }}
+        >
+          <Feather name="plus-circle" size={16} color="#FFFFFF" />
+          <Text style={{ fontSize: 12.5 * fontScale, fontWeight: '800', color: '#FFFFFF' }}>
+            Nova Categoria
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {carregandoCategorias && categoriasParaExibir.length === 0 ? (
+        <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: 10 }} />
+      ) : (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {categoriasParaExibir.map((item) => {
+            const selecionada = categoria === item.nome;
+            return (
+              <View
+                key={item.id}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  minHeight: 48,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: selecionada ? '#1E3A8A' : item.oculta ? '#D1D5DB' : '#E5E7EB',
+                  backgroundColor: selecionada ? '#1E3A8A14' : '#FFFFFF',
+                  opacity: item.oculta ? 0.65 : 1,
+                  overflow: 'hidden',
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => {
+                    if (permitirSelecionar || !item.oculta) {
+                      setCategoria(item.nome);
+                    }
+                  }}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Categoria ${item.nome}`}
+                  style={{
+                    minHeight: 48,
+                    paddingLeft: 12,
+                    paddingRight: 6,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
+                  }}
+                >
+                  <Feather
+                    name={selecionada ? 'check-circle' : 'tag'}
+                    size={14}
+                    color={selecionada ? '#1E3A8A' : '#64748B'}
+                  />
+                  <Text
+                    style={{
+                      fontSize: 12.5 * fontScale,
+                      fontWeight: selecionada ? '800' : '600',
+                      color: selecionada ? '#1E3A8A' : theme.text,
+                    }}
+                  >
+                    {item.nome}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => lidarAlternarOcultarCategoria(item)}
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={
+                    item.oculta
+                      ? `Reexibir categoria ${item.nome}`
+                      : `Ocultar categoria ${item.nome}`
+                  }
+                  style={{
+                    minWidth: 48,
+                    minHeight: 48,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderLeftWidth: 1,
+                    borderLeftColor: '#E5E7EB',
+                  }}
+                >
+                  <Feather
+                    name={item.oculta ? 'eye' : 'eye-off'}
+                    size={15}
+                    color={item.oculta ? '#10B981' : '#94A3B8'}
+                  />
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {categoriasOcultas.length > 0 && (
+        <TouchableOpacity
+          onPress={() => setMostrarCategoriasOcultas((v) => !v)}
+          accessible={true}
+          accessibilityRole="button"
+          accessibilityLabel="Mostrar ou esconder categorias ocultas"
+          style={{
+            marginTop: 10,
+            minHeight: 48,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 6,
+            paddingHorizontal: 10,
+            borderRadius: 10,
+            backgroundColor: '#F8FAFC',
+            borderWidth: 1,
+            borderColor: '#E2E8F0',
+          }}
+        >
+          <Feather
+            name={mostrarCategoriasOcultas ? 'eye' : 'eye-off'}
+            size={15}
+            color="#64748B"
+          />
+          <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, fontWeight: '600' }}>
+            {mostrarCategoriasOcultas
+              ? 'Esconder categorias ocultas novamente'
+              : `${categoriasOcultas.length} categoria(s) oculta(s) • Toque para gerenciar`}
+          </Text>
+        </TouchableOpacity>
+      )}
+    </View>
+  );
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
@@ -810,6 +987,21 @@ export default function StockAddScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {etapa === 1 && (
+          <View
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              padding: 16,
+              borderWidth: 1.5,
+              borderColor: '#E5E7EB',
+              marginBottom: 16,
+            }}
+          >
+            {renderBlocoCategorias(false)}
+          </View>
+        )}
 
         {/* CENÁRIO A: PRODUTO JÁ EXISTE NO ESTOQUE (Card Informativo) */}
         {produtoExistenteNoBanco === true && etapa >= 2 && (
@@ -938,70 +1130,12 @@ export default function StockAddScreen() {
               onChangeText={setMarcaProduto}
             />
 
-            <Text style={{ fontSize: 12 * fontScale, fontWeight: '600', color: theme.text, marginBottom: 8 }}>
-              Categoria do Alimento:
-            </Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
-              {categorias.map((cat) => {
-                const selecionada = categoria === cat;
-                return (
-                  <TouchableOpacity
-                    key={cat}
-                    onPress={() => setCategoria(cat)}
-                    style={{
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
-                      borderRadius: 10,
-                      borderWidth: 1.5,
-                      borderColor: selecionada ? theme.primary : '#E5E7EB',
-                      backgroundColor: selecionada ? `${theme.primary}15` : '#FFFFFF',
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontSize: 12 * fontScale,
-                        fontWeight: selecionada ? '700' : '500',
-                        color: selecionada ? theme.primary : theme.text,
-                      }}
-                    >
-                      {cat}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+            {renderBlocoCategorias(true)}
 
-              {/* Botão Adicionar Categoria no mesmo formato e tamanho */}
-              <TouchableOpacity
-                onPress={() => setModalNovaCategoriaVisivel(true)}
-                style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 12,
-                  borderRadius: 10,
-                  borderWidth: 1.5,
-                  borderStyle: 'dashed',
-                  borderColor: theme.primary,
-                  backgroundColor: `${theme.primary}0D`,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                }}
-              >
-                <Feather name="plus" size={13} color={theme.primary} style={{ marginRight: 4 }} />
-                <Text
-                  style={{
-                    fontSize: 12 * fontScale,
-                    fontWeight: '700',
-                    color: theme.primary,
-                  }}
-                >
-                  Adicionar Categoria
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            <AppInput
+            <AppNumericInput
               rotulo="Estoque mínimo de segurança *"
               placeholder="10"
-              keyboardType="numeric"
+              min={0}
               value={estoqueMinimo}
               onChangeText={lidarComMascaraEstoqueMinimo}
             />
@@ -1059,28 +1193,47 @@ export default function StockAddScreen() {
               onChangeText={setNumeroLote}
             />
 
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ flex: 1 }}>
-                <AppInput
-                  rotulo="Quantidade (pacotes) *"
-                  placeholder="0"
-                  keyboardType="numeric"
-                  value={quantidadePacotes}
-                  onChangeText={lidarComMascaraQuantidade}
-                />
-              </View>
+            <AppNumericInput
+              rotulo="Quantidade (pacotes) *"
+              placeholder="0"
+              min={0}
+              value={quantidadePacotes}
+              onChangeText={lidarComMascaraQuantidade}
+            />
 
-              <View style={{ flex: 1 }}>
-                <AppInput
-                  rotulo="Validade (DD/MM/AAAA) *"
-                  placeholder="DD/MM/AAAA"
-                  keyboardType="numeric"
-                  maxLength={10}
-                  value={dataValidade}
-                  onChangeText={lidarComMascaraData}
-                />
+            <AppDateInput
+              rotulo="Validade (DD/MM/AAAA) *"
+              placeholder="DD/MM/AAAA"
+              value={dataValidade}
+              onChangeText={setDataValidade}
+              bloquearDatasPassadas={true}
+              mensagemAviso={
+                validadeVencida
+                  ? 'Bloqueio de segurança: produto vencido não pode ser aceito.'
+                  : undefined
+              }
+            />
+
+            {validadeVencida && (
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: 10,
+                  backgroundColor: '#FEF2F2',
+                  borderColor: '#DC2626',
+                  borderWidth: 1.5,
+                  borderRadius: 12,
+                  padding: 12,
+                  marginBottom: 14,
+                }}
+              >
+                <Feather name="alert-octagon" size={20} color="#DC2626" />
+                <Text style={{ flex: 1, color: '#991B1B', fontSize: 12 * fontScale, fontWeight: '700' }}>
+                  Entrada Bloqueada: a data informada já está vencida. O sistema proíbe o cadastro e o aceite de lotes fora da validade.
+                </Text>
               </View>
-            </View>
+            )}
 
             <Text style={{ fontSize: 13 * fontScale, fontWeight: '700', color: theme.text, marginBottom: 6, marginTop: 4 }}>
               Local de Armazenamento (Armário / Geladeira):
@@ -1272,8 +1425,15 @@ export default function StockAddScreen() {
               <ActivityIndicator size="large" color="#10B981" style={{ marginVertical: 8 }} />
             ) : (
               <AppButton
-                title={produtoExistenteNoBanco ? '✔ Salvar Novo Lote' : '✔ Cadastrar Produto e Lote'}
-                variant="secondary"
+                title={
+                  validadeVencida
+                    ? 'Entrada Bloqueada (Produto Vencido)'
+                    : produtoExistenteNoBanco
+                      ? 'Salvar Novo Lote'
+                      : 'Cadastrar Produto e Lote'
+                }
+                variant={validadeVencida ? 'danger' : 'secondary'}
+                disabled={validadeVencida}
                 onPress={salvarLoteNoBackend}
               />
             )}
@@ -1507,7 +1667,17 @@ export default function StockAddScreen() {
                   Cadastrar no banco de dados AWS
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setModalNovaCategoriaVisivel(false)}>
+              <TouchableOpacity
+                onPress={() => setModalNovaCategoriaVisivel(false)}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar modal de nova categoria"
+                style={{
+                  minWidth: 48,
+                  minHeight: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <Feather name="x" size={20} color={theme.subtext} />
               </TouchableOpacity>
             </View>
@@ -1525,6 +1695,7 @@ export default function StockAddScreen() {
                 disabled={salvandoCategoria}
                 style={{
                   flex: 1,
+                  minHeight: 48,
                   paddingVertical: 12,
                   borderRadius: 10,
                   borderWidth: 1,
@@ -1543,6 +1714,7 @@ export default function StockAddScreen() {
                 disabled={salvandoCategoria}
                 style={{
                   flex: 1,
+                  minHeight: 48,
                   paddingVertical: 12,
                   borderRadius: 10,
                   backgroundColor: theme.primary,

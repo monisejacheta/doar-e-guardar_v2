@@ -1,58 +1,52 @@
-// src/styles/audit.styles.ts
 import { StyleSheet } from 'react-native';
 
 export const estilosAudit = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
   rolagem: {
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 105,
+    padding: 20,
+    paddingBottom: 110,
   },
   botaoVoltar: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    minHeight: 48,
+    minWidth: 48,
     marginBottom: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
   },
   textoBotaoVoltar: {
     fontWeight: '700',
-    marginLeft: 6,
+    marginLeft: 8,
   },
   cabecalho: {
     marginBottom: 16,
-    paddingHorizontal: 4,
   },
   titulo: {
     fontWeight: '800',
-    marginBottom: 2,
-    letterSpacing: -0.3,
   },
   subtitulo: {
-    lineHeight: 18,
-    fontWeight: '500',
+    marginTop: 4,
+    lineHeight: 19,
   },
-
-  // Card Termômetro de Saúde
   cardSaude: {
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 14,
+    marginBottom: 16,
+    gap: 14,
   },
   indicadorBox: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 66,
+    height: 66,
+    borderRadius: 33,
+    borderWidth: 4,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 4,
-    marginRight: 14,
+    backgroundColor: '#FFFFFF',
   },
   indicadorTexto: {
     fontWeight: '900',
@@ -63,163 +57,202 @@ export const estilosAudit = StyleSheet.create({
   },
   tituloSaude: {
     fontWeight: '800',
-    marginBottom: 2,
   },
   subtituloSaude: {
+    marginTop: 3,
     lineHeight: 16,
-    fontWeight: '500',
   },
-
-  // Ações Principais
   botaoAuditoria: {
+    minHeight: 48,
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 12,
-    paddingVertical: 14,
-    marginBottom: 20,
-    elevation: 2,
+    gap: 10,
+    marginBottom: 14,
   },
   botaoAuditoriaTexto: {
     fontWeight: '800',
-    marginLeft: 8,
   },
-
-  // Lista de Logs de Ajuste
+  gradeAtalhos: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 10,
+    marginBottom: 20,
+  },
+  cardAtalho: {
+    width: '48%',
+    minHeight: 48,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
   tituloSecaoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 4,
+    gap: 8,
+    marginBottom: 14,
   },
   tituloSecao: {
     fontWeight: '800',
-    marginLeft: 6,
   },
-  cardLog: {
-    borderWidth: 1.5,
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
+  emptyBox: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 26,
+    alignItems: 'center',
+  },
+  emptyTitle: {
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  emptySubtitle: {
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  // Linha do Tempo Cronológica
+  timelineItemRow: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
+  timelineRailCol: {
+    width: 42,
+    alignItems: 'center',
+  },
+  timelineNodeCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  timelineLine: {
+    flex: 1,
+    width: 2,
+    marginTop: 2,
+    marginBottom: 2,
+  },
+  timelineCardCol: {
+    flex: 1,
+    paddingBottom: 14,
+    paddingLeft: 8,
+  },
+  cardTimeline: {
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 13,
     elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
   },
   linhaTopoLog: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: 6,
   },
-  badgeAjuste: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 6,
+  badgeTipoAcao: {
+    paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
   },
-  badgeAjusteTexto: {
+  badgeTipoTexto: {
     fontWeight: '800',
-    marginLeft: 4,
   },
   textoDataLog: {
     fontWeight: '600',
   },
-  textoProdutoLog: {
+  textoTituloEvento: {
     fontWeight: '800',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   textoMetadadosLog: {
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  caixaComparacao: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  textoComparacao: {
-    fontWeight: '700',
+    lineHeight: 17,
   },
   rodapeLog: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
   },
   textoResponsavelLog: {
     fontWeight: '600',
-    marginLeft: 4,
+    flex: 1,
   },
-
-  // Modais de Busca e Ajuste
+  // Modais
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
     justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
+    padding: 18,
   },
   modalCard: {
-    width: '100%',
-    maxWidth: 380,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    elevation: 6,
-    padding: 20,
+    borderRadius: 18,
+    padding: 18,
+    maxHeight: '88%',
   },
   modalHeaderRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   modalTitulo: {
-    fontWeight: '900',
+    fontWeight: '800',
+  },
+  botaoFecharModal: {
+    minWidth: 48,
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputBuscaModal: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    height: 44,
-    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 48,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    marginVertical: 10,
   },
   itemListaLote: {
-    borderWidth: 1.5,
-    borderRadius: 10,
+    minHeight: 48,
+    borderRadius: 12,
+    borderWidth: 1,
     padding: 12,
     marginBottom: 8,
   },
   linhaLoteModal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 2,
+    marginTop: 3,
   },
   textoLoteModal: {
-    fontWeight: '700',
+    fontWeight: '800',
   },
   textoQtdModal: {
     fontWeight: '800',
   },
   boxInfoAtual: {
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  emptyBox: {
-    alignItems: 'center',
-    padding: 24,
     borderRadius: 12,
-    borderWidth: 1.5,
-  },
-  emptyTitle: {
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptySubtitle: {
-    marginTop: 2,
+    borderWidth: 1,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 14,
   },
 });
-
