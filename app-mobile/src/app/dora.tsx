@@ -4,6 +4,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   SafeAreaView,
   ScrollView,
@@ -88,6 +89,7 @@ export default function DoraScreen() {
   const [ultimaReceitaId, setUltimaReceitaId] = useState<string | undefined>(undefined);
   const [entradaTexto, setEntradaTexto] = useState('');
   const [exibirComandosVoz, setExibirComandosVoz] = useState(false);
+  const [modalSobreDoraVisivel, setModalSobreDoraVisivel] = useState(false);
   const [historico, setHistorico] = useState<MensagemChat[]>(() => [criarMensagemBoasVindas()]);
 
   const coresChat = useMemo(() => {
@@ -378,19 +380,27 @@ export default function DoraScreen() {
   };
 
   const renderizarAvatarDora = (tamanho = 40) => (
-    <Image
-      source={AVATAR_DORA_ASSET}
-      style={{
-        width: tamanho,
-        height: tamanho,
-        borderRadius: tamanho / 2,
-        borderWidth: 1.5,
-        borderColor: '#10B981',
-        backgroundColor: '#D1FAE5',
-      }}
-      resizeMode="cover"
-      accessibilityLabel="Avatar da assistente Dora"
-    />
+    <TouchableOpacity
+      onPress={() => setModalSobreDoraVisivel(true)}
+      activeOpacity={0.8}
+      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+      accessibilityRole="button"
+      accessibilityLabel="Conhecer a assistente Dora"
+    >
+      <Image
+        source={AVATAR_DORA_ASSET}
+        style={{
+          width: tamanho,
+          height: tamanho,
+          borderRadius: tamanho / 2,
+          borderWidth: 1.5,
+          borderColor: '#10B981',
+          backgroundColor: '#D1FAE5',
+        }}
+        resizeMode="cover"
+        accessibilityLabel="Avatar da assistente Dora"
+      />
+    </TouchableOpacity>
   );
 
   return (
@@ -413,7 +423,7 @@ export default function DoraScreen() {
 
             <View style={estilosDora.avatarWrapper}>
               {renderizarAvatarDora(42)}
-              <View style={estilosDora.pontoOnline} />
+              <View style={estilosDora.pontoOnline} pointerEvents="none" />
             </View>
 
             <View style={estilosDora.cabecalhoInfo}>
@@ -875,6 +885,152 @@ export default function DoraScreen() {
           </View>
         </View>
       </KeyboardAvoidingView>
+
+      <Modal
+        visible={modalSobreDoraVisivel}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalSobreDoraVisivel(false)}
+      >
+        <View style={estilosDora.modalSobreOverlay}>
+          <View
+            style={[
+              estilosDora.modalSobreCard,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <View style={estilosDora.modalSobreTopo}>
+              <TouchableOpacity
+                onPress={() => setModalSobreDoraVisivel(false)}
+                style={estilosDora.modalSobreBotaoFechar}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar apresentação da Dora"
+              >
+                <Feather name="x" size={22} color={theme.subtext} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={estilosDora.modalSobreCabecalhoAvatar}>
+                <Image
+                  source={AVATAR_DORA_ASSET}
+                  style={estilosDora.modalSobreImagem}
+                  resizeMode="cover"
+                  accessibilityLabel="Foto da assistente Dora"
+                />
+                <Text
+                  style={[
+                    estilosDora.modalSobreNome,
+                    { color: '#1E3A8A', fontSize: 20 * fontScale },
+                  ]}
+                >
+                  Oi! Eu sou a Dora 👋
+                </Text>
+                <Text
+                  style={[
+                    estilosDora.modalSobreCargo,
+                    { color: '#047857', fontSize: 12.5 * fontScale },
+                  ]}
+                >
+                  Assistente Inteligente • Doar & Guardar
+                </Text>
+              </View>
+
+              <View
+                style={[
+                  estilosDora.modalSobreBalaoFala,
+                  {
+                    backgroundColor:
+                      mode === 'dark' || mode === 'high-contrast' ? theme.background : '#F0FDF4',
+                    borderColor:
+                      mode === 'dark' || mode === 'high-contrast' ? theme.border : '#BBF7D0',
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: theme.text, fontSize: 13.5 * fontScale },
+                  ]}
+                >
+                  Eu sou a assistente virtual do{' '}
+                  <Text style={{ fontWeight: '800', color: '#1E3A8A' }}>Doar & Guardar</Text>,
+                  criada para ajudar você e toda a equipe da{' '}
+                  <Text style={{ fontWeight: '800' }}>Casa da Criança</Text> a cuidar do estoque de
+                  alimentos com praticidade e sem desperdícios!
+                </Text>
+
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: '#047857', fontWeight: '800', fontSize: 13 * fontScale, marginTop: 2 },
+                  ]}
+                >
+                  Veja o que eu consigo fazer por você no sistema:
+                </Text>
+
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: theme.text, fontSize: 13 * fontScale },
+                  ]}
+                >
+                  • <Text style={{ fontWeight: '800' }}>Sugerir receitas reais:</Text> olho o que já
+                  temos na despensa e indico preparos compatíveis usando ingredientes do estoque.
+                </Text>
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: theme.text, fontSize: 13 * fontScale },
+                  ]}
+                >
+                  • <Text style={{ fontWeight: '800' }}>Alertar validades (FEFO):</Text> mostro
+                  quais produtos e lotes vencem primeiro para garantirmos que nada estrague.
+                </Text>
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: theme.text, fontSize: 13 * fontScale },
+                  ]}
+                >
+                  • <Text style={{ fontWeight: '800' }}>Prever o consumo:</Text> calculo a duração
+                  estimada dos alimentos e aviso quando algum item precisa de reposição.
+                </Text>
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: theme.text, fontSize: 13 * fontScale },
+                  ]}
+                >
+                  • <Text style={{ fontWeight: '800' }}>Localizar nas prateleiras:</Text> informo
+                  exatamente em qual armário ou geladeira cada lote está guardado.
+                </Text>
+                <Text
+                  style={[
+                    estilosDora.modalSobreTextoFala,
+                    { color: theme.text, fontSize: 13 * fontScale },
+                  ]}
+                >
+                  • <Text style={{ fontWeight: '800' }}>Guiar pelo aplicativo:</Text> tiro dúvidas
+                  sobre cadastros, saídas e movimentações com atalhos diretos para as telas.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                onPress={() => setModalSobreDoraVisivel(false)}
+                style={estilosDora.modalSobreBotaoAcao}
+                accessibilityRole="button"
+                accessibilityLabel="Entendi, voltar para a conversa com a Dora"
+              >
+                <Feather name="message-circle" size={18} color="#FFFFFF" />
+                <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 14 * fontScale }}>
+                  Entendi, vamos conversar!
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

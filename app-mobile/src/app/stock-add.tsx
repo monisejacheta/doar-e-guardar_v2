@@ -168,6 +168,7 @@ export default function StockAddScreen() {
     }))
   );
   const [carregandoCategorias, setCarregandoCategorias] = useState(true);
+  const [dropdownCategoriasAberto, setDropdownCategoriasAberto] = useState(false);
   const [mostrarCategoriasOcultas, setMostrarCategoriasOcultas] = useState(false);
   const [modalNovaCategoriaVisivel, setModalNovaCategoriaVisivel] = useState(false);
   const [nomeNovaCategoria, setNomeNovaCategoria] = useState('');
@@ -284,6 +285,7 @@ export default function StockAddScreen() {
       setCategoria(res.nomeFinal);
       setNomeNovaCategoria('');
       setModalNovaCategoriaVisivel(false);
+      setDropdownCategoriasAberto(false);
       Alert.alert(
         'Nova Categoria Salva',
         res.sincronizadaAws
@@ -700,167 +702,259 @@ export default function StockAddScreen() {
     return obterPlaceholderPorCategoria(catNome || categoria);
   };
 
-  const renderBlocoCategorias = (permitirSelecionar: boolean) => (
-    <View style={{ marginBottom: 14 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 8,
-          marginBottom: 10,
-        }}
-      >
-        <View style={{ flex: 1, minWidth: 160 }}>
-          <Text style={{ fontSize: 13 * fontScale, fontWeight: '800', color: theme.text }}>
-            Categorias de Alimentos (DynamoDB)
-          </Text>
-          <Text style={{ fontSize: 11 * fontScale, color: theme.subtext, marginTop: 2 }}>
-            {categoriasVisiveis.length} categoria(s) ativa(s) • toque no olho para ocultar
-          </Text>
-        </View>
+  const renderBlocoCategorias = (permitirSelecionar: boolean) => {
+    const categoriaAtualItem = categoriasItens.find((c) => c.nome === categoria);
 
-        <TouchableOpacity
-          onPress={() => setModalNovaCategoriaVisivel(true)}
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="Adicionar Nova Categoria"
+    return (
+      <View style={{ marginBottom: 14 }}>
+        <View
           style={{
-            minHeight: 48,
-            paddingHorizontal: 14,
-            borderRadius: 12,
-            backgroundColor: '#10B981',
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 6,
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 8,
+            marginBottom: 10,
           }}
         >
-          <Feather name="plus-circle" size={16} color="#FFFFFF" />
-          <Text style={{ fontSize: 12.5 * fontScale, fontWeight: '800', color: '#FFFFFF' }}>
-            Nova Categoria
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <View style={{ flex: 1, minWidth: 160 }}>
+            <Text style={{ fontSize: 13 * fontScale, fontWeight: '800', color: theme.text }}>
+              Categorias de Alimentos (DynamoDB)
+            </Text>
+            <Text style={{ fontSize: 11 * fontScale, color: theme.subtext, marginTop: 2 }}>
+              {categoriasVisiveis.length} categoria(s) ativa(s) • toque para selecionar
+            </Text>
+          </View>
 
-      {carregandoCategorias && categoriasParaExibir.length === 0 ? (
-        <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: 10 }} />
-      ) : (
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-          {categoriasParaExibir.map((item) => {
-            const selecionada = categoria === item.nome;
-            return (
-              <View
-                key={item.id}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  minHeight: 48,
-                  borderRadius: 12,
-                  borderWidth: 1.5,
-                  borderColor: selecionada ? '#1E3A8A' : item.oculta ? '#D1D5DB' : '#E5E7EB',
-                  backgroundColor: selecionada ? '#1E3A8A14' : '#FFFFFF',
-                  opacity: item.oculta ? 0.65 : 1,
-                  overflow: 'hidden',
-                }}
-              >
-                <TouchableOpacity
-                  onPress={() => {
-                    if (permitirSelecionar || !item.oculta) {
-                      setCategoria(item.nome);
-                    }
-                  }}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Categoria ${item.nome}`}
+          <TouchableOpacity
+            onPress={() => setModalNovaCategoriaVisivel(true)}
+            accessible={true}
+            accessibilityRole="button"
+            accessibilityLabel="Adicionar Nova Categoria"
+            style={{
+              minHeight: 48,
+              paddingHorizontal: 14,
+              borderRadius: 12,
+              backgroundColor: '#10B981',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: 6,
+            }}
+          >
+            <Feather name="plus-circle" size={16} color="#FFFFFF" />
+            <Text style={{ fontSize: 12.5 * fontScale, fontWeight: '800', color: '#FFFFFF' }}>
+              Nova Categoria
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {carregandoCategorias && categoriasParaExibir.length === 0 ? (
+          <ActivityIndicator size="small" color={theme.primary} style={{ marginVertical: 10 }} />
+        ) : (
+          <View>
+            <TouchableOpacity
+              onPress={() => setDropdownCategoriasAberto((aberto) => !aberto)}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityState={{ expanded: dropdownCategoriasAberto }}
+              accessibilityLabel={`Categoria selecionada: ${categoria || 'Nenhuma'}. Toque para abrir a lista suspensa de categorias`}
+              activeOpacity={0.8}
+              style={{
+                minHeight: 50,
+                borderRadius: 12,
+                borderWidth: 1.5,
+                borderColor: dropdownCategoriasAberto ? '#1E3A8A' : '#CBD5E1',
+                backgroundColor: dropdownCategoriasAberto ? '#EFF6FF' : '#F8FAFC',
+                paddingHorizontal: 14,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: 10,
+              }}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+                <Feather name="tag" size={17} color="#1E3A8A" />
+                <Text
+                  numberOfLines={1}
                   style={{
-                    minHeight: 48,
-                    paddingLeft: 12,
-                    paddingRight: 6,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: 6,
+                    flex: 1,
+                    fontSize: 14 * fontScale,
+                    fontWeight: '700',
+                    color: categoria ? '#1E3A8A' : theme.subtext,
                   }}
                 >
-                  <Feather
-                    name={selecionada ? 'check-circle' : 'tag'}
-                    size={14}
-                    color={selecionada ? '#1E3A8A' : '#64748B'}
-                  />
-                  <Text
+                  {categoria || 'Selecione uma categoria...'}
+                </Text>
+                {categoriaAtualItem?.oculta && (
+                  <View
                     style={{
-                      fontSize: 12.5 * fontScale,
-                      fontWeight: selecionada ? '800' : '600',
-                      color: selecionada ? '#1E3A8A' : theme.text,
+                      paddingHorizontal: 8,
+                      paddingVertical: 2,
+                      borderRadius: 6,
+                      backgroundColor: '#E2E8F0',
                     }}
                   >
-                    {item.nome}
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => lidarAlternarOcultarCategoria(item)}
-                  accessible={true}
-                  accessibilityRole="button"
-                  accessibilityLabel={
-                    item.oculta
-                      ? `Reexibir categoria ${item.nome}`
-                      : `Ocultar categoria ${item.nome}`
-                  }
-                  style={{
-                    minWidth: 48,
-                    minHeight: 48,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderLeftWidth: 1,
-                    borderLeftColor: '#E5E7EB',
-                  }}
-                >
-                  <Feather
-                    name={item.oculta ? 'eye' : 'eye-off'}
-                    size={15}
-                    color={item.oculta ? '#10B981' : '#94A3B8'}
-                  />
-                </TouchableOpacity>
+                    <Text style={{ fontSize: 10 * fontScale, fontWeight: '700', color: '#475569' }}>
+                      Oculta
+                    </Text>
+                  </View>
+                )}
               </View>
-            );
-          })}
-        </View>
-      )}
 
-      {categoriasOcultas.length > 0 && (
-        <TouchableOpacity
-          onPress={() => setMostrarCategoriasOcultas((v) => !v)}
-          accessible={true}
-          accessibilityRole="button"
-          accessibilityLabel="Mostrar ou esconder categorias ocultas"
-          style={{
-            marginTop: 10,
-            minHeight: 48,
-            flexDirection: 'row',
-            alignItems: 'center',
-            gap: 6,
-            paddingHorizontal: 10,
-            borderRadius: 10,
-            backgroundColor: '#F8FAFC',
-            borderWidth: 1,
-            borderColor: '#E2E8F0',
-          }}
-        >
-          <Feather
-            name={mostrarCategoriasOcultas ? 'eye' : 'eye-off'}
-            size={15}
-            color="#64748B"
-          />
-          <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, fontWeight: '600' }}>
-            {mostrarCategoriasOcultas
-              ? 'Esconder categorias ocultas novamente'
-              : `${categoriasOcultas.length} categoria(s) oculta(s) • Toque para gerenciar`}
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
+              <Feather
+                name={dropdownCategoriasAberto ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#1E3A8A"
+              />
+            </TouchableOpacity>
+
+            {dropdownCategoriasAberto && (
+              <View
+                style={{
+                  marginTop: 6,
+                  borderRadius: 12,
+                  borderWidth: 1.5,
+                  borderColor: '#CBD5E1',
+                  backgroundColor: '#FFFFFF',
+                  overflow: 'hidden',
+                  elevation: 3,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 6,
+                }}
+              >
+                <ScrollView
+                  nestedScrollEnabled={true}
+                  style={{ maxHeight: 260 }}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {categoriasParaExibir.length === 0 ? (
+                    <View style={{ padding: 16, alignItems: 'center' }}>
+                      <Text style={{ fontSize: 12.5 * fontScale, color: theme.subtext }}>
+                        Nenhuma categoria ativa disponível.
+                      </Text>
+                    </View>
+                  ) : (
+                    categoriasParaExibir.map((item, idx) => {
+                      const selecionada = categoria === item.nome;
+                      return (
+                        <View
+                          key={item.id}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            minHeight: 48,
+                            backgroundColor: selecionada ? '#EFF6FF' : '#FFFFFF',
+                            borderBottomWidth: idx < categoriasParaExibir.length - 1 ? 1 : 0,
+                            borderBottomColor: '#F1F5F9',
+                            opacity: item.oculta ? 0.65 : 1,
+                          }}
+                        >
+                          <TouchableOpacity
+                            onPress={() => {
+                              if (permitirSelecionar || !item.oculta) {
+                                setCategoria(item.nome);
+                                setDropdownCategoriasAberto(false);
+                              }
+                            }}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: selecionada }}
+                            accessibilityLabel={`Categoria ${item.nome}`}
+                            style={{
+                              flex: 1,
+                              minHeight: 48,
+                              paddingHorizontal: 14,
+                              flexDirection: 'row',
+                              alignItems: 'center',
+                              gap: 10,
+                            }}
+                          >
+                            <Feather
+                              name={selecionada ? 'check-circle' : 'tag'}
+                              size={16}
+                              color={selecionada ? '#1E3A8A' : '#64748B'}
+                            />
+                            <Text
+                              style={{
+                                flex: 1,
+                                fontSize: 13.5 * fontScale,
+                                fontWeight: selecionada ? '800' : '600',
+                                color: selecionada ? '#1E3A8A' : theme.text,
+                              }}
+                            >
+                              {item.nome}
+                              {item.oculta ? ' (oculta)' : ''}
+                            </Text>
+                          </TouchableOpacity>
+
+                          <TouchableOpacity
+                            onPress={() => lidarAlternarOcultarCategoria(item)}
+                            accessible={true}
+                            accessibilityRole="button"
+                            accessibilityLabel={
+                              item.oculta
+                                ? `Reexibir categoria ${item.nome}`
+                                : `Ocultar categoria ${item.nome}`
+                            }
+                            style={{
+                              minWidth: 48,
+                              minHeight: 48,
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              borderLeftWidth: 1,
+                              borderLeftColor: '#F1F5F9',
+                            }}
+                          >
+                            <Feather
+                              name={item.oculta ? 'eye' : 'eye-off'}
+                              size={16}
+                              color={item.oculta ? '#10B981' : '#94A3B8'}
+                            />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })
+                  )}
+                </ScrollView>
+
+                {categoriasOcultas.length > 0 && (
+                  <TouchableOpacity
+                    onPress={() => setMostrarCategoriasOcultas((v) => !v)}
+                    accessible={true}
+                    accessibilityRole="button"
+                    accessibilityLabel="Mostrar ou esconder categorias ocultas"
+                    style={{
+                      minHeight: 48,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      paddingHorizontal: 14,
+                      backgroundColor: '#F8FAFC',
+                      borderTopWidth: 1,
+                      borderTopColor: '#E2E8F0',
+                    }}
+                  >
+                    <Feather
+                      name={mostrarCategoriasOcultas ? 'eye' : 'eye-off'}
+                      size={15}
+                      color="#64748B"
+                    />
+                    <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, fontWeight: '600' }}>
+                      {mostrarCategoriasOcultas
+                        ? 'Esconder categorias ocultas novamente'
+                        : `${categoriasOcultas.length} categoria(s) oculta(s) • Toque para gerenciar`}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>

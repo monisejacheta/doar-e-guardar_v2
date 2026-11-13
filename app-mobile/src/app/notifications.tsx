@@ -5,6 +5,7 @@ import {
   SafeAreaView,
   ScrollView,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -15,7 +16,7 @@ import { useAppTheme } from '../context/ThemeContext';
 import { estilosNotificacoes } from '../styles/notifications.styles';
 import { requisicaoApi } from '../services/api';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
-import { diasAteVencimento } from '../utils/dateValidation';
+import { diasAteVencimento, parseDataLocal } from '../utils/dateValidation';
 
 type TipoNotificacao =
   | 'vencido'
@@ -27,6 +28,16 @@ type TipoNotificacao =
   | 'ajuste'
   | 'campanha';
 
+type FiltroCategoriaNotificacao =
+  | 'todos'
+  | 'alertas'
+  | 'entrada'
+  | 'saida'
+  | 'movimentacao'
+  | 'campanha';
+
+type OrdenacaoNotificacao = 'prioridade' | 'recentes' | 'antigas' | 'az' | 'za';
+
 interface NotificacaoSistema {
   id: string;
   tipo: TipoNotificacao;
@@ -36,11 +47,57 @@ interface NotificacaoSistema {
   titulo: string;
   mensagem: string;
   dataLabel: string;
+  timestampMs: number;
   prioridade: number;
   rotaDestino: string;
 }
 
 const CHAVE_DISPENSADAS = '@dg_notificacoes_dispensadas_v1';
+
+const OPCOES_FILTRO_TIPO: { valor: FiltroCategoriaNotificacao; rotulo: string }[] = [
+  { valor: 'todos', rotulo: 'Todas' },
+  { valor: 'alertas', rotulo: 'Alertas' },
+  { valor: 'entrada', rotulo: 'Entradas' },
+  { valor: 'saida', rotulo: 'Saídas' },
+  { valor: 'movimentacao', rotulo: 'Movimentações' },
+  { valor: 'campanha', rotulo: 'Campanhas' },
+];
+
+const OPCOES_ORDENACAO: {
+  valor: OrdenacaoNotificacao;
+  rotulo: string;
+  icone: React.ComponentProps<typeof Feather>['name'];
+}[] = [
+  { valor: 'prioridade', rotulo: 'Urgência', icone: 'alert-circle' },
+  { valor: 'recentes', rotulo: 'Mais recentes', icone: 'arrow-down' },
+  { valor: 'antigas', rotulo: 'Mais antigas', icone: 'arrow-up' },
+  { valor: 'az', rotulo: 'Título A–Z', icone: 'type' },
+  { valor: 'za', rotulo: 'Título Z–A', icone: 'type' },
+];
+
+const normalizarTextoBusca = (texto: string): string =>
+  (texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const parseTimestampMs = (bruto?: string, fallback?: number): number => {
+  const texto = String(bruto || '').trim();
+  if (!texto) return fallback ?? 0;
+
+  const dtCompleta = new Date(texto);
+  if (!isNaN(dtCompleta.getTime())) {
+    return dtCompleta.getTime();
+  }
+
+  const dtLocal = parseDataLocal(texto);
+  if (dtLocal) {
+    return dtLocal.getTime();
+  }
+
+  return fallback ?? 0;
+};
 
 const formatarDataCurta = (bruto?: string): string => {
   if (!bruto) return 'Hoje';
@@ -61,6 +118,9 @@ export default function NotificationsScreen() {
   const [idsDispensados, setIdsDispensados] = useState<string[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
+  const [buscaTexto, setBuscaTexto] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState<FiltroCategoriaNotificacao>('todos');
+  const [ordenacao, setOrdenacao] = useState<OrdenacaoNotificacao>('prioridade');
 
   const carregarDispensadas = useCallback(async (): Promise<string[]> => {
     try {
@@ -106,6 +166,8 @@ export default function NotificationsScreen() {
         { nome: string; total: number; minimo: number }
       >();
 
+      const agoraMs = Date.now();
+
       lotes.forEach((lote, idx) => {
         const qtd = Number(lote.quantidade_atual_pacote || 0);
         if (qtd <= 0) return;
@@ -124,6 +186,10 @@ export default function NotificationsScreen() {
         const localDesc = normalizarDescricaoPrateleira(
           lote.local_descricao || lote.id_local_armazenamento || 'Estoque Geral',
         );
+        const timestampAlerta = parseTimestampMs(
+          lote.data_entrada_lote || dataValStr,
+          agoraMs,
+        );
 
         if (dias !== null && dias < 0) {
           lista.push({
@@ -135,6 +201,7 @@ export default function NotificationsScreen() {
             titulo: `${nomeProd} está vencido`,
             mensagem: `${qtd} pacote(s) em ${localDesc} (venceu há ${Math.abs(dias)} dia(s)). Remova do consumo imediatamente.`,
             dataLabel: 'Urgente',
+            timestampMs: agoraMs - idx,
             prioridade: 1,
             rotaDestino: '/stock-remove',
           });
@@ -148,6 +215,7 @@ export default function NotificationsScreen() {
             titulo: `${nomeProd} vence ${dias === 0 ? 'hoje' : `em ${dias} dia(s)`}`,
             mensagem: `Lote ${lote.numero_codigo_lote || 'S/N'} (${qtd} pcts) guardado em ${localDesc}. Priorize a saída (FEFO).`,
             dataLabel: dias === 0 ? 'Hoje' : `Em ${dias}d`,
+            timestampMs: timestampAlerta || agoraMs - idx,
             prioridade: 2,
             rotaDestino: '/stock-remove',
           });
@@ -166,6 +234,7 @@ export default function NotificationsScreen() {
             titulo: `Estoque baixo de ${info.nome}`,
             mensagem: `Restam apenas ${info.total} pacote(s) (mínimo recomendado: ${info.minimo}).`,
             dataLabel: 'Reposição',
+            timestampMs: agoraMs,
             prioridade: 3,
             rotaDestino: '/stock-add',
           });
@@ -192,6 +261,7 @@ export default function NotificationsScreen() {
           mov.id_usuario_responsavel || mov.responsavel || 'Equipe',
         );
         const dataHora = mov.data_hora_movimentacao || mov.data || '';
+        const timestampMov = parseTimestampMs(dataHora, agoraMs - (idx + 1) * 60000);
         const idBase = String(mov.id_movimentacao || mov.id_movimentacao_estoque || idx);
 
         if (tipoOp.includes('entrada') || tipoOp.includes('cadastr')) {
@@ -204,6 +274,7 @@ export default function NotificationsScreen() {
             titulo: `Entrada de ${nomeProd} (+${qtd} pcts)`,
             mensagem: `Registrado em ${localDesc} por ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
+            timestampMs: timestampMov,
             prioridade: 4,
             rotaDestino: '/stock-details',
           });
@@ -217,6 +288,7 @@ export default function NotificationsScreen() {
             titulo: `Saída de ${nomeProd} (-${qtd} pcts)`,
             mensagem: `${mov.justificativa_detalhe || mov.motivo_saida || 'Retirada registrada'} • por ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
+            timestampMs: timestampMov,
             prioridade: 4,
             rotaDestino: '/audit',
           });
@@ -230,6 +302,7 @@ export default function NotificationsScreen() {
             titulo: `Ajuste físico em ${nomeProd}`,
             mensagem: `${mov.justificativa_detalhe || 'Conferência de prateleira'} • ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
+            timestampMs: timestampMov,
             prioridade: 5,
             rotaDestino: '/audit',
           });
@@ -243,6 +316,7 @@ export default function NotificationsScreen() {
             titulo: `Transferência de ${nomeProd} (${qtd} pcts)`,
             mensagem: `Movido para ${localDesc} por ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
+            timestampMs: timestampMov,
             prioridade: 5,
             rotaDestino: '/stock-move',
           });
@@ -255,6 +329,7 @@ export default function NotificationsScreen() {
         const tituloCamp = String(camp.nome_campanha || camp.titulo || 'Campanha Solidária');
         const statusCamp = String(camp.status_campanha || 'Ativa');
         const idCamp = String(camp.id_campanha_doacao || idx);
+        const dataCamp = camp.criada_em || camp.data_inicio_campanha;
         lista.push({
           id: `notif-camp-${idCamp}`,
           tipo: 'campanha',
@@ -263,7 +338,8 @@ export default function NotificationsScreen() {
           cor: '#1E3A8A',
           titulo: tituloCamp,
           mensagem: `${camp.objetivo_descricao_campanha || 'Campanha ativa para arrecadação de alimentos.'} (Status: ${statusCamp})`,
-          dataLabel: formatarDataCurta(camp.criada_em || camp.data_inicio_campanha),
+          dataLabel: formatarDataCurta(dataCamp),
+          timestampMs: parseTimestampMs(dataCamp, agoraMs - 86400000),
           prioridade: 6,
           rotaDestino: '/settings-campaigns',
         });
@@ -307,6 +383,75 @@ export default function NotificationsScreen() {
     [notificacoesBrutas, idsDispensados],
   );
 
+  const notificacoesFiltradas = useMemo(() => {
+    const termo = normalizarTextoBusca(buscaTexto);
+
+    const filtradas = notificacoesVisiveis.filter((item) => {
+      if (filtroTipo === 'alertas') {
+        if (
+          item.tipo !== 'vencido' &&
+          item.tipo !== 'vencimento_proximo' &&
+          item.tipo !== 'estoque_baixo'
+        ) {
+          return false;
+        }
+      } else if (filtroTipo === 'movimentacao') {
+        if (item.tipo !== 'movimentacao' && item.tipo !== 'ajuste') {
+          return false;
+        }
+      } else if (filtroTipo !== 'todos' && item.tipo !== filtroTipo) {
+        return false;
+      }
+
+      if (termo) {
+        const alvo = normalizarTextoBusca(
+          `${item.titulo} ${item.mensagem} ${item.etiqueta} ${item.dataLabel}`,
+        );
+        if (!alvo.includes(termo)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    return [...filtradas].sort((a, b) => {
+      switch (ordenacao) {
+        case 'recentes':
+          return b.timestampMs - a.timestampMs || a.prioridade - b.prioridade;
+        case 'antigas':
+          return a.timestampMs - b.timestampMs || a.prioridade - b.prioridade;
+        case 'az':
+          return a.titulo.localeCompare(b.titulo, 'pt-BR', { sensitivity: 'base' });
+        case 'za':
+          return b.titulo.localeCompare(a.titulo, 'pt-BR', { sensitivity: 'base' });
+        case 'prioridade':
+        default:
+          return a.prioridade - b.prioridade || b.timestampMs - a.timestampMs;
+      }
+    });
+  }, [notificacoesVisiveis, buscaTexto, filtroTipo, ordenacao]);
+
+  const dispensarTodasNotificacoes = async () => {
+    if (notificacoesFiltradas.length === 0) return;
+    const idsParaDispensar = notificacoesFiltradas.map((item) => item.id);
+    const atualizadas = Array.from(new Set([...idsDispensados, ...idsParaDispensar]));
+    setIdsDispensados(atualizadas);
+    try {
+      await AsyncStorage.setItem(CHAVE_DISPENSADAS, JSON.stringify(atualizadas));
+    } catch {
+      // Silencioso
+    }
+  };
+
+  const limparFiltros = () => {
+    setBuscaTexto('');
+    setFiltroTipo('todos');
+    setOrdenacao('prioridade');
+  };
+
+  const possuiFiltroAtivo = buscaTexto.trim().length > 0 || filtroTipo !== 'todos';
+
   return (
     <SafeAreaView style={[estilosNotificacoes.container, { backgroundColor: theme.background }]}>
       <View
@@ -340,7 +485,9 @@ export default function NotificationsScreen() {
                 { color: theme.subtext, fontSize: 12 * fontScale },
               ]}
             >
-              {notificacoesVisiveis.length} aviso(s) do sistema
+              {possuiFiltroAtivo
+                ? `${notificacoesFiltradas.length} de ${notificacoesVisiveis.length} aviso(s)`
+                : `${notificacoesVisiveis.length} aviso(s) do sistema`}
             </Text>
           </View>
         </View>
@@ -353,6 +500,124 @@ export default function NotificationsScreen() {
         >
           <Feather name="settings" size={20} color="#1E3A8A" />
         </TouchableOpacity>
+      </View>
+
+      {/* Painel de Pesquisa, Filtro por Categoria e Ordenação */}
+      <View
+        style={[
+          estilosNotificacoes.painelFiltros,
+          { backgroundColor: theme.surface, borderBottomColor: theme.border },
+        ]}
+      >
+        <View
+          style={[
+            estilosNotificacoes.caixaBusca,
+            { backgroundColor: theme.background, borderColor: theme.border },
+          ]}
+        >
+          <Feather name="search" size={18} color={theme.subtext} />
+          <TextInput
+            value={buscaTexto}
+            onChangeText={setBuscaTexto}
+            placeholder="Pesquisar notificações..."
+            placeholderTextColor={theme.subtext}
+            accessibilityLabel="Pesquisar notificações"
+            style={[
+              estilosNotificacoes.inputBusca,
+              { color: theme.text, fontSize: 13.5 * fontScale },
+            ]}
+          />
+          {buscaTexto.length > 0 && (
+            <TouchableOpacity
+              onPress={() => setBuscaTexto('')}
+              style={estilosNotificacoes.botaoLimparBusca}
+              accessibilityRole="button"
+              accessibilityLabel="Limpar pesquisa"
+            >
+              <Feather name="x-circle" size={17} color={theme.subtext} />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={estilosNotificacoes.linhaChipsScroll}
+        >
+          {OPCOES_FILTRO_TIPO.map((op) => {
+            const ativo = filtroTipo === op.valor;
+            return (
+              <TouchableOpacity
+                key={op.valor}
+                onPress={() => setFiltroTipo(op.valor)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: ativo }}
+                style={[
+                  estilosNotificacoes.chipFiltro,
+                  {
+                    backgroundColor: ativo ? '#1E3A8A' : theme.background,
+                    borderColor: ativo ? '#1E3A8A' : theme.border,
+                  },
+                ]}
+              >
+                <Text
+                  style={[
+                    estilosNotificacoes.textoChipFiltro,
+                    {
+                      color: ativo ? '#FFFFFF' : theme.text,
+                      fontSize: 12 * fontScale,
+                    },
+                  ]}
+                >
+                  {op.rotulo}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={estilosNotificacoes.linhaChipsScroll}
+        >
+          <View style={{ justifyContent: 'center', paddingRight: 4 }}>
+            <Text style={{ color: theme.subtext, fontWeight: '700', fontSize: 11.5 * fontScale }}>
+              Ordenar:
+            </Text>
+          </View>
+          {OPCOES_ORDENACAO.map((op) => {
+            const ativo = ordenacao === op.valor;
+            return (
+              <TouchableOpacity
+                key={op.valor}
+                onPress={() => setOrdenacao(op.valor)}
+                accessibilityRole="button"
+                accessibilityState={{ selected: ativo }}
+                style={[
+                  estilosNotificacoes.chipFiltro,
+                  {
+                    backgroundColor: ativo ? '#10B98118' : theme.background,
+                    borderColor: ativo ? '#10B981' : theme.border,
+                  },
+                ]}
+              >
+                <Feather name={op.icone} size={13} color={ativo ? '#047857' : theme.subtext} />
+                <Text
+                  style={[
+                    estilosNotificacoes.textoChipFiltro,
+                    {
+                      color: ativo ? '#047857' : theme.subtext,
+                      fontSize: 11.5 * fontScale,
+                    },
+                  ]}
+                >
+                  {op.rotulo}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       <ScrollView
@@ -369,6 +634,31 @@ export default function NotificationsScreen() {
         }
         showsVerticalScrollIndicator={false}
       >
+        {!carregando && notificacoesFiltradas.length > 0 && (
+          <View style={estilosNotificacoes.barraAcoesLista}>
+            <Text style={{ color: theme.subtext, fontWeight: '700', fontSize: 12 * fontScale }}>
+              Exibindo {notificacoesFiltradas.length} notificação(ões)
+            </Text>
+
+            <TouchableOpacity
+              onPress={dispensarTodasNotificacoes}
+              accessibilityRole="button"
+              accessibilityLabel="Tirar todas as notificações de uma vez"
+              style={[
+                estilosNotificacoes.botaoLimparTodas,
+                { backgroundColor: '#FEF2F2', borderColor: '#FECACA' },
+              ]}
+            >
+              <Feather name="trash-2" size={14} color="#DC2626" />
+              <Text style={{ color: '#DC2626', fontWeight: '800', fontSize: 12 * fontScale }}>
+                {possuiFiltroAtivo
+                  ? `Tirar filtradas (${notificacoesFiltradas.length})`
+                  : 'Tirar todas'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {carregando ? (
           <ActivityIndicator size="large" color="#1E3A8A" style={{ marginTop: 32 }} />
         ) : notificacoesVisiveis.length === 0 ? (
@@ -400,8 +690,51 @@ export default function NotificationsScreen() {
               Todos os avisos recentes de entradas, saídas, validades e campanhas foram lidos.
             </Text>
           </View>
+        ) : notificacoesFiltradas.length === 0 ? (
+          <View
+            style={[
+              estilosNotificacoes.estadoVazio,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <Feather name="search" size={30} color="#1E3A8A" />
+            <Text
+              style={{
+                color: theme.text,
+                fontWeight: '800',
+                fontSize: 15 * fontScale,
+                marginTop: 12,
+              }}
+            >
+              Nenhum resultado encontrado
+            </Text>
+            <Text
+              style={{
+                color: theme.subtext,
+                fontSize: 12.5 * fontScale,
+                textAlign: 'center',
+                marginTop: 4,
+              }}
+            >
+              Tente outro termo de pesquisa ou limpe os filtros selecionados.
+            </Text>
+            <TouchableOpacity
+              onPress={limparFiltros}
+              style={[
+                estilosNotificacoes.botaoRestaurar,
+                { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE', marginTop: 14 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Limpar filtros de pesquisa"
+            >
+              <Feather name="x" size={15} color="#1E3A8A" />
+              <Text style={{ color: '#1E3A8A', fontWeight: '700', fontSize: 12.5 * fontScale }}>
+                Limpar filtros
+              </Text>
+            </TouchableOpacity>
+          </View>
         ) : (
-          notificacoesVisiveis.map((item) => (
+          notificacoesFiltradas.map((item) => (
             <View
               key={item.id}
               style={[
