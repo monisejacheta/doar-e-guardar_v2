@@ -113,7 +113,7 @@ export default function ReportsScreen() {
   }, [itensProporcao, totalGeral, circunferencia]);
 
   return (
-    <SafeAreaView style={[estilosRelatorios.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosRelatorios.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilosRelatorios.conteudoScroll}
         refreshControl={

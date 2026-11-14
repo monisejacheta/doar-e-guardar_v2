@@ -444,7 +444,7 @@ export default function StockMoveScreen() {
   const larguraCardGrid = Math.floor((larguraDisponivel - espacoEntreCards * (numColunas - 1)) / numColunas);
 
   return (
-    <SafeAreaView style={[estilosStockMove.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosStockMove.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilosStockMove.rolagem}
         keyboardShouldPersistTaps="handled"

@@ -190,7 +190,7 @@ export default function ReportsLossesScreen() {
   if (carregando) return <ActivityIndicator size="large" color={theme.danger} style={{ marginTop: 40 }} />;
 
   return (
-    <SafeAreaView style={[estilosReportsLosses.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosReportsLosses.container, { backgroundColor: 'transparent' }]}>
       <ScrollView contentContainerStyle={estilosReportsLosses.rolagem} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}

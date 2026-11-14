@@ -101,7 +101,7 @@ export default function DiagnosticScreen() {
   ];
 
   return (
-    <SafeAreaView style={[estilosDiagnostic.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosDiagnostic.container, { backgroundColor: 'transparent' }]}>
       <ScrollView contentContainerStyle={estilosDiagnostic.rolagem}>
         <TouchableOpacity
           accessible={true}

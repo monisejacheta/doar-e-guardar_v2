@@ -64,7 +64,7 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={[estilos.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilos.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilos.scroll}
         keyboardShouldPersistTaps="handled"

@@ -197,7 +197,7 @@ export default function DiagnosticDatabaseScreen() {
   }, [filtroTexto]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView contentContainerStyle={{ padding: 18, paddingBottom: 110 }}>
         {/* Botão Voltar */}
         <TouchableOpacity

@@ -205,7 +205,7 @@ export default function ReportsExpiryScreen() {
   const totalVencidosGlobal = dadosGrafico.find((d) => d.label === 'Vencidos')?.quantidade || 0;
 
   return (
-    <SafeAreaView style={[estilosReportsExpiry.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosReportsExpiry.container, { backgroundColor: 'transparent' }]}>
       <ScrollView contentContainerStyle={estilosReportsExpiry.rolagem} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}

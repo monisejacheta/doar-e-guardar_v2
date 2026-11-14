@@ -43,7 +43,7 @@ export default function AuditUserScreen() {
   }, [movimentacoes]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 96 }}>
         <TouchableOpacity
           accessible={true}

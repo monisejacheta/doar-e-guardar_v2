@@ -12,7 +12,7 @@ export default function SettingsScreen() {
   const { theme, tokens, fontScale } = useAppTheme();
 
   return (
-    <SafeAreaView style={[estilosSettings.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosSettings.container, { backgroundColor: 'transparent' }]}>
       <ScrollView contentContainerStyle={estilosSettings.rolagem}>
         <TouchableOpacity
           accessible={true}

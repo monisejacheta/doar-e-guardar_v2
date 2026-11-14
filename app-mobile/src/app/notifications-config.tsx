@@ -83,7 +83,7 @@ export default function NotificationsConfigScreen() {
 
   if (carregando) {
     return (
-      <SafeAreaView style={[estilos.container, { backgroundColor: theme.background }]}>
+      <SafeAreaView style={[estilos.container, { backgroundColor: 'transparent' }]}>
         <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 60 }} />
         <Text style={[estilos.carregandoTexto, { color: theme.subtext, fontSize: 14 * fontScale }]}>
           Carregando preferências…
@@ -120,7 +120,7 @@ export default function NotificationsConfigScreen() {
   ];
 
   return (
-    <SafeAreaView style={[estilos.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilos.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilos.scroll}
         keyboardShouldPersistTaps="handled"

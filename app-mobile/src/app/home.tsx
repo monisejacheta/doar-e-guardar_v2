@@ -349,7 +349,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={[estilosHome.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosHome.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilosHome.scrollContent}
         showsVerticalScrollIndicator={false}

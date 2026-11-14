@@ -38,7 +38,7 @@ export default function AccessibilityScreen() {
   };
 
   return (
-    <SafeAreaView style={[estilosAccessibility.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosAccessibility.container, { backgroundColor: 'transparent' }]}>
       <ScrollView contentContainerStyle={estilosAccessibility.rolagem}>
         <TouchableOpacity
           accessible={true}

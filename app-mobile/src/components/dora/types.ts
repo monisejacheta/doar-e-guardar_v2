@@ -8,6 +8,7 @@ import { ThemeColors } from '../../theme/themes';
 export type ModoTemaChat = 'light' | 'dark' | 'high-contrast';
 
 export const AVATAR_DORA_ASSET = require('../../../assets/images/dora-avatar.png');
+export const VIDEO_DORA_GREETING_ASSET = require('../../../assets/DoraGreeting.mp4');
 
 export interface MensagemChat {
   id: string;
@@ -50,7 +51,7 @@ export const criarCoresChatDora = (theme: ThemeColors, mode: ModoTemaChat): Core
 
   return {
     cabecalho: ehContraste ? theme.surface : '#1E3A8A',
-    canvas: modoEscuroOuContraste ? theme.background : '#EFEAE2',
+    canvas: 'transparent',
     divisorBg: modoEscuroOuContraste ? theme.surface : 'rgba(30, 58, 138, 0.10)',
     divisorTexto: ehContraste ? theme.accent : modoEscuroOuContraste ? '#93C5FD' : '#1E3A8A',
     balaoDoraBg: theme.surface,

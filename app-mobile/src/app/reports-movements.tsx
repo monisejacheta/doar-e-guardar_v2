@@ -226,7 +226,7 @@ export default function ReportsMovementsScreen() {
   };
 
   return (
-    <SafeAreaView style={[estilosReportsMove.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosReportsMove.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilosReportsMove.rolagem}
         keyboardShouldPersistTaps="handled"

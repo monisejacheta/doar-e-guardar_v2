@@ -1,14 +1,65 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Image, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { useAppTheme } from '../../context/ThemeContext';
 import { estilosDora } from '../../styles/dora.styles';
-import { AVATAR_DORA_ASSET, CoresChatDora } from './types';
+import { AVATAR_DORA_ASSET, CoresChatDora, VIDEO_DORA_GREETING_ASSET } from './types';
 
 interface DoraAboutModalProps {
   visible: boolean;
   coresChat: CoresChatDora;
   onClose: () => void;
+}
+
+function DoraGreetingVideo() {
+  const [erroVideo, setErroVideo] = useState(false);
+
+  const player = useVideoPlayer(VIDEO_DORA_GREETING_ASSET, (instancia) => {
+    instancia.loop = false;
+    instancia.muted = false;
+    instancia.play();
+  });
+
+  useEffect(() => {
+    const subFim = player.addListener('playToEnd', () => {
+      player.pause();
+    });
+
+    const subStatus = player.addListener('statusChange', ({ status }) => {
+      if (status === 'error') {
+        setErroVideo(true);
+      }
+    });
+
+    return () => {
+      subFim.remove();
+      subStatus.remove();
+    };
+  }, [player]);
+
+  if (erroVideo) {
+    return (
+      <Image
+        source={AVATAR_DORA_ASSET}
+        style={estilosDora.modalSobreImagem}
+        resizeMode="cover"
+        accessibilityLabel="Foto da assistente Dora"
+      />
+    );
+  }
+
+  return (
+    <View style={[estilosDora.modalSobreImagem, { overflow: 'hidden' }]}>
+      <VideoView
+        player={player}
+        style={{ width: '100%', height: '100%' }}
+        contentFit="cover"
+        nativeControls={false}
+        allowsPictureInPicture={false}
+      />
+    </View>
+  );
 }
 
 export function DoraAboutModal({ visible, coresChat, onClose }: DoraAboutModalProps) {
@@ -36,12 +87,7 @@ export function DoraAboutModal({ visible, coresChat, onClose }: DoraAboutModalPr
 
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={estilosDora.modalSobreCabecalhoAvatar}>
-              <Image
-                source={AVATAR_DORA_ASSET}
-                style={estilosDora.modalSobreImagem}
-                resizeMode="cover"
-                accessibilityLabel="Foto da assistente Dora"
-              />
+              {visible && <DoraGreetingVideo />}
               <Text
                 style={[
                   estilosDora.modalSobreNome,

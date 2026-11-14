@@ -453,7 +453,7 @@ export default function NotificationsScreen() {
   const possuiFiltroAtivo = buscaTexto.trim().length > 0 || filtroTipo !== 'todos';
 
   return (
-    <SafeAreaView style={[estilosNotificacoes.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosNotificacoes.container, { backgroundColor: 'transparent' }]}>
       <View
         style={[
           estilosNotificacoes.header,

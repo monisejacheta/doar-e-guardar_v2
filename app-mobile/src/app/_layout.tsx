@@ -1,16 +1,34 @@
 // src/app/_layout.tsx
 import React from 'react';
-import { Stack } from 'expo-router';
+import { ImageBackground, StyleSheet, View } from 'react-native';
+import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useAppTheme } from '../context/ThemeContext';
 import { BottomNavBar } from '../components/common/BottomNavBar';
 
+const WALLPAPER_APP_ASSET = require('../../assets/images/wallpaperApp.jpg');
+
 function RootNavigationLayout() {
   const { theme, mode } = useAppTheme();
+  const rotaAtual = usePathname();
+  const ehTelaLogin = rotaAtual === '/';
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: theme.background }}>
+      {!ehTelaLogin && (
+        <ImageBackground
+          source={WALLPAPER_APP_ASSET}
+          style={StyleSheet.absoluteFill}
+          imageStyle={{
+            opacity: mode === 'high-contrast' ? 0.12 : mode === 'dark' ? 0.18 : 0.25,
+            width: '100%',
+            height: '100%',
+          }}
+          resizeMode="cover"
+          pointerEvents="none"
+        />
+      )}
       <StatusBar
         style={mode === 'dark' || mode === 'high-contrast' ? 'light' : 'dark'}
       />
@@ -20,7 +38,7 @@ function RootNavigationLayout() {
           headerStyle: { backgroundColor: theme.primary },
           headerTintColor: '#FFFFFF',
           headerTitleStyle: { fontWeight: 'bold' },
-          contentStyle: { backgroundColor: theme.background },
+          contentStyle: { backgroundColor: ehTelaLogin ? theme.background : 'transparent' },
         }}
       >
         <Stack.Screen name="index" options={{ title: 'Doar & Guardar - Entrada' }} />
@@ -45,7 +63,7 @@ function RootNavigationLayout() {
       </Stack>
 
       <BottomNavBar />
-    </>
+    </View>
   );
 }
 

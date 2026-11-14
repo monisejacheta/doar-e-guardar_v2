@@ -144,7 +144,7 @@ export default function ReportsStockScreen() {
   if (carregando) return <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 40 }} />;
 
   return (
-    <SafeAreaView style={[estilosReportsStock.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosReportsStock.container, { backgroundColor: 'transparent' }]}>
       <ScrollView contentContainerStyle={estilosReportsStock.rolagem} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}

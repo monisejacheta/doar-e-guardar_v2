@@ -36,7 +36,6 @@ export function BottomNavBar() {
   // Itens do Menu Hambúrguer (Mais opções)
   const widgetsExtras = [
     { nome: 'Meu Perfil', icone: 'user', rota: '/profile', corTexto: '#8B5CF6', corFundo: '#F5F3FF' },
-    { nome: 'Relatórios', icone: 'bar-chart-2', rota: '/reports', corTexto: '#EF4444', corFundo: '#FEF2F2' },
     { nome: 'Auditoria', icone: 'clipboard', rota: '/audit', corTexto: '#14B8A6', corFundo: '#F0FDFA' },
     { nome: 'Ajustes', icone: 'settings', rota: '/settings', corTexto: '#64748B', corFundo: '#F8FAFC' },
     { nome: 'Sistema AWS', icone: 'activity', rota: '/diagnostic', corTexto: '#F59E0B', corFundo: '#FFFBEB' },

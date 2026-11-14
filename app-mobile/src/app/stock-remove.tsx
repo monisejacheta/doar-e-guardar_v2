@@ -381,7 +381,7 @@ export default function StockRemoveScreen() {
   };
 
   return (
-    <SafeAreaView style={[estilosStockRemove.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosStockRemove.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilosStockRemove.rolagem}
         keyboardShouldPersistTaps="handled"

@@ -25,7 +25,7 @@ export default function SettingsUsersScreen() {
   const { theme, tokens, fontScale } = useAppTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
         <TouchableOpacity
           accessible={true}

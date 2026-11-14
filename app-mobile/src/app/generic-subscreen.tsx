@@ -11,7 +11,7 @@ export default function GenericSubscreen() {
   const { theme, tokens, fontScale } = useAppTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView contentContainerStyle={{ padding: 20 }}>
         <Text style={{ fontWeight: 'bold', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 8 }}>
           {title || 'Módulo Operacional'}

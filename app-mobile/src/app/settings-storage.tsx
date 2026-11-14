@@ -188,7 +188,7 @@ export default function SettingsStorageScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView
         contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
         keyboardShouldPersistTaps="handled"

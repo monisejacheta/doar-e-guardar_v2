@@ -292,7 +292,7 @@ export default function AuditScreen() {
   };
 
   return (
-    <SafeAreaView style={[estilosAudit.container, { backgroundColor: theme.background }]}>
+    <SafeAreaView style={[estilosAudit.container, { backgroundColor: 'transparent' }]}>
       <ScrollView
         contentContainerStyle={estilosAudit.rolagem}
         refreshControl={

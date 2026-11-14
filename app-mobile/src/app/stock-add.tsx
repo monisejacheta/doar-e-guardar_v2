@@ -957,7 +957,7 @@ export default function StockAddScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView
         ref={scrollRef}
         contentContainerStyle={{ padding: 20, paddingBottom: 110 }}
