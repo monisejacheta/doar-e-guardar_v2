@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 export const estilosDiagnostic = StyleSheet.create({
   container: { flex: 1 },
-  rolagem: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 40 },
+  rolagem: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 105 },
   cabecalho: { marginBottom: 16 },
   titulo: { fontWeight: 'bold', marginBottom: 4 },
   subtitulo: { lineHeight: 20 },

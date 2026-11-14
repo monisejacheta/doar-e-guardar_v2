@@ -1,6 +1,7 @@
 // src/app/audit-user.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';

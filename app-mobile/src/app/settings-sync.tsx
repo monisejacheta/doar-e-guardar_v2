@@ -1,6 +1,7 @@
 // src/app/settings-sync.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';

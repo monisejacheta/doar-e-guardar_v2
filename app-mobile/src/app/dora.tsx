@@ -218,7 +218,7 @@ export default function DoraScreen() {
   );
 
   return (
-    <SafeAreaView style={[estilosDora.tela, { backgroundColor: coresChat.canvas }]}>
+    <SafeAreaView style={[estilosDora.tela, { backgroundColor: 'transparent' }]}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}

@@ -13,7 +13,7 @@ export default function ExploreRedirectScreen() {
   }, [roteador]);
 
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.background }}>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'transparent' }}>
       <ActivityIndicator size="large" color={theme.primary} />
     </View>
   );

@@ -1,6 +1,6 @@
 // src/app/_layout.tsx
 import React from 'react';
-import { ImageBackground, StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { Stack, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -13,21 +13,18 @@ function RootNavigationLayout() {
   const { theme, mode } = useAppTheme();
   const rotaAtual = usePathname();
   const ehTelaLogin = rotaAtual === '/';
+  const wallpaperOpacity = mode === 'high-contrast' ? 0.1 : mode === 'dark' ? 0.22 : 0.35;
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.background }}>
+    <View style={[styles.root, { backgroundColor: theme.background }]}>
       {!ehTelaLogin && (
-        <ImageBackground
-          source={WALLPAPER_APP_ASSET}
-          style={StyleSheet.absoluteFill}
-          imageStyle={{
-            opacity: mode === 'high-contrast' ? 0.12 : mode === 'dark' ? 0.18 : 0.25,
-            width: '100%',
-            height: '100%',
-          }}
-          resizeMode="cover"
-          pointerEvents="none"
-        />
+        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+          <Image
+            source={WALLPAPER_APP_ASSET}
+            style={[styles.wallpaper, { opacity: wallpaperOpacity }]}
+            resizeMode="cover"
+          />
+        </View>
       )}
       <StatusBar
         style={mode === 'dark' || mode === 'high-contrast' ? 'light' : 'dark'}
@@ -76,3 +73,13 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+  },
+  wallpaper: {
+    width: '100%',
+    height: '100%',
+  },
+});

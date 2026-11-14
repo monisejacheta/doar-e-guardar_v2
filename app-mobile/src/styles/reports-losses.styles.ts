@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 export const estilosReportsLosses = StyleSheet.create({
   container: { flex: 1 },
-  rolagem: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 },
+  rolagem: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 105 },
   
   botaoVoltar: {
     flexDirection: 'row',

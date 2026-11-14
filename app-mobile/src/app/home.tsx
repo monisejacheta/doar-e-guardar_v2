@@ -3,16 +3,15 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
   TextInput,
-  Modal,
   ActivityIndicator,
   RefreshControl,
   useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { auth } from '../services/firebaseConfig';
@@ -21,6 +20,7 @@ import { authService } from '../services/authService';
 import { resolverFotoProduto } from '../utils/imageUtils';
 import { normalizarDescricaoPrateleira } from '../services/storageLocations';
 import { useAppTheme } from '../context/ThemeContext';
+import { ProductDetailModal } from '../components/common/ProductDetailModal';
 import { estilosHome } from '../styles/home.styles';
 
 interface LoteItem {
@@ -740,111 +740,15 @@ export default function HomeScreen() {
         )}
       </ScrollView>
 
-      <Modal
+      <ProductDetailModal
         visible={modalLotesVisivel}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalLotesVisivel(false)}
-      >
-        <View style={estilosHome.modalOverlay}>
-          <View style={estilosHome.modalCard}>
-            <View style={estilosHome.modalCapaContainer}>
-              <TouchableOpacity
-                onPress={() => setModalLotesVisivel(false)}
-                style={estilosHome.modalCloseBtnAbsolute}
-                accessibilityLabel="Fechar"
-              >
-                <Feather name="x" size={18} color="#000000" />
-              </TouchableOpacity>
-
-              <Image
-                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
-                style={estilosHome.modalProdutoFotoCapa}
-                resizeMode="cover"
-              />
-            </View>
-
-            <View style={estilosHome.modalConteudoBox}>
-              <Text style={[estilosHome.modalProdutoNomeCenter, { color: theme.primary, fontSize: 17 * fontScale }]} numberOfLines={2}>
-                {produtoSelecionado?.nome_produto}
-              </Text>
-              <Text style={[estilosHome.modalProdutoMetaCenter, { color: theme.subtext, fontSize: 12 * fontScale }]}>
-                {produtoSelecionado?.categoria} • EAN: {produtoSelecionado?.codigo_barra_produto}
-              </Text>
-
-              <View style={estilosHome.modalResumoBox}>
-                <Text style={[estilosHome.modalResumoTexto, { color: theme.primary, fontSize: 12.5 * fontScale }]}>
-                  Estoque atual: <Text style={{ fontWeight: '800' }}>{produtoSelecionado?.quantidade_total} pacotes</Text>
-                  {produtoSelecionado && produtoSelecionado.quantidade_total < produtoSelecionado.estoque_minimo && (
-                    <Text style={{ color: '#EA580C', fontWeight: '700' }}>
-                      {' '}
-                      (Abaixo do mínimo de {produtoSelecionado.estoque_minimo})
-                    </Text>
-                  )}
-                </Text>
-              </View>
-
-              <Text style={[estilosHome.modalLotesTitulo, { color: theme.text, fontSize: 13 * fontScale }]}>
-                Nossos Lotes e Prateleiras AWS:
-              </Text>
-
-              <ScrollView style={{ maxHeight: 200 }} showsVerticalScrollIndicator={false}>
-                {produtoSelecionado?.lotes.map((lote) => {
-                  const statusLote = avaliarStatusLote(lote.data_validade_lote);
-                  const isVencido = statusLote === 'vencido';
-                  const isProximo = statusLote === 'proximo_vencimento';
-
-                  return (
-                    <View
-                      key={lote.id_lote_produto}
-                      style={[
-                        estilosHome.loteCardItem,
-                        {
-                          borderColor: isVencido ? '#EF4444' : isProximo ? '#FCD34D' : '#E2E8F0',
-                          backgroundColor: isVencido ? '#FEE2E2' : isProximo ? '#FEFDF8' : '#F8FAFC',
-                        },
-                      ]}
-                    >
-                      <View style={estilosHome.loteLinhaTopo}>
-                        <Text style={[estilosHome.loteCodigo, { color: theme.text, fontSize: 11.5 * fontScale }]}>
-                          Lote: {lote.numero_codigo_lote}
-                        </Text>
-                        <Text style={[estilosHome.loteQtd, { color: isVencido ? '#B91C1C' : theme.primary, fontSize: 11.5 * fontScale }]}>
-                          {lote.quantidade_atual_pacote} pacotes
-                        </Text>
-                      </View>
-
-                      <Text style={[estilosHome.loteLocal, { color: theme.subtext, fontSize: 10.5 * fontScale }]}>
-                        Prateleira: {lote.local_descricao}
-                      </Text>
-
-                      <Text
-                        style={[
-                          estilosHome.loteValidade,
-                          {
-                            color: isVencido ? '#DC2626' : isProximo ? '#D97706' : '#16A34A',
-                            fontSize: 10.5 * fontScale,
-                            fontWeight: isVencido || isProximo ? '700' : '500',
-                          },
-                        ]}
-                      >
-                        Validade: {lote.data_validade_lote} {isVencido ? '(Passou do prazo)' : isProximo ? '(Vence logo)' : '(No prazo)'}
-                      </Text>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-
-              <TouchableOpacity
-                onPress={() => setModalLotesVisivel(false)}
-                style={[estilosHome.modalBtnPrimario, { backgroundColor: theme.primary }]}
-              >
-                <Text style={[estilosHome.modalBtnTexto, { fontSize: 13 * fontScale }]}>Entendi, Fechar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        produto={produtoSelecionado}
+        onClose={() => setModalLotesVisivel(false)}
+        headerTitle="Detalhes do Produto"
+        accentColor={theme.primary}
+        lotesTitle="Nossos Lotes e Prateleiras AWS"
+        closeButtonLabel="Entendi, Fechar"
+      />
     </SafeAreaView>
   );
 }

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -14,12 +13,14 @@ import {
   RefreshControl,
   Vibration,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
 import { AppNumericInput } from '../components/common/AppNumericInput';
 import { AppButton } from '../components/common/AppButton';
+import { ProductDetailModal } from '../components/common/ProductDetailModal';
 import { estilosStockMove } from '../styles/stock-move.styles';
 import { requisicaoApi } from '../services/api';
 import { resolverFotoProduto } from '../utils/imageUtils';
@@ -135,25 +136,6 @@ export default function StockMoveScreen() {
       return new Date(`${y}-${m}-${d}T00:00:00`).getTime();
     }
     return new Date(`${dataStr}T00:00:00`).getTime();
-  };
-
-  const avaliarStatusLote = (dataLoteStr: string) => {
-    if (!dataLoteStr) return 'regular';
-    let dataVal: Date;
-    if (dataLoteStr.includes('/')) {
-      const [d, m, y] = dataLoteStr.split('/');
-      dataVal = new Date(`${y}-${m}-${d}T00:00:00`);
-    } else {
-      dataVal = new Date(`${dataLoteStr}T00:00:00`);
-    }
-    if (!isNaN(dataVal.getTime())) {
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
-      const diffDias = Math.ceil((dataVal.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDias < 0) return 'vencido';
-      if (diffDias <= 7) return 'proximo_vencimento';
-    }
-    return 'regular';
   };
 
   const carregarEstoqueEPrateleiras = useCallback(async (silencioso = false) => {
@@ -841,113 +823,16 @@ export default function StockMoveScreen() {
       </Modal>
 
       {/* MODAL 1: ESCOLHER QUAL LOTE MOVER */}
-      <Modal
+      <ProductDetailModal
         visible={modalLotesVisivel}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalLotesVisivel(false)}
-      >
-        <View style={estilosStockMove.modalOverlay}>
-          <View style={estilosStockMove.modalCard}>
-            <View style={estilosStockMove.modalCapaContainer}>
-              <TouchableOpacity
-                onPress={() => setModalLotesVisivel(false)}
-                style={estilosStockMove.modalCloseBtnAbsolute}
-                accessibilityLabel="Fechar"
-              >
-                <Feather name="x" size={18} color="#000000" />
-              </TouchableOpacity>
-
-              <Image
-                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
-                style={estilosStockMove.modalProdutoFotoCapa}
-                resizeMode="cover"
-              />
-            </View>
-
-            <View style={estilosStockMove.modalConteudoBox}>
-              <Text
-                style={[estilosStockMove.modalProdutoNomeCenter, { color: corAzulPrincipal, fontSize: 17 * fontScale }]}
-                numberOfLines={2}
-              >
-                {produtoSelecionado?.nome_produto}
-              </Text>
-              <Text style={[estilosStockMove.modalProdutoMetaCenter, { color: theme.subtext, fontSize: 12 * fontScale }]}>
-                {produtoSelecionado?.categoria} • EAN: {produtoSelecionado?.codigo_barra_produto}
-              </Text>
-
-              <View
-                style={[
-                  estilosStockMove.modalResumoBox,
-                  { backgroundColor: corAzulFundo, borderColor: corAzulBorda },
-                ]}
-              >
-                <Text style={[estilosStockMove.modalResumoTexto, { color: corAzulPrincipal, fontSize: 12.5 * fontScale }]}>
-                  Toque no lote que você deseja transferir de prateleira:
-                </Text>
-              </View>
-
-              <ScrollView style={{ maxHeight: 230 }} showsVerticalScrollIndicator={false}>
-                {produtoSelecionado?.lotes.map((lote) => {
-                  const statusLote = avaliarStatusLote(lote.data_validade_lote);
-                  const isVencido = statusLote === 'vencido';
-                  const isProximo = statusLote === 'proximo_vencimento';
-
-                  return (
-                    <TouchableOpacity
-                      key={lote.id_lote_produto}
-                      onPress={() => iniciarFluxoMover(lote)}
-                      style={[
-                        estilosStockMove.loteCardItem,
-                        {
-                          borderColor: isVencido ? '#EF4444' : isProximo ? '#FCD34D' : corAzulBorda,
-                          backgroundColor: isVencido ? '#FEE2E2' : isProximo ? '#FEFDF8' : '#F8FAFC',
-                        },
-                      ]}
-                    >
-                      <View style={estilosStockMove.loteLinhaTopo}>
-                        <Text style={[estilosStockMove.loteCodigo, { color: theme.text, fontSize: 12 * fontScale }]}>
-                          Lote: {lote.numero_codigo_lote}
-                        </Text>
-                        <Text
-                          style={[estilosStockMove.loteQtd, { color: corAzulPrincipal, fontSize: 12 * fontScale }]}
-                        >
-                          {lote.quantidade_atual_pacote} pct(s)
-                        </Text>
-                      </View>
-
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                        <Feather name="map-pin" size={12} color={corAzulPrincipal} style={{ marginRight: 4 }} />
-                        <Text
-                          style={[
-                            estilosStockMove.loteLocal,
-                            { color: theme.text, fontWeight: '700', fontSize: 11.5 * fontScale, marginTop: 0 },
-                          ]}
-                        >
-                          Prateleira Atual: {lote.local_descricao}
-                        </Text>
-                      </View>
-
-                      <Text
-                        style={[
-                          estilosStockMove.loteValidade,
-                          {
-                            color: isVencido ? '#DC2626' : isProximo ? '#D97706' : '#16A34A',
-                            fontSize: 10.5 * fontScale,
-                            fontWeight: '700',
-                          },
-                        ]}
-                      >
-                        Validade: {lote.data_validade_lote}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        produto={produtoSelecionado}
+        onClose={() => setModalLotesVisivel(false)}
+        headerTitle="Movimentar Lote"
+        accentColor={corAzulPrincipal}
+        instructionText="Toque no lote que você deseja transferir de prateleira."
+        lotesTitle="Lotes Disponíveis para Transferência"
+        onSelectLote={(lote) => iniciarFluxoMover(lote)}
+      />
 
       {/* MODAL 2: FORMULÁRIO DE TRANSFERÊNCIA ENTRE PRATELEIRAS AWS */}
       <Modal

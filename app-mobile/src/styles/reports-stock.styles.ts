@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 export const estilosReportsStock = StyleSheet.create({
   container: { flex: 1 },
-  rolagem: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 40 },
+  rolagem: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 105 },
   
   // Novo Botão de Voltar
   botaoVoltar: {

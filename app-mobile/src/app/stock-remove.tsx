@@ -3,7 +3,6 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import {
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Image,
@@ -16,6 +15,7 @@ import {
   Platform,
   Vibration,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
@@ -28,6 +28,7 @@ import { auth } from '../services/firebaseConfig';
 import { AppInput } from '../components/common/AppInput';
 import { AppNumericInput } from '../components/common/AppNumericInput';
 import { AppButton } from '../components/common/AppButton';
+import { ProductDetailModal } from '../components/common/ProductDetailModal';
 
 interface LoteItem {
   id_lote_produto: string;
@@ -645,85 +646,17 @@ export default function StockRemoveScreen() {
       </Modal>
 
       {/* Modal 1: Lista de Lotes (FEFO) */}
-      <Modal
+      <ProductDetailModal
         visible={modalLotesVisivel}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalLotesVisivel(false)}
-      >
-        <View style={estilosStockRemove.modalOverlay}>
-          <View style={estilosStockRemove.modalCard}>
-            <View style={estilosStockRemove.modalCapaContainer}>
-              <TouchableOpacity
-                onPress={() => setModalLotesVisivel(false)}
-                style={estilosStockRemove.modalCloseBtnAbsolute}
-              >
-                <Feather name="x" size={18} color="#000000" />
-              </TouchableOpacity>
-
-              <Image
-                source={resolverFotoProduto(produtoSelecionado?.foto_url, produtoSelecionado?.categoria)}
-                style={estilosStockRemove.modalProdutoFotoCapa}
-                resizeMode="cover"
-              />
-            </View>
-
-            <View style={estilosStockRemove.modalConteudoBox}>
-              <Text style={[estilosStockRemove.modalProdutoNomeCenter, { color: theme.danger, fontSize: 16 * fontScale }]} numberOfLines={2}>
-                {produtoSelecionado?.nome_produto}
-              </Text>
-              <Text style={[estilosStockRemove.modalProdutoMetaCenter, { color: theme.subtext, fontSize: 11.5 * fontScale }]}>
-                {produtoSelecionado?.categoria} • EAN: {produtoSelecionado?.codigo_barra_produto}
-              </Text>
-
-              <Text style={[estilosStockRemove.modalLotesTitulo, { color: theme.text, fontSize: 12.5 * fontScale }]}>
-                Selecione o Lote para dar baixa (Ordem FEFO):
-              </Text>
-
-              <ScrollView style={{ maxHeight: 220 }} showsVerticalScrollIndicator={false}>
-                {produtoSelecionado?.lotes.map((lote, index) => {
-                  const isMaisUrgente = index === 0;
-
-                  return (
-                    <TouchableOpacity
-                      key={lote.id_lote_produto}
-                      onPress={() => handleSelecionarLote(lote)}
-                      activeOpacity={0.7}
-                      style={[
-                        estilosStockRemove.loteCardItem,
-                        {
-                          backgroundColor: isMaisUrgente ? '#FFFBEB' : '#F8FAFC',
-                          borderColor: isMaisUrgente ? tokens.colors.accentAmber500 : theme.border,
-                        },
-                      ]}
-                    >
-                      <View style={estilosStockRemove.loteLinhaTopo}>
-                        <Text style={[estilosStockRemove.loteCodigo, { color: theme.text, fontSize: 11.5 * fontScale }]}>
-                          Lote: {lote.numero_codigo_lote}
-                        </Text>
-                        <Text style={[estilosStockRemove.loteQtd, { color: theme.primary, fontSize: 11.5 * fontScale }]}>
-                          {lote.quantidade_atual_pacote} pcts
-                        </Text>
-                      </View>
-
-                      <Text style={[estilosStockRemove.loteLocal, { color: theme.subtext, fontSize: 10.5 * fontScale }]}>
-                        Local: {lote.local_descricao}
-                      </Text>
-
-                      <View style={estilosStockRemove.loteValidadeBox}>
-                        <Feather name="calendar" size={14} color={tokens.colors.accentAmber500} />
-                        <Text style={[estilosStockRemove.loteValidadeTexto, { color: tokens.colors.accentAmber500, fontSize: 10.5 * fontScale }]}>
-                          Validade: {lote.data_validade_lote} {isMaisUrgente ? '(Prioridade FEFO)' : ''}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        produto={produtoSelecionado}
+        onClose={() => setModalLotesVisivel(false)}
+        headerTitle="Baixa de Estoque (FEFO)"
+        accentColor={theme.danger}
+        instructionText="Selecione o lote para dar baixa. Lotes com vencimento mais próximo aparecem primeiro."
+        lotesTitle="Lotes em Ordem FEFO"
+        highlightFefoFirst={true}
+        onSelectLote={(lote) => handleSelecionarLote(lote)}
+      />
 
       {/* Modal 2: Formulário de Saída */}
       <Modal

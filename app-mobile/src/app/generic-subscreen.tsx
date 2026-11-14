@@ -1,6 +1,7 @@
 // src/app/generic-subscreen.tsx
 import React from 'react';
-import { Text, View, SafeAreaView, ScrollView } from 'react-native';
+import { Text, View, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAppTheme } from '../context/ThemeContext';
 import { AppButton } from '../components/common/AppButton';

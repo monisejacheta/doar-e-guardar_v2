@@ -1,6 +1,7 @@
 // src/app/reports-expiry.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Text, View, SafeAreaView, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';

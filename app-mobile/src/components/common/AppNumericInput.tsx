@@ -121,20 +121,9 @@ export function AppNumericInput({
         >
           <Feather
             name="minus"
-            size={14}
+            size={18}
             color={podeDecrementar ? theme.primary : theme.subtext}
           />
-          <Text
-            style={[
-              styles.stepText,
-              {
-                color: podeDecrementar ? theme.primary : theme.subtext,
-                fontSize: 13 * fontScale,
-              },
-            ]}
-          >
-            -1
-          </Text>
         </TouchableOpacity>
 
         <TextInput
@@ -154,7 +143,7 @@ export function AppNumericInput({
           textAlign="center"
           accessibilityLabel={rotulo || 'Campo numérico'}
           accessibilityHint={
-            dicaAcessibilidade || 'Digite um número ou utilize os botões -1 e +1'
+            dicaAcessibilidade || 'Digite um número ou utilize os botões - e +'
           }
         />
 
@@ -178,20 +167,9 @@ export function AppNumericInput({
         >
           <Feather
             name="plus"
-            size={14}
+            size={18}
             color={podeIncrementar ? theme.secondary : theme.subtext}
           />
-          <Text
-            style={[
-              styles.stepText,
-              {
-                color: podeIncrementar ? theme.secondary : theme.subtext,
-                fontSize: 13 * fontScale,
-              },
-            ]}
-          >
-            +1
-          </Text>
         </TouchableOpacity>
       </View>
 
@@ -240,9 +218,6 @@ const styles = StyleSheet.create({
   },
   rightButton: {
     borderLeftWidth: 1,
-  },
-  stepText: {
-    fontWeight: '800',
   },
   input: {
     flex: 1,
