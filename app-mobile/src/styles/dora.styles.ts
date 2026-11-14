@@ -167,7 +167,22 @@ export const estilosDora = StyleSheet.create({
   },
   tituloReceita: {
     fontWeight: '800',
-    marginBottom: 4,
+    marginBottom: 6,
+  },
+  badgesReceitaLinha: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  badgeReceita: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   topicoReceita: {
     lineHeight: 19,
@@ -186,9 +201,20 @@ export const estilosDora = StyleSheet.create({
     gap: 8,
   },
   itemPredicao: {
-    padding: 8,
+    padding: 10,
     borderRadius: 10,
     borderWidth: 1,
+  },
+  itemPredicaoTopo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  badgePredicao: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
   },
   botaoAtalho: {
     marginTop: 10,
@@ -233,7 +259,6 @@ export const estilosDora = StyleSheet.create({
     justifyContent: 'center',
   },
   composerDock: {
-    paddingBottom: 68,
     borderTopWidth: 1,
   },
   composerRow: {

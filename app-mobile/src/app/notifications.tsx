@@ -276,7 +276,7 @@ export default function NotificationsScreen() {
             dataLabel: formatarDataCurta(dataHora),
             timestampMs: timestampMov,
             prioridade: 4,
-            rotaDestino: '/stock-details',
+            rotaDestino: '/home',
           });
         } else if (tipoOp.includes('saida') || tipoOp.includes('baixa') || tipoOp.includes('perda')) {
           lista.push({

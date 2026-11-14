@@ -29,7 +29,6 @@ function RootNavigationLayout() {
         <Stack.Screen name="stock-add" options={{ title: 'Entrada de Alimentos' }} />
         <Stack.Screen name="stock-remove" options={{ title: 'Saída e Baixa de Estoque' }} />
         <Stack.Screen name="stock-move" options={{ title: 'Movimentação Interna' }} />
-        <Stack.Screen name="stock-details" options={{ title: 'Consulta de Lotes' }} />
         <Stack.Screen name="reports" options={{ title: 'Central de Relatórios' }} />
         <Stack.Screen name="reports-stock" options={{ title: 'Relatório de Estoque Atual' }} />
         <Stack.Screen name="reports-movements" options={{ title: 'Relatório de Movimentações' }} />

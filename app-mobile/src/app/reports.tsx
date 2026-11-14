@@ -133,7 +133,7 @@ export default function ReportsScreen() {
             style={[
               estilosRelatorios.tituloPagina,
               {
-                color: '#1E3A8A',
+                color: theme.primary,
                 fontSize: tokens.typography.fontSize.xl * fontScale,
               },
             ]}
@@ -163,7 +163,7 @@ export default function ReportsScreen() {
           ]}
         >
           {carregando ? (
-            <ActivityIndicator size="large" color="#1E3A8A" style={{ marginVertical: 40 }} />
+            <ActivityIndicator size="large" color={theme.primary} style={{ marginVertical: 40 }} />
           ) : totalGeral === 0 ? (
             <View style={estilosRelatorios.estadoVazio}>
               <Feather name="pie-chart" size={34} color={theme.subtext} />
@@ -222,7 +222,7 @@ export default function ReportsScreen() {
                   <Text
                     style={[
                       estilosRelatorios.donutTotalValor,
-                      { color: '#1E3A8A', fontSize: 24 * fontScale },
+                      { color: theme.primary, fontSize: 24 * fontScale },
                     ]}
                   >
                     {totalGeral}
