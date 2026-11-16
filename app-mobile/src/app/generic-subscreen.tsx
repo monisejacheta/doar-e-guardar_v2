@@ -13,12 +13,12 @@ export default function GenericSubscreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <Text style={{ fontWeight: 'bold', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 8 }}>
-          {title || 'Módulo Operacional'}
+          {title || 'Área do Aplicativo'}
         </Text>
         <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale, marginBottom: 20, lineHeight: 20 }}>
-          {subtitle || 'Gerenciamento específico integrado à infraestrutura da Casa da Criança.'}
+          {subtitle || 'Cuidado simples e organizado para a despensa da Casa da Criança.'}
         </Text>
 
         <View
@@ -32,7 +32,7 @@ export default function GenericSubscreen() {
           }}
         >
           <Text style={{ color: theme.text, fontSize: 14 * fontScale, lineHeight: 22 }}>
-            Esta subtela opera conectada aos microsserviços serverless na AWS e banco relacional SQL, permitindo consultas, cadastros e atualizações auditadas em tempo real.
+            Esta tela ajuda você a consultar, cadastrar e manter as informações da despensa sempre atualizadas de forma simples e rápida.
           </Text>
         </View>
 

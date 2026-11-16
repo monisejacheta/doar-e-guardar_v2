@@ -28,94 +28,94 @@ interface InfoTabelaAws {
 
 const TABELAS_OFICIAIS_AWS: InfoTabelaAws[] = [
   {
-    nome: 'tb_lotesProdutos',
-    chaveParticao: 'id_lote_produto (S)',
-    descricao: 'Controle de lotes físicos, datas de validade (FEFO), quantidades e prateleiras.',
+    nome: 'Lotes de Alimentos',
+    chaveParticao: 'Lotes guardados',
+    descricao: 'Guarda os pacotes da despensa, datas de validade, quantidades e prateleiras.',
     modulo: 'Estoque / Lotes',
     status: 'Ativo',
   },
   {
-    nome: 'tb_locaisArmazenamento',
-    chaveParticao: 'id_local_armazenamento (S)',
-    descricao: 'Prateleiras e compartimentos físicos (armários e geladeiras homologados).',
-    modulo: 'Configurações / Locais',
+    nome: 'Prateleiras e Armários',
+    chaveParticao: 'Locais da despensa',
+    descricao: 'Armários, geladeiras, prateleiras e gavetas cadastrados para guardar os alimentos.',
+    modulo: 'Ajustes / Prateleiras',
     status: 'Ativo',
   },
   {
-    nome: 'tb_movimentacoesEstoques',
-    chaveParticao: 'id_movimentacao_estoque (S)',
-    descricao: 'Auditoria de entradas, transferências entre prateleiras e baixas/descartes.',
-    modulo: 'Auditoria / Histórico',
+    nome: 'Histórico de Movimentações',
+    chaveParticao: 'Entradas e saídas',
+    descricao: 'Registro de tudo o que entrou, saiu ou mudou de prateleira na despensa.',
+    modulo: 'Histórico',
     status: 'Ativo',
   },
   {
-    nome: 'tb_movimentacoes',
-    chaveParticao: 'id_movimentacao_estoque (S)',
-    descricao: 'Tabela de compatibilidade de movimentações operacionais.',
+    nome: 'Operações do Dia a Dia',
+    chaveParticao: 'Movimentações rápidas',
+    descricao: 'Apoio para registrar as trocas e saídas do dia a dia da cozinha.',
     modulo: 'Estoque / Operações',
     status: 'Ativo',
   },
   {
-    nome: 'tb_produtos',
-    chaveParticao: 'id_produto (S)',
-    descricao: 'Catálogo de produtos alimentícios, marcas, códigos de barras e estoque mínimo.',
-    modulo: 'Produtos / EAN',
+    nome: 'Catálogo de Produtos',
+    chaveParticao: 'Alimentos conhecidos',
+    descricao: 'Lista de produtos, marcas, códigos de barras e aviso de estoque mínimo.',
+    modulo: 'Produtos',
     status: 'Ativo',
   },
   {
-    nome: 'tb_categoriasAlimentos',
-    chaveParticao: 'id_categoria_alimento (S)',
-    descricao: 'Categorias de alimentos (Grãos, Laticínios, Massas, Óleos, Enlatados, etc).',
+    nome: 'Categorias de Alimentos',
+    chaveParticao: 'Tipos de alimentos',
+    descricao: 'Divisão dos alimentos (Grãos, Laticínios, Massas, Óleos, Enlatados, etc).',
     modulo: 'Categorias',
     status: 'Ativo',
   },
   {
-    nome: 'tb_motivosSaidas',
-    chaveParticao: 'id_motivo_saida (S)',
-    descricao: 'Justificativas regulamentares de saída (Consumo Cozinha, Vencimento, Avaria).',
+    nome: 'Motivos de Saída',
+    chaveParticao: 'Opções de baixa',
+    descricao: 'Motivos usados na saída de alimentos (Uso na Cozinha, Vencimento, Embalagem Danificada).',
     modulo: 'Saídas / Baixas',
     status: 'Ativo',
   },
   {
-    nome: 'tb_logsAuditorias',
-    chaveParticao: 'id_log_auditoria (S)',
-    descricao: 'Trilha de auditoria das ações administrativas e operacionais no estoque.',
-    modulo: 'Segurança / Logs',
+    nome: 'Conferências e Ajustes',
+    chaveParticao: 'Registro de contagens',
+    descricao: 'Histórico das conferências de prateleira e ajustes feitos pela equipe.',
+    modulo: 'Conferência',
     status: 'Ativo',
   },
   {
-    nome: 'tb_campanhasDoacoes',
-    chaveParticao: 'id_campanha_doacao (S)',
-    descricao: 'Campanhas públicas de arrecadação com metas e validação da diretoria.',
+    nome: 'Campanhas de Doações',
+    chaveParticao: 'Campanhas ativas',
+    descricao: 'Campanhas abertas para arrecadar alimentos para a Casa da Criança.',
     modulo: 'Campanhas Solidárias',
     status: 'Ativo',
   },
   {
-    nome: 'tb_itensCampanhas',
-    chaveParticao: 'id_item_campanha (S)',
-    descricao: 'Metas e quantidades específicas de alimentos vinculadas a cada campanha.',
+    nome: 'Itens das Campanhas',
+    chaveParticao: 'Metas de doação',
+    descricao: 'Alimentos e quantidades que precisamos arrecadar em cada campanha.',
     modulo: 'Itens de Campanhas',
     status: 'Ativo',
   },
   {
-    nome: 'tb_doadores',
-    chaveParticao: 'id_doador (S)',
-    descricao: 'Cadastro de doadores pessoa física e jurídica com conformidade LGPD.',
-    modulo: 'Doadores / LGPD',
+    nome: 'Doadores e Apoiadores',
+    chaveParticao: 'Parceiros',
+    descricao: 'Cadastro de pessoas e empresas que ajudam com doações.',
+    modulo: 'Doadores',
     status: 'Ativo',
   },
   {
-    nome: 'tb_instituicoes',
-    chaveParticao: 'id_instituicao (S)',
-    descricao: 'Dados cadastrais da Associação Casa da Criança e unidades vinculadas.',
+    nome: 'Instituições e Unidades',
+    chaveParticao: 'Unidades parceiras',
+    descricao: 'Dados da Casa da Criança e das unidades parceiras.',
     modulo: 'Instituição',
     status: 'Ativo',
   },
   {
-    nome: 'tb_representantesInstituicoes',
-    chaveParticao: 'id_representante_instituicao (S)',
-    descricao: 'Diretoria e voluntários autorizados para gestão e prestação de contas.',
-    modulo: 'Governança',
+    nome: 'Equipe e Coordenadores',
+    chaveParticao: 'Pessoas autorizadas',
+    descricao: 'Coordenação e voluntários que cuidam da despensa e das doações.',
+    modulo: 'Equipe',
     status: 'Ativo',
   },
 ];
@@ -203,13 +203,13 @@ export default function DiagnosticDatabaseScreen() {
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Voltar para Diagnóstico"
+          accessibilityLabel="Voltar para Status do App"
           onPress={() => roteador.back()}
           style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, minHeight: 44 }}
         >
           <Feather name="arrow-left" size={20} color={theme.primary} />
           <Text style={{ color: theme.primary, fontWeight: 'bold', marginLeft: 8, fontSize: 15 * fontScale }}>
-            Voltar ao Diagnóstico
+            Voltar
           </Text>
         </TouchableOpacity>
 
@@ -222,10 +222,10 @@ export default function DiagnosticDatabaseScreen() {
             marginBottom: 4,
           }}
         >
-          Tabelas AWS DynamoDB ({metricas.totalTabelas})
+          Dados Salvos da Despensa
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Monitoramento e validação de conectividade das 13 tabelas NoSQL da AWS para o estoque da Casa da Criança.
+          Veja se todas as áreas de cadastro do estoque da Casa da Criança estão funcionando e em dia.
         </Text>
 
         {/* Cards de Resumo */}
@@ -241,10 +241,10 @@ export default function DiagnosticDatabaseScreen() {
             }}
           >
             <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '600' }}>
-              Tabelas Ativas
+              Cadastros Ativos
             </Text>
             <Text style={{ color: theme.secondary, fontSize: 18 * fontScale, fontWeight: '800', marginTop: 2 }}>
-              13 de 13 Online
+              13 de 13 em dia
             </Text>
           </View>
           <View
@@ -258,10 +258,10 @@ export default function DiagnosticDatabaseScreen() {
             }}
           >
             <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '600' }}>
-              Lotes Ativos
+              Lotes Guardados
             </Text>
             <Text style={{ color: theme.primary, fontSize: 18 * fontScale, fontWeight: '800', marginTop: 2 }}>
-              {metricas.lotesAtivos} Lotes na AWS
+              {metricas.lotesAtivos} Lotes
             </Text>
           </View>
         </View>
@@ -284,7 +284,7 @@ export default function DiagnosticDatabaseScreen() {
           <TextInput
             value={filtroTexto}
             onChangeText={setFiltroTexto}
-            placeholder="Filtrar tabela por nome, chave ou módulo..."
+            placeholder="Buscar área de cadastro..."
             placeholderTextColor={theme.subtext}
             style={{ flex: 1, marginLeft: 10, color: theme.text, fontSize: 13.5 * fontScale }}
           />
@@ -299,7 +299,7 @@ export default function DiagnosticDatabaseScreen() {
           <View style={{ paddingVertical: 36, alignItems: 'center' }}>
             <ActivityIndicator size="large" color={theme.primary} />
             <Text style={{ color: theme.subtext, marginTop: 10, fontSize: 13 * fontScale }}>
-              Verificando conexões e integridade com a AWS...
+              Conferindo os dados salvos da despensa...
             </Text>
           </View>
         ) : (
@@ -339,7 +339,7 @@ export default function DiagnosticDatabaseScreen() {
                 </View>
 
                 <Text style={{ color: theme.text, fontSize: 12 * fontScale, marginTop: 4 }}>
-                  Chave de Partição:{' '}
+                  Função:{' '}
                   <Text style={{ fontWeight: '700', color: theme.secondary }}>{t.chaveParticao}</Text>
                 </Text>
 
@@ -349,10 +349,10 @@ export default function DiagnosticDatabaseScreen() {
 
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
                   <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontStyle: 'italic' }}>
-                    Módulo: {t.modulo}
+                    Área: {t.modulo}
                   </Text>
                   <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>
-                    Modo: Sob Demanda
+                    Sempre atualizado
                   </Text>
                 </View>
               </View>
@@ -361,7 +361,7 @@ export default function DiagnosticDatabaseScreen() {
         )}
 
         <AppButton
-          title="Revalidar Conexões na AWS"
+          title="Conferir Dados Novamente"
           variant="primary"
           loading={carregando}
           onPress={auditarBancos}

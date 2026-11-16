@@ -9,13 +9,13 @@ import { useAppTheme } from '../context/ThemeContext';
 const CAMPANHAS_ATIVAS = [
   {
     titulo: 'Arrecadação de Leite Integral UHT e Leite em Pó',
-    meta: 'Prioridade Nutricional Infantil',
-    moderacao: 'Homologada pela Diretoria (Regra W08)',
+    meta: 'Alimentação das Crianças',
+    moderacao: 'Campanha aprovada pela coordenação',
   },
   {
     titulo: 'Campanha Cesta Básica Solidária (Arroz, Feijão e Óleo)',
-    meta: 'Reposição de Estoque Seco',
-    moderacao: 'Homologada pela Diretoria (Regra W08)',
+    meta: 'Reposição da Despensa',
+    moderacao: 'Campanha aprovada pela coordenação',
   },
 ];
 
@@ -25,7 +25,7 @@ export default function SettingsCampaignsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -40,10 +40,10 @@ export default function SettingsCampaignsScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          6.3 Campanhas de Doações Ativas
+          Campanhas de Doações Ativas
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Campanhas públicas visíveis no Portal Web após aprovação administrativa (W08).
+          Campanhas abertas para receber doações da comunidade.
         </Text>
 
         {CAMPANHAS_ATIVAS.map((c) => (

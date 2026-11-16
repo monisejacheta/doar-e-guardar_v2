@@ -41,7 +41,7 @@ export default function AuditPeriodScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 96 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -53,10 +53,10 @@ export default function AuditPeriodScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }}>
-          Auditoria por Período
+          Histórico por Período
         </Text>
         <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale, marginTop: 4, marginBottom: 16 }}>
-          Filtre os registros transacionais da AWS por janela de tempo.
+          Filtre as movimentações da despensa pelos últimos dias ou meses.
         </Text>
 
         <View style={{ flexDirection: 'row', gap: 10, marginBottom: 16 }}>

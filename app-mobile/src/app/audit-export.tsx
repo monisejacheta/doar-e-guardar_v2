@@ -17,7 +17,7 @@ export default function AuditExportScreen() {
 
   const exportarLogsAuditoria = async () => {
     if (!emailDestino.trim() || !emailDestino.includes('@')) {
-      Alert.alert('E-mail Inválido', 'Informe um endereço de e-mail institucional válido para receber a trilha de auditoria.');
+      Alert.alert('E-mail Inválido', 'Informe um endereço de e-mail válido para receber o histórico.');
       return;
     }
 
@@ -37,21 +37,21 @@ export default function AuditExportScreen() {
           relatorio_completo: true,
           total_itens: movs.length,
           destinatarios: emailDestino.split(',').map((e) => e.trim()),
-          tipo_grafico: 'Auditoria de Movimentações',
+          tipo_grafico: 'Histórico de Movimentações',
         },
       });
 
       if (respEmail?.sucesso) {
         Alert.alert(
-          'Trilha de Auditoria Exportada!',
-          `O relatório contendo ${movs.length} registro(s) auditados na AWS foi enviado para ${emailDestino}.`
+          'Histórico Enviado!',
+          `O relatório com ${movs.length} registro(s) foi enviado para ${emailDestino}.`
         );
         setEmailDestino('');
       } else {
-        Alert.alert('Aviso', respEmail?.mensagem || 'Não foi possível despachar o relatório no momento.');
+        Alert.alert('Aviso', respEmail?.mensagem || 'Não foi possível enviar o relatório no momento.');
       }
     } catch {
-      Alert.alert('Erro', 'Falha de comunicação ao exportar os logs da AWS.');
+      Alert.alert('Ops!', 'Não foi possível enviar o histórico agora.');
     } finally {
       setEnviando(false);
     }
@@ -59,7 +59,7 @@ export default function AuditExportScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 96 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -71,10 +71,10 @@ export default function AuditExportScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }}>
-          Exportar Logs de Auditoria
+          Enviar Histórico por E-mail
         </Text>
         <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale, marginTop: 4, marginBottom: 18 }}>
-          Envie a trilha de auditoria completa (entradas, saídas com trava PERDA, ajustes físicos e transferências de prateleira) para o e-mail da diretoria.
+          Envie o histórico completo de entradas, saídas, ajustes de contagem e mudanças de prateleira por e-mail.
         </Text>
 
         <View
@@ -87,14 +87,14 @@ export default function AuditExportScreen() {
           }}
         >
           <AppInput
-            rotulo="E-mail(s) da Diretoria / Conselho Fiscal *"
-            placeholder="auditoria@casadacrianca.org.br"
+            rotulo="E-mail(s) para envio *"
+            placeholder="contato@casadacrianca.org.br"
             keyboardType="email-address"
             value={emailDestino}
             onChangeText={setEmailDestino}
           />
           <AppButton
-            title={enviando ? 'Gerando Arquivo...' : 'Exportar e Enviar por E-mail'}
+            title={enviando ? 'Enviando...' : 'Enviar Histórico por E-mail'}
             variant="primary"
             loading={enviando}
             onPress={exportarLogsAuditoria}

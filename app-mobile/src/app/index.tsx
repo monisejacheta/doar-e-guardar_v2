@@ -427,7 +427,7 @@ export default function LoginScreen() {
 
               <View style={styles.inputContainer}>
                 <Text style={[styles.inputLabel, { color: theme.text, fontSize: 13 * fontScale }]}>
-                  E-mail institucional
+                  Seu e-mail
                 </Text>
                 <View style={[styles.inputWrapper, { borderColor: theme.border, backgroundColor: theme.background }]}>
                   <Feather name="mail" size={18} color={theme.subtext} style={styles.inputIcon} />
@@ -533,7 +533,7 @@ export default function LoginScreen() {
             {conectandoGoogle ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4285F4" />
-                <Text style={styles.loadingText}>Autenticando no Firebase com Google...</Text>
+                <Text style={styles.loadingText}>Entrando com sua conta Google...</Text>
               </View>
             ) : (
               <ScrollView style={{ maxHeight: 390 }} showsVerticalScrollIndicator={false}>

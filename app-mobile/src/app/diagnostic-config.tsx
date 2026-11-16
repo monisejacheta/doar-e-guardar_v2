@@ -12,36 +12,35 @@ export default function DiagnosticConfigScreen() {
   const { theme, tokens, fontScale } = useAppTheme();
 
   const parametros = [
-    { chave: 'Endpoint AWS Lambda', valor: API_BASE_URL },
-    { chave: 'Timeout de Requisição HTTP', valor: '15.000 ms (AbortController ativo)' },
-    { chave: 'Prioridade 0 (Cache Nuvem)', valor: 'DynamoDB tb_produtos (instantâneo)' },
-    { chave: 'Prioridade 1 (API Externa)', valor: 'Open Food Facts BR / World v2 (timeout 5s)' },
-    { chave: 'Prioridade 2 (API Externa)', valor: 'Bluesoft Cosmos API (X-Cosmos-Token)' },
-    { chave: 'Prioridade 3 (API Fallback)', valor: 'Open Product Data / UPCitemdb Trial' },
-    { chave: 'Política de Prateleiras', valor: 'Normalização Canônica US06 (tb_locaisArmazenamento)' },
+    { chave: 'Conexão do Aplicativo', valor: 'Conectado à internet e atualizado automaticamente' },
+    { chave: 'Tempo Máximo de Espera', valor: 'Até 15 segundos para conexões mais lentas' },
+    { chave: 'Busca de Código de Barras', valor: 'Procura primeiro nos alimentos já conhecidos da despensa' },
+    { chave: 'Cadastro Automático', valor: 'Preenche nome, marca e foto quando o código é reconhecido' },
+    { chave: 'Organização de Prateleiras', valor: 'Padroniza nomes de armários, geladeiras, prateleiras e gavetas' },
+    { chave: 'Proteção de Validades', valor: 'Avisa sobre itens que vencem logo e impede entrada de vencidos' },
   ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Voltar para Diagnóstico"
+          accessibilityLabel="Voltar para Status do App"
           onPress={() => roteador.back()}
           style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, minHeight: 44 }}
         >
           <Feather name="arrow-left" size={20} color={theme.primary} />
           <Text style={{ color: theme.primary, fontWeight: 'bold', marginLeft: 8, fontSize: 15 * fontScale }}>
-            Voltar ao Diagnóstico
+            Voltar
           </Text>
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          Parâmetros e Integrações
+          Informações do Aplicativo
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Configurações ativas de comunicação entre o aplicativo mobile e a infraestrutura AWS Serverless.
+          Veja como o aplicativo funciona para ajudar no cuidado diário da despensa da Casa da Criança.
         </Text>
 
         {parametros.map((p) => (

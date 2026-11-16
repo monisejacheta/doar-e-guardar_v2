@@ -30,20 +30,20 @@ export default function SettingsScreen() {
 
         <View style={estilosSettings.cabecalho}>
           <Text style={[estilosSettings.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-            Configurações e Cadastros
+            Ajustes e Cadastros
           </Text>
           <Text style={[estilosSettings.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Gerencie prateleiras homologadas na AWS, categorias institucionais, motivos de baixa e sincronização.
+            Cuide das prateleiras da despensa, categorias de alimentos, motivos de saída e parceiros.
           </Text>
         </View>
 
         <Text style={[estilosSettings.categoriaSecao, { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale }]}>
-          Estrutura Física e Alimentos (AWS)
+          Organização da Despensa
         </Text>
 
         <ActionCard
-          titulo="Locais de Armazenamento (Prateleiras AWS)"
-          descricao="Cadastrar armários, geladeiras, prateleiras e gavetas sincronizados na tabela tb_locaisArmazenamento."
+          titulo="Prateleiras e Armários"
+          descricao="Cadastre e organize os armários, geladeiras, prateleiras e gavetas onde os alimentos ficam guardados."
           iconName="box"
           destaque={true}
           corDestaque={theme.secondary}
@@ -52,57 +52,57 @@ export default function SettingsScreen() {
 
         <ActionCard
           titulo="Categorias de Alimentos"
-          descricao="Conferir categorias institucionais e contagem real de lotes ativos por categoria na AWS."
+          descricao="Veja os tipos de alimentos e quantos pacotes temos guardados em cada categoria."
           iconName="clipboard"
           aoTocar={() => roteador.push('/settings-categories')}
         />
 
         <ActionCard
-          titulo="Motivos de Saída e Trava US07"
-          descricao="Regras de justificativa para consumo diário na cozinha e baixa auditada com trava PERDA."
+          titulo="Motivos de Saída"
+          descricao="Veja as opções para registrar o uso diário na cozinha, doações ou descartes."
           iconName="arrow-down-circle"
           aoTocar={() => roteador.push('/settings-reasons')}
         />
 
         <Text style={[estilosSettings.categoriaSecao, { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale }]}>
-          Comunidade e Doações (Portal Web & LGPD)
+          Comunidade e Doações
         </Text>
 
         <ActionCard
-          titulo="Doadores (Pessoa Física)"
-          descricao="Consultar apoiadores e política de anonimização LGPD de dados sensíveis."
+          titulo="Doadores e Apoiadores"
+          descricao="Cadastre e consulte as pessoas e empresas que ajudam a Casa da Criança com doações."
           iconName="user"
           aoTocar={() => roteador.push('/settings-donors')}
         />
 
         <ActionCard
           titulo="Instituições Parceiras"
-          descricao="Entidades homologadas vinculadas às doações recorrentes da Casa da Criança."
+          descricao="Veja as unidades e entidades parceiras que caminham junto com a Casa da Criança."
           iconName="box"
           aoTocar={() => roteador.push('/settings-institutions')}
         />
 
         <ActionCard
-          titulo="Campanhas de Doações Ativas"
-          descricao="Campanhas homologadas pela administração da ONG (Regra W08)."
+          titulo="Campanhas de Doações"
+          descricao="Acompanhe as campanhas de arrecadação de alimentos que estão abertas."
           iconName="bell"
           aoTocar={() => roteador.push('/settings-campaigns')}
         />
 
         <Text style={[estilosSettings.categoriaSecao, { color: theme.primary, fontSize: tokens.typography.fontSize.md * fontScale }]}>
-          Segurança e Nuvem
+          Equipe e Atualização
         </Text>
 
         <ActionCard
-          titulo="Usuários e Permissões"
-          descricao="Níveis de acesso de administradores, nutricionistas e operadores de estoque."
+          titulo="Equipe e Funções"
+          descricao="Veja o que cada pessoa da equipe pode fazer no aplicativo."
           iconName="settings"
           aoTocar={() => roteador.push('/settings-users')}
         />
 
         <ActionCard
-          titulo="Backup e Sincronização AWS"
-          descricao="Reconciliar prateleiras e verificar o status de sincronização com o DynamoDB."
+          titulo="Atualizar Dados do App"
+          descricao="Confira se as prateleiras, alimentos e movimentações estão todos atualizados."
           iconName="refresh-cw"
           aoTocar={() => roteador.push('/settings-sync')}
         />

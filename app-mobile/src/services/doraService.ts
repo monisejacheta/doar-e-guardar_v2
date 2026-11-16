@@ -559,8 +559,8 @@ export function responderConversaDora(
         `## Assistente de Estoque • ${totalPacotes} pacotes em ${lotesReais.length} lotes\n` +
         `• **Receitas inteligentes:** Combino apenas ingredientes disponíveis que harmonizam entre si.\n` +
         `• **Previsão de consumo:** Calculo quantos dias cada alimento ainda vai durar.\n` +
-        `• **Alerta de validade (FEFO):** Mostro o que vence primeiro e em qual prateleira está.\n` +
-        `• **Guia do app:** Explico o passo a passo de entradas, saídas, trocas e auditoria.`,
+        `• **Avisos de validade:** Mostro o que vence primeiro e em qual prateleira está.\n` +
+        `• **Guia do app:** Explico o passo a passo de entradas, saídas, trocas e conferência.`,
       sugestoesContinuacao: [
         '📈 Previsão de consumo do estoque',
         '🍲 Me sugere uma receita gostosa?',
@@ -664,7 +664,7 @@ export function responderConversaDora(
           `# Sugestão de Receita\n` +
           `## Sem ingredientes disponíveis\n` +
           `• **Despensa vazia:** Cadastre alimentos em **Entrada de Alimentos**.\n` +
-          `• **Automático:** Assim que houver saldo, monto receitas com os lotes FEFO.`,
+          `• **Automático:** Assim que houver pacotes, monto receitas usando o que vence antes.`,
         atalho: { rotulo: 'Registrar Entrada de Alimentos', rota: '/stock-add', icone: 'plus-circle' },
       };
     }
@@ -686,7 +686,7 @@ export function responderConversaDora(
 
     return {
       texto:
-        `# Receita Selecionada pelo Estoque (FEFO)\n` +
+        `# Receita Sugerida com o Estoque\n` +
         `## Prioridade de uso imediato\n` +
         `• **Ingrediente foco:** ${itemFoco.nome_produto}\n` +
         `• **Localização:** ${itemFoco.local_descricao}\n` +
@@ -735,8 +735,8 @@ export function responderConversaDora(
 
     const subtitulo =
       vencidos.length > 0 || proximos.length > 0
-        ? `## Itens prioritários na fila FEFO`
-        : `## Sem vencimentos urgentes — próximos lotes da fila`;
+        ? `## Itens para usar primeiro`
+        : `## Sem vencimentos urgentes — próximos lotes da despensa`;
 
     return {
       texto:
@@ -779,11 +779,11 @@ export function responderConversaDora(
       return {
         texto:
           `# Passo a Passo: Entrada no Estoque\n` +
-          `## Como cadastrar novos lotes\n` +
+          `## Como cadastrar novos alimentos\n` +
           `• **1. Acesse:** Toque em **Entrada de Alimentos** no menu Estoque.\n` +
-          `• **2. Escaneie:** Leia o código de barras com a câmera ou digite o EAN.\n` +
+          `• **2. Escaneie:** Aponte a câmera para o código de barras ou digite os números.\n` +
           `• **3. Preencha:** Use os botões **-1 / +1** para quantidade e o calendário para validade.\n` +
-          `• **4. Segurança:** O sistema bloqueia automaticamente produtos com validade vencida.`,
+          `• **4. Segurança:** O app avisa e não deixa guardar produtos que já venceram.`,
         atalho: { rotulo: 'Abrir Entrada de Alimentos', rota: '/stock-add', icone: 'plus-circle' },
         sugestoesContinuacao: ['🧭 Como faço para dar saída?', '🧭 Como mudo um item de prateleira?'],
       };
@@ -805,12 +805,12 @@ export function responderConversaDora(
     if (p.includes('auditoria') || p.includes('contagem') || p.includes('conferencia')) {
       return {
         texto:
-          `# Passo a Passo: Auditoria Física\n` +
+          `# Passo a Passo: Conferência das Prateleiras\n` +
           `## Como conferir e ajustar quantidades\n` +
-          `• **1. Acesse:** Abra a tela **Auditoria**.\n` +
-          `• **2. Escolha o item:** Toque no lote conferido na prateleira.\n` +
-          `• **3. Ajuste:** Informe a contagem física com **-1 / +1** e registre a justificativa.`,
-        atalho: { rotulo: 'Abrir Auditoria de Estoque', rota: '/audit', icone: 'clipboard' },
+          `• **1. Acesse:** Abra a tela **Histórico** no menu Mais.\n` +
+          `• **2. Escolha o item:** Toque no alimento que você contou na prateleira.\n` +
+          `• **3. Ajuste:** Informe a quantidade certa com **-1 / +1** e salve o motivo.`,
+        atalho: { rotulo: 'Abrir Histórico e Conferência', rota: '/audit', icone: 'clipboard' },
       };
     }
 
@@ -818,9 +818,9 @@ export function responderConversaDora(
       return {
         texto:
           `# Central de Relatórios\n` +
-          `## Indicadores proporcionais em tempo real\n` +
-          `• **Gráfico proporcional:** Visualize a distribuição do estoque por categoria.\n` +
-          `• **Atualização imediata:** Os dados refletem os lotes ativos do banco AWS.`,
+          `## Resumo do estoque sempre atualizado\n` +
+          `• **Gráfico por categoria:** Veja fácil a divisão dos alimentos na despensa.\n` +
+          `• **Sempre em dia:** Os números mostram tudo o que está guardado agora.`,
         atalho: { rotulo: 'Abrir Central de Relatórios', rota: '/reports', icone: 'bar-chart-2' },
       };
     }
@@ -829,10 +829,10 @@ export function responderConversaDora(
       return {
         texto:
           `# Passo a Passo: Saída do Estoque\n` +
-          `## Consumo, doação ou descarte seguro\n` +
+          `## Uso na cozinha, doação ou descarte\n` +
           `• **1. Acesse:** Abra **Saída / Baixa do Estoque**.\n` +
-          `• **2. Prioridade FEFO:** Escolha o lote indicado no topo.\n` +
-          `• **3. Trava de perda:** Para descartes, digite **PERDA** para confirmar.`,
+          `• **2. Escolha o pacote:** Dê preferência ao lote que vence mais cedo.\n` +
+          `• **3. Confirme:** Escolha a quantidade e o motivo da saída.`,
         atalho: { rotulo: 'Abrir Saída do Estoque', rota: '/stock-remove', icone: 'minus-circle' },
       };
     }
@@ -841,10 +841,10 @@ export function responderConversaDora(
       texto:
         `# Guia Rápido do Aplicativo\n` +
         `## Funcionalidades principais\n` +
-        `• **Entrada de Alimentos:** Cadastro com leitor EAN e trava anti-vencidos.\n` +
-        `• **Saída / Baixa:** Baixas para cozinha, repasse ou descarte.\n` +
-        `• **Movimentação Interna:** Troca entre armários e geladeiras.\n` +
-        `• **Auditoria:** Linha do tempo de ações e contagem física.`,
+        `• **Entrada de Alimentos:** Cadastro fácil pelo código de barras.\n` +
+        `• **Saída / Baixa:** Registro do que foi usado na cozinha, doado ou descartado.\n` +
+        `• **Movimentação Interna:** Troca de alimentos entre armários e geladeiras.\n` +
+        `• **Histórico e Conferência:** Consulta do que aconteceu e ajuste de contagem.`,
       sugestoesContinuacao: [
         '🧭 Como cadastro uma entrada?',
         '🧭 Como dou saída ou baixa?',

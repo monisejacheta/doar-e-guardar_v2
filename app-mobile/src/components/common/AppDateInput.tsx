@@ -120,7 +120,7 @@ export function AppDateInput({
     const ehPassado = data.getTime() < hoje.getTime();
     if (bloquearDatasPassadas && ehPassado) {
       setAvisoCalendario(
-        'Bloqueio de segurança: não é permitido selecionar produtos com data de validade vencida.',
+        'Atenção: não é possível escolher uma data de validade que já passou.',
       );
       return;
     }

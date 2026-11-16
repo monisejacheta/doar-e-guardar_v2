@@ -29,16 +29,16 @@ export function BottomNavBar() {
   const widgetsPrincipais = [
     { nome: 'Início', icone: 'home', rota: '/home', corTexto: '#3B82F6', corFundo: '#EFF6FF' },
     { nome: 'Estoque', icone: 'box', rota: '/stock', corTexto: '#10B981', corFundo: '#ECFDF5' },
-    { nome: 'Dora IA', icone: 'smile', rota: '/dora', corTexto: '#F59E0B', corFundo: '#FFFBEB' },
+    { nome: 'Dora', icone: 'smile', rota: '/dora', corTexto: '#F59E0B', corFundo: '#FFFBEB' },
     { nome: 'Avisos', icone: 'bell', rota: '/notifications', corTexto: '#8B5CF6', corFundo: '#F5F3FF' },
   ];
 
   // Itens do Menu Hambúrguer (Mais opções)
   const widgetsExtras = [
     { nome: 'Meu Perfil', icone: 'user', rota: '/profile', corTexto: '#8B5CF6', corFundo: '#F5F3FF' },
-    { nome: 'Auditoria', icone: 'clipboard', rota: '/audit', corTexto: '#14B8A6', corFundo: '#F0FDFA' },
+    { nome: 'Histórico', icone: 'clipboard', rota: '/audit', corTexto: '#14B8A6', corFundo: '#F0FDFA' },
     { nome: 'Ajustes', icone: 'settings', rota: '/settings', corTexto: '#64748B', corFundo: '#F8FAFC' },
-    { nome: 'Sistema AWS', icone: 'activity', rota: '/diagnostic', corTexto: '#F59E0B', corFundo: '#FFFBEB' },
+    { nome: 'Status do App', icone: 'activity', rota: '/diagnostic', corTexto: '#F59E0B', corFundo: '#FFFBEB' },
   ];
 
   const alturaBarra = 60 + (insets.bottom > 0 ? insets.bottom : 8);

@@ -72,7 +72,7 @@ export function ProductDetailModal<T extends ProductDetailLot>({
   headerTitle = 'Detalhes do Produto',
   accentColor,
   instructionText,
-  lotesTitle = 'Lotes e Prateleiras AWS',
+  lotesTitle = 'Lotes e Prateleiras',
   highlightFefoFirst = false,
   onSelectLote,
   closeButtonLabel = 'Fechar',
@@ -159,7 +159,7 @@ export function ProductDetailModal<T extends ProductDetailLot>({
               <View style={[styles.badge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
                 <Feather name="maximize" size={12} color={theme.subtext} />
                 <Text style={[styles.badgeText, { color: theme.subtext, fontSize: 11.5 * fontScale }]}>
-                  EAN: {produto.codigo_barra_produto || 'N/A'}
+                  Código: {produto.codigo_barra_produto || 'N/A'}
                 </Text>
               </View>
             </View>
@@ -280,7 +280,7 @@ export function ProductDetailModal<T extends ProductDetailLot>({
                 const statusLabel = isVencido
                   ? 'Vencido'
                   : isFefoUrgente
-                    ? 'Prioridade FEFO'
+                    ? 'Usar primeiro'
                     : isProximo
                       ? 'Vence logo'
                       : 'No prazo';

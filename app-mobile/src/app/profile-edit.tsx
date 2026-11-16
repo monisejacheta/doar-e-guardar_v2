@@ -21,7 +21,7 @@ export default function ProfileEditScreen() {
 
   const salvarAlteracoes = async () => {
     if (!nome.trim()) {
-      Alert.alert('Campo Obrigatório', 'Informe o nome de identificação do operador.');
+      Alert.alert('Campo Obrigatório', 'Digite o seu nome para continuar.');
       return;
     }
 
@@ -31,8 +31,8 @@ export default function ProfileEditScreen() {
         await updateProfile(auth.currentUser, { displayName: nome.trim() });
       }
       Alert.alert(
-        'Perfil Atualizado',
-        'Seus dados de identificação foram salvos e serão utilizados nos próximos registros de auditoria na AWS.',
+        'Perfil Atualizado!',
+        'Seu nome foi salvo com sucesso.',
         [{ text: 'Concluir', onPress: () => roteador.back() }]
       );
     } catch (e: any) {
@@ -44,7 +44,7 @@ export default function ProfileEditScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -62,12 +62,12 @@ export default function ProfileEditScreen() {
           Editar Perfil
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Atualize seu nome de operador exibido nas movimentações de prateleiras e baixas.
+          Atualize como seu nome aparece quando você registra entradas ou saídas na despensa.
         </Text>
 
         <View style={{ backgroundColor: theme.surface, padding: 16, borderRadius: 14, borderWidth: 1.5, borderColor: theme.border, marginBottom: 16 }}>
           <AppInput
-            rotulo="Nome Completo / Identificação na Auditoria"
+            rotulo="Seu Nome Completo"
             value={nome}
             onChangeText={setNome}
             placeholder="Ex: Maria Silva"

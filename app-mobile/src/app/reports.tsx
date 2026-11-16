@@ -138,7 +138,7 @@ export default function ReportsScreen() {
               },
             ]}
           >
-            Relatório de Proporção
+            Divisão do Estoque
           </Text>
           <Text
             style={[
@@ -149,7 +149,7 @@ export default function ReportsScreen() {
               },
             ]}
           >
-            Participação percentual de cada categoria no estoque ativo
+            Veja quanto temos de cada tipo de alimento guardado na despensa
           </Text>
         </View>
 
@@ -175,7 +175,7 @@ export default function ReportsScreen() {
                   marginTop: 12,
                 }}
               >
-                Sem dados proporcionais no estoque
+                Nenhum alimento guardado ainda
               </Text>
               <Text
                 style={{
@@ -185,7 +185,7 @@ export default function ReportsScreen() {
                   marginTop: 4,
                 }}
               >
-                Cadastre lotes em Entrada de Alimentos para visualizar as proporções.
+                Cadastre alimentos em Entrada de Alimentos para ver a divisão aqui.
               </Text>
             </View>
           ) : (

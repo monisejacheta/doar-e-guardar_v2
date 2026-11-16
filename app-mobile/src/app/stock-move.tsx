@@ -164,7 +164,7 @@ export default function StockMoveScreen() {
       setModalAvisoGenerico({
         visivel: true,
         titulo: 'Erro de Conexão',
-        mensagem: 'Falha ao buscar o estoque e as prateleiras cadastradas na AWS.',
+        mensagem: 'Não conseguimos carregar o estoque e as prateleiras agora. Verifique sua internet.',
       });
     } finally {
       setCarregando(false);
@@ -269,8 +269,8 @@ export default function StockMoveScreen() {
     } else {
       setModalAvisoGenerico({
         visivel: true,
-        titulo: 'Produto Não Encontrado no Estoque',
-        mensagem: `Nenhum lote ativo com o código EAN ${eanLido} foi encontrado para movimentação.`,
+        titulo: 'Produto Não Encontrado',
+        mensagem: `Não encontramos nenhum lote ativo com o código ${eanLido} para mudar de lugar.`,
       });
     }
   };
@@ -350,7 +350,7 @@ export default function StockMoveScreen() {
       });
 
       if (!respSaida || !respSaida.sucesso) {
-        throw new Error(respSaida?.mensagem || 'Falha ao dar baixa no lote de origem na AWS.');
+        throw new Error(respSaida?.mensagem || 'Não foi possível retirar os itens da prateleira atual.');
       }
 
       // 2. Gera um novo ID exclusivo e código de lote rastreável para a prateleira de destino
@@ -382,7 +382,7 @@ export default function StockMoveScreen() {
       });
 
       if (!respEntrada || !respEntrada.sucesso) {
-        throw new Error(respEntrada?.mensagem || 'Erro ao alocar os pacotes na prateleira de destino na AWS.');
+        throw new Error(respEntrada?.mensagem || 'Erro ao colocar os pacotes na nova prateleira.');
       }
 
       const qtdRestante = loteSelecionado.quantidade_atual_pacote - qtdMover;
@@ -402,8 +402,8 @@ export default function StockMoveScreen() {
       setModalMoverVisivel(false);
       setModalAvisoGenerico({
         visivel: true,
-        titulo: 'Falha na Movimentação',
-        mensagem: erro?.message || 'Não foi possível concluir a transferência na AWS.',
+        titulo: 'Não foi possível mover',
+        mensagem: erro?.message || 'Não conseguimos concluir a mudança de prateleira agora.',
       });
     } finally {
       setProcessandoMovimentacao(false);
@@ -458,7 +458,7 @@ export default function StockMoveScreen() {
           <TouchableOpacity
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Gerenciar prateleiras e locais de armazenamento na AWS"
+            accessibilityLabel="Gerenciar prateleiras e armários"
             onPress={() => roteador.push('/settings-storage' as any)}
             style={{
               flexDirection: 'row',
@@ -474,7 +474,7 @@ export default function StockMoveScreen() {
           >
             <Feather name="layers" size={14} color={corAzulPrincipal} />
             <Text style={{ color: corAzulPrincipal, fontWeight: '700', fontSize: 11.5 * fontScale }}>
-              Prateleiras AWS ({prateleirasAws.length})
+              Prateleiras ({prateleirasAws.length})
             </Text>
           </TouchableOpacity>
         </View>
@@ -494,7 +494,7 @@ export default function StockMoveScreen() {
               { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale },
             ]}
           >
-            Transfira pacotes entre os armários e geladeiras homologados no banco de dados da AWS.
+            Mude os pacotes de lugar entre os armários e geladeiras da despensa.
           </Text>
         </View>
 
@@ -514,7 +514,7 @@ export default function StockMoveScreen() {
           >
             <Feather name="check-circle" size={16} color={corAzulPrincipal} />
             <Text style={{ flex: 1, color: '#1E40AF', fontSize: 11 * fontScale, fontWeight: '600' }}>
-              Prateleiras sincronizadas com a AWS: {discrepanciasDetectadas} registro(s) com nomenclatura abreviada foram normalizados.
+              Prateleiras organizadas: {discrepanciasDetectadas} nome(s) abreviado(s) foram ajustados automaticamente.
             </Text>
           </View>
         )}
@@ -846,7 +846,7 @@ export default function StockMoveScreen() {
             <View style={[estilosStockMove.modalConteudoBox, { paddingTop: 20 }]}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <Text style={{ fontWeight: '800', fontSize: 16 * fontScale, color: corAzulPrincipal }}>
-                  Transferir de Prateleira (AWS)
+                  Mudar de Prateleira
                 </Text>
                 <TouchableOpacity onPress={() => setModalMoverVisivel(false)}>
                   <Feather name="x" size={20} color="#64748B" />
@@ -915,7 +915,7 @@ export default function StockMoveScreen() {
                   }}
                 >
                   <Text style={{ fontWeight: '700', color: theme.text, fontSize: 13 * fontScale }}>
-                    Prateleira de Destino (AWS) *
+                    Nova Prateleira *
                   </Text>
                   <TouchableOpacity
                     onPress={() => {
@@ -1048,7 +1048,7 @@ export default function StockMoveScreen() {
                     <ActivityIndicator size="large" color={corAzulPrincipal} />
                   ) : (
                     <AppButton
-                      title={vaiDividirLote ? 'Transferir e Dividir Lote' : 'Confirmar Transferência na AWS'}
+                      title={vaiDividirLote ? 'Separar e Mudar de Lugar' : 'Confirmar Mudança'}
                       variant="primary"
                       onPress={validarEIniciarTransferencia}
                       style={{ backgroundColor: corAzulPrincipal }}

@@ -35,7 +35,7 @@ export default function StockScreen() {
     {
       id: 'entrada',
       titulo: 'Entrada de Alimentos',
-      descricao: 'Registro de doações e compras com leitura de código de barras (3 APIs em cascata) ou cadastro manual.',
+      descricao: 'Cadastre doações e compras lendo o código de barras com a câmera ou digitando os dados.',
       rota: '/stock-add',
       icone: 'plus-circle',
       corDestaque: '#10B981',
@@ -44,7 +44,7 @@ export default function StockScreen() {
     {
       id: 'saida',
       titulo: 'Saída / Baixa',
-      descricao: 'Retirada de mantimentos para o preparo das refeições ou descarte com trava de segurança PERDA.',
+      descricao: 'Retire alimentos para preparar as refeições ou registre itens que estragaram ou venceram.',
       rota: '/stock-remove',
       icone: 'minus-circle',
       corDestaque: '#EF4444',
@@ -53,7 +53,7 @@ export default function StockScreen() {
     {
       id: 'mover',
       titulo: 'Movimentação Interna',
-      descricao: `Transferência de lotes entre as ${resumoPrateleiras.totalLocais} prateleiras (armários e geladeiras) cadastradas na AWS.`,
+      descricao: `Mude os alimentos de lugar entre as ${resumoPrateleiras.totalLocais} prateleiras (armários e geladeiras) cadastradas.`,
       rota: '/stock-move',
       icone: 'repeat',
       corDestaque: '#1E3A8A',
@@ -62,7 +62,7 @@ export default function StockScreen() {
     {
       id: 'relatorios',
       titulo: 'Relatórios',
-      descricao: 'Gráfico de proporção por categoria e visão consolidada dos mantimentos ativos.',
+      descricao: 'Veja de um jeito fácil a quantidade e a divisão dos alimentos guardados na despensa.',
       rota: '/reports',
       icone: 'bar-chart-2',
       corDestaque: '#EF4444',
@@ -70,8 +70,8 @@ export default function StockScreen() {
     },
     {
       id: 'prateleiras',
-      titulo: 'Prateleiras e Armários (AWS)',
-      descricao: 'Gerenciamento e homologação dos compartimentos físicos conectados ao banco de dados.',
+      titulo: 'Prateleiras e Armários',
+      descricao: 'Adicione, organize ou remova os armários, geladeiras e prateleiras onde tudo fica guardado.',
       rota: '/settings-storage',
       icone: 'layers',
       corDestaque: '#0284C7',
@@ -84,7 +84,7 @@ export default function StockScreen() {
       <ScrollView
         contentContainerStyle={{
           padding: 20,
-          paddingBottom: 96,
+          paddingBottom: 110,
         }}
         showsVerticalScrollIndicator={false}
       >
@@ -99,7 +99,7 @@ export default function StockScreen() {
               marginBottom: 4,
             }}
           >
-            Gestão Operacional • Doar & Guardar
+            Cuidado com a Despensa • Doar & Guardar
           </Text>
           <Text
             style={{
@@ -118,7 +118,7 @@ export default function StockScreen() {
               lineHeight: 18,
             }}
           >
-            Selecione uma das ações operacionais abaixo para atualizar, transferir ou auditar os mantimentos na AWS ({resumoPrateleiras.totalPacotes} pacotes alocados em {resumoPrateleiras.totalLocais} prateleiras).
+            Escolha uma opção abaixo para registrar entradas, saídas ou organizar os alimentos ({resumoPrateleiras.totalPacotes} pacotes guardados em {resumoPrateleiras.totalLocais} prateleiras).
           </Text>
         </View>
 

@@ -11,19 +11,19 @@ const MOTIVOS_HOMOLOGADOS = [
     id: 'Consumo na Cozinha',
     titulo: '🍲 Consumo Diário na Cozinha',
     exigeTravaPerda: false,
-    regra: 'Baixa operacional padrão para preparo de refeições das crianças (prioridade FEFO).',
+    regra: 'Saída normal para o preparo das refeições das crianças (dando preferência ao que vence antes).',
   },
   {
     id: 'Vencimento (Descarte)',
-    titulo: '⚠️ Descarte por Vencimento (US07)',
+    titulo: '⚠️ Descarte por Vencimento',
     exigeTravaPerda: true,
-    regra: 'Exige confirmação explícita digitando PERDA e registra alerta no Relatório de Perdas e Descartes.',
+    regra: 'Usado quando um alimento passa da validade e precisa ser retirado da prateleira.',
   },
   {
     id: 'Avaria / Embalagem Rasgada',
-    titulo: '📦 Descarte por Avaria ou Violação (US07)',
+    titulo: '📦 Descarte por Embalagem Danificada',
     exigeTravaPerda: true,
-    regra: 'Exige confirmação explícita digitando PERDA para rastreabilidade em auditoria.',
+    regra: 'Usado quando o pacote rasga ou estraga e não pode mais ser usado na cozinha.',
   },
 ];
 
@@ -33,7 +33,7 @@ export default function SettingsReasonsScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -48,10 +48,10 @@ export default function SettingsReasonsScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          6.7 Motivos de Saída (US07)
+          Motivos de Saída
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Justificativas oficiais exigidas na tela de Dar Baixa (`stock-remove`) e auditadas na AWS.
+          Veja as opções disponíveis na hora de dar baixa em um alimento do estoque.
         </Text>
 
         {MOTIVOS_HOMOLOGADOS.map((m) => (
@@ -76,7 +76,7 @@ export default function SettingsReasonsScreen() {
                 color: m.exigeTravaPerda ? theme.danger : theme.secondary,
               }}
             >
-              {m.exigeTravaPerda ? '🔒 TRAVA DE SEGURANÇA "PERDA" ATIVA' : '✅ FLUXO RÁPIDO DE CONSUMO'}
+              {m.exigeTravaPerda ? '📋 FICA REGISTRADO NO RELATÓRIO DE DESCARTES' : '✅ SAÍDA RÁPIDA PARA USO'}
             </Text>
           </View>
         ))}

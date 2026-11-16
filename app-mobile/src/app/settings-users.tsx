@@ -8,16 +8,16 @@ import { useAppTheme } from '../context/ThemeContext';
 
 const PERFIS_ACESSO = [
   {
-    papel: 'Administrador / Diretoria',
-    permissoes: 'Acesso total: relatórios PDF, auditoria, cadastro/exclusão de prateleiras AWS e moderação web.',
+    papel: 'Coordenação / Diretoria',
+    permissoes: 'Acesso completo: relatórios, histórico, cadastro de prateleiras e acompanhamento das campanhas.',
   },
   {
-    papel: 'Operador de Estoque / Cozinha',
-    permissoes: 'Entrada de produtos via código de barras, transferência entre prateleiras e baixa FEFO.',
+    papel: 'Equipe de Estoque e Cozinha',
+    permissoes: 'Entrada de alimentos pelo código de barras, mudança de prateleira e baixa de uso diário.',
   },
   {
-    papel: 'Voluntário de Triagem',
-    permissoes: 'Conferência de validades, leitura de EAN e consulta à Assistente Dora.',
+    papel: 'Voluntários de Apoio',
+    permissoes: 'Conferência de prazos de validade, leitura de códigos de barras e conversa com a Dora.',
   },
 ];
 
@@ -27,7 +27,7 @@ export default function SettingsUsersScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -42,10 +42,10 @@ export default function SettingsUsersScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          6.6 Usuários e Permissões
+          Equipe e Funções
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Política de controle de acesso baseado em papéis (RBAC) da Casa da Criança.
+          Veja como organizamos as funções de cada pessoa que usa o aplicativo na Casa da Criança.
         </Text>
 
         {PERFIS_ACESSO.map((p) => (

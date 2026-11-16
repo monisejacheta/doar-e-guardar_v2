@@ -581,13 +581,13 @@ export default function HomeScreen() {
 
                   <View style={{ flex: 1, paddingHorizontal: 10 }}>
                     <View style={estilosHome.tituloComAlertaRow}>
-                      <Text style={[estilosHome.produtoNome, { color: theme.text, fontSize: 13 * fontScale }]} numberOfLines={1}>
+                      <Text style={[estilosHome.produtoNome, { color: theme.text, fontSize: 13 * fontScale, flexShrink: 1 }]} numberOfLines={1}>
                         {item.nome_produto}
                       </Text>
                       {item.criticidade === 'abaixo_minimo' && <Feather name="alert-triangle" size={14} color="#D97706" style={{ marginLeft: 4 }} />}
                     </View>
                     <Text style={[estilosHome.produtoMeta, { color: theme.subtext, fontSize: 10.5 * fontScale }]} numberOfLines={1}>
-                      {item.categoria} • EAN: {item.codigo_barra_produto}
+                      {item.categoria} • Código: {item.codigo_barra_produto}
                     </Text>
                     <Text
                       style={[
@@ -746,7 +746,7 @@ export default function HomeScreen() {
         onClose={() => setModalLotesVisivel(false)}
         headerTitle="Detalhes do Produto"
         accentColor={theme.primary}
-        lotesTitle="Nossos Lotes e Prateleiras AWS"
+        lotesTitle="Lotes e Prateleiras"
         closeButtonLabel="Entendi, Fechar"
       />
     </SafeAreaView>

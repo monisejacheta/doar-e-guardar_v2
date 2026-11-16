@@ -71,7 +71,7 @@ export default function NotificationsConfigScreen() {
       await AsyncStorage.setItem(CHAVE_PREFERENCIAS_ALERTA, JSON.stringify(preferencias));
       Alert.alert(
         'Preferências Salvas',
-        'Regras de alerta FEFO atualizadas com sucesso.',
+        'Seus avisos de validade e estoque foram atualizados.',
         [{ text: 'OK', onPress: () => roteador.back() }],
       );
     } catch (erro) {
@@ -101,8 +101,8 @@ export default function NotificationsConfigScreen() {
     },
     {
       campo: 'alertaVencimento30d' as keyof PreferenciasAlerta,
-      titulo: 'Alerta Preventivo FEFO (≤ 30 dias)',
-      descricao: 'Sinaliza lotes em âmbar para priorizar o consumo na cozinha.',
+      titulo: 'Aviso Antecipado (até 30 dias para vencer)',
+      descricao: 'Destaca os pacotes em amarelo para ajudar a usar primeiro na cozinha.',
       corAtivo: tokens.colors.accentAmber500,
     },
     {
@@ -140,10 +140,10 @@ export default function NotificationsConfigScreen() {
         </TouchableOpacity>
 
         <Text style={[estilos.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-          Configurar Alertas de Validade
+          Configurar Avisos
         </Text>
         <Text style={[estilos.subtitulo, { color: theme.subtext, fontSize: 13 * fontScale }]}>
-          Defina quais regras preventivas FEFO e de estoque mínimo devem gerar avisos prioritários.
+          Escolha quais avisos de validade e de estoque baixo você quer receber no aplicativo.
         </Text>
 
         {/* Card de Switches */}
@@ -180,7 +180,7 @@ export default function NotificationsConfigScreen() {
           accessible
           accessibilityRole="button"
           accessibilityLabel="Salvar Preferências de Alerta"
-          accessibilityHint="Persiste as configurações de alerta FEFO no dispositivo"
+          accessibilityHint="Salva as configurações de avisos no aparelho"
           onPress={salvarPreferencias}
           disabled={salvando}
           activeOpacity={0.75}

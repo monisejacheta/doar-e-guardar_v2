@@ -154,7 +154,7 @@ export function DoraMessageBubble({
                   { color: coresChat.tituloBloco, fontSize: 12 * fontScale },
                 ]}
               >
-                Ingredientes do Estoque (FEFO)
+                Ingredientes da Despensa
               </Text>
               <DoraStructuredText
                 texto={mensagem.receita.ingredientesEstoque}
@@ -213,7 +213,7 @@ export function DoraMessageBubble({
                   fontSize: 12 * fontScale,
                 }}
               >
-                Resumo de Autonomia Estimada
+                Quanto tempo vai durar
               </Text>
               {mensagem.predicoes.map((pred) => {
                 const statusCor = pred.riscoVencerAntesDeAcabar

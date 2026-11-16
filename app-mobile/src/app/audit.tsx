@@ -112,7 +112,7 @@ export default function AuditScreen() {
         );
       }
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar os dados de auditoria da AWS.');
+      Alert.alert('Ops!', 'Não foi possível carregar o histórico agora.');
     } finally {
       setCarregando(false);
       setRecarregando(false);
@@ -156,11 +156,11 @@ export default function AuditScreen() {
         cor = '#DC2626';
         titulo = `${categoriaAcao}: ${nomeProd} (-${qtd} pcts)`;
       } else if (tipoOp.includes('ajuste')) {
-        categoriaAcao = 'Ajuste Físico';
+        categoriaAcao = 'Ajuste de Contagem';
         icone = 'sliders';
         cor = '#F59E0B';
         ehAjuste = true;
-        titulo = `Auditoria: ${nomeProd} (Δ ${qtd} pcts)`;
+        titulo = `Conferência: ${nomeProd} (Δ ${qtd} pcts)`;
       } else {
         titulo = `Transferência: ${nomeProd} (${qtd} pcts)`;
       }
@@ -277,12 +277,12 @@ export default function AuditScreen() {
       if (resposta?.sucesso) {
         setModalAjusteVisivel(false);
         Alert.alert(
-          'Auditoria Concluída!',
-          `Estoque corrigido com sucesso. Diferença de ${resposta.diferenca > 0 ? '+' : ''}${resposta.diferenca} pacote(s) registrada na linha do tempo.`,
+          'Contagem Atualizada!',
+          `A quantidade foi corrigida com sucesso. A diferença de ${resposta.diferenca > 0 ? '+' : ''}${resposta.diferenca} pacote(s) ficou salva no histórico.`,
           [{ text: 'OK', onPress: () => carregarDados() }],
         );
       } else {
-        Alert.alert('Falha no Ajuste', resposta?.mensagem || 'Erro ao processar na AWS.');
+        Alert.alert('Não foi possível salvar', resposta?.mensagem || 'Tente novamente em instantes.');
       }
     } catch (erro: any) {
       Alert.alert('Erro', erro.message || 'Falha de comunicação.');
@@ -326,7 +326,7 @@ export default function AuditScreen() {
               { color: corPrimaria, fontSize: tokens.typography.fontSize.xl * fontScale },
             ]}
           >
-            Auditoria e Linha do Tempo
+            Histórico e Conferência
           </Text>
           <Text
             style={[
@@ -334,7 +334,7 @@ export default function AuditScreen() {
               { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale },
             ]}
           >
-            Rastreabilidade cronológica das ações dos usuários e conferência física de estoque.
+            Veja tudo o que foi feito no estoque e ajuste as quantidades das prateleiras quando precisar.
           </Text>
         </View>
 
@@ -371,14 +371,14 @@ export default function AuditScreen() {
             </View>
             <View style={estilosAudit.textoSaudeContainer}>
               <Text style={[estilosAudit.tituloSaude, { color: corPrimaria, fontSize: 14.5 * fontScale }]}>
-                Precisão do Inventário
+                Saúde da Despensa
               </Text>
               <Text style={[estilosAudit.subtituloSaude, { color: '#1E40AF', fontSize: 12 * fontScale }]}>
                 {saudeEstoque >= 95
-                  ? 'Excelente! Estoque físico e sistema totalmente alinhados.'
+                  ? 'Tudo certinho! As prateleiras estão batendo com o aplicativo.'
                   : saudeEstoque >= 80
-                    ? 'Bom índice, com ajustes pontuais registrados.'
-                    : 'Atenção: divergências frequentes exigem conferência.'}
+                    ? 'Tudo bem, com pequenos ajustes de contagem feitos.'
+                    : 'Vale conferir as prateleiras para manter tudo em dia.'}
               </Text>
             </View>
           </View>
@@ -391,20 +391,20 @@ export default function AuditScreen() {
           }}
           style={[estilosAudit.botaoAuditoria, { backgroundColor: corSecundaria }]}
           accessibilityRole="button"
-          accessibilityLabel="Realizar Conferência Física"
+          accessibilityLabel="Conferir Prateleira"
         >
           <Feather name="check-square" size={20} color="#FFFFFF" />
           <Text style={[estilosAudit.botaoAuditoriaTexto, { color: '#FFFFFF', fontSize: 14 * fontScale }]}>
-            Realizar Conferência Física
+            Conferir Quantidade na Prateleira
           </Text>
         </TouchableOpacity>
 
         <View style={estilosAudit.gradeAtalhos}>
           {[
             { titulo: 'Por Produto', rota: '/audit-product', icone: 'package' },
-            { titulo: 'Por Operador', rota: '/audit-user', icone: 'user-check' },
+            { titulo: 'Por Pessoa', rota: '/audit-user', icone: 'user-check' },
             { titulo: 'Por Período', rota: '/audit-period', icone: 'calendar' },
-            { titulo: 'Exportar Logs', rota: '/audit-export', icone: 'share' },
+            { titulo: 'Enviar por E-mail', rota: '/audit-export', icone: 'share' },
           ].map((atalho) => (
             <TouchableOpacity
               key={atalho.rota}
@@ -674,7 +674,7 @@ export default function AuditScreen() {
           >
             <View style={estilosAudit.modalHeaderRow}>
               <Text style={[estilosAudit.modalTitulo, { color: corPrimaria, fontSize: 16 * fontScale }]}>
-                Auditoria de Saldo
+                Ajustar Quantidade
               </Text>
               <TouchableOpacity
                 onPress={() => setModalAjusteVisivel(false)}
@@ -723,7 +723,7 @@ export default function AuditScreen() {
                 <ActivityIndicator size="large" color={corPrimaria} />
               ) : (
                 <AppButton
-                  title="Confirmar Ajuste Físico"
+                  title="Salvar Nova Quantidade"
                   variant="secondary"
                   onPress={confirmarAjusteFisico}
                 />

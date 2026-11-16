@@ -87,7 +87,7 @@ export default function SettingsStorageScreen() {
         )
       );
     } catch {
-      Alert.alert('Erro', 'Não foi possível carregar as prateleiras cadastradas na AWS.');
+      Alert.alert('Erro', 'Não foi possível carregar as prateleiras cadastradas.');
     } finally {
       setCarregando(false);
       setRecarregando(false);
@@ -100,7 +100,7 @@ export default function SettingsStorageScreen() {
 
   const normalizarLotesDivergentesNaAws = async () => {
     if (lotesParaSincronizar.length === 0) {
-      Alert.alert('Tudo Sincronizado', 'Todos os lotes ativos na AWS já utilizam a nomenclatura canônica de prateleiras.');
+      Alert.alert('Tudo Organizado', 'Todas as prateleiras e pacotes já estão organizados direitinho.');
       return;
     }
 
@@ -124,11 +124,11 @@ export default function SettingsStorageScreen() {
       }
       await carregarDados(true);
       Alert.alert(
-        'Banco AWS Normalizado!',
-        `${lotesParaSincronizar.length} lote(s) tiveram suas prateleiras e IDs atualizados na AWS com sucesso.`
+        'Prateleiras Organizadas!',
+        `${lotesParaSincronizar.length} lote(s) tiveram os nomes das prateleiras atualizados com sucesso.`
       );
     } catch {
-      Alert.alert('Aviso', 'A normalização local foi aplicada, mas houve oscilação ao gravar um dos lotes na nuvem.');
+      Alert.alert('Aviso', 'Os nomes foram ajustados aqui no celular, mas a internet oscilou ao salvar um dos lotes.');
     } finally {
       setSincronizandoAws(false);
     }
@@ -148,9 +148,9 @@ export default function SettingsStorageScreen() {
         setNomeLocal('');
         setSublocal('');
         await carregarDados(true);
-        Alert.alert('Prateleira Homologada', res.mensagem);
+        Alert.alert('Prateleira Salva!', res.mensagem);
       } else {
-        Alert.alert('Atenção (Regra US06)', res.mensagem);
+        Alert.alert('Atenção', res.mensagem);
       }
     } finally {
       setSalvandoNovo(false);
@@ -160,15 +160,15 @@ export default function SettingsStorageScreen() {
   const confirmarExclusao = (loc: LocalArmazenamento) => {
     if ((loc.quantidade_pacotes_alocados || 0) > 0) {
       Alert.alert(
-        'Exclusão Bloqueada (US06)',
-        `A prateleira "${loc.local_descricao}" possui ${loc.quantidade_lotes_ativos} lote(s) ativo(s) (${loc.quantidade_pacotes_alocados} pacotes).\n\nTransfira os pacotes em "Movimentação Interna" antes de excluir o compartimento.`
+        'Prateleira em Uso',
+        `A prateleira "${loc.local_descricao}" ainda tem ${loc.quantidade_lotes_ativos} lote(s) guardado(s) (${loc.quantidade_pacotes_alocados} pacotes).\n\nMude os pacotes de lugar em "Movimentação Interna" antes de remover esta prateleira.`
       );
       return;
     }
 
     Alert.alert(
       'Remover Prateleira',
-      `Deseja remover "${loc.local_descricao}" do catálogo de armazenamento?`,
+      `Quer mesmo remover "${loc.local_descricao}" da lista de locais?`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
@@ -190,7 +190,7 @@ export default function SettingsStorageScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingBottom: 100 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 110 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
@@ -218,14 +218,14 @@ export default function SettingsStorageScreen() {
 
         <View style={{ marginBottom: 18 }}>
           <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }}>
-            Locais e Prateleiras (AWS)
+            Locais e Prateleiras
           </Text>
           <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale, marginTop: 4 }}>
-            Gerencie os armários e geladeiras homologados no banco de dados da AWS (Regra US06: vedados corredores ou ruas).
+            Organize os armários, geladeiras, prateleiras e gavetas onde os alimentos ficam guardados.
           </Text>
         </View>
 
-        {/* Card de Verificação de Discrepâncias no Banco AWS */}
+        {/* Card de Organização das Prateleiras */}
         <View
           style={{
             backgroundColor: discrepanciasDetectadas > 0 ? '#FFFBEB' : '#ECFDF5',
@@ -248,11 +248,12 @@ export default function SettingsStorageScreen() {
                 fontWeight: '800',
                 color: discrepanciasDetectadas > 0 ? '#92400E' : '#065F46',
                 fontSize: 13 * fontScale,
+                flex: 1,
               }}
             >
               {discrepanciasDetectadas > 0
-                ? `Auditoria de Prateleiras: ${discrepanciasDetectadas} divergência(s) detectada(s)`
-                : 'Integridade de Prateleiras AWS: 100% Sincronizado'}
+                ? `Organização das Prateleiras: ${discrepanciasDetectadas} nome(s) ajustado(s)`
+                : 'Prateleiras Organizadas: Tudo em Ordem'}
             </Text>
           </View>
           <Text
@@ -263,8 +264,8 @@ export default function SettingsStorageScreen() {
             }}
           >
             {discrepanciasDetectadas > 0
-              ? 'Foram identificados lotes com abreviações ("Prat.") ou IDs genéricos ("loc_arm"). Eles já foram reconciliados nas telas de Entrada e Movimentação.'
-              : 'Todas as prateleiras utilizadas nas telas de Entrada, Movimentação Interna e Relatórios possuem IDs únicos e nomenclatura padronizada.'}
+              ? 'Alguns pacotes estavam com o nome da prateleira abreviado ("Prat."). Já deixamos tudo arrumado para ficar mais fácil de achar!'
+              : 'Todos os armários e geladeiras estão com os nomes certinhos e prontos para uso.'}
           </Text>
 
           {lotesParaSincronizar.length > 0 && (
@@ -283,7 +284,7 @@ export default function SettingsStorageScreen() {
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 * fontScale }}>
-                  Persistir Normalização nos Lotes da AWS ({lotesParaSincronizar.length})
+                  Atualizar Nomes nos Lotes ({lotesParaSincronizar.length})
                 </Text>
               )}
             </TouchableOpacity>
@@ -302,11 +303,11 @@ export default function SettingsStorageScreen() {
           }}
         >
           <Text style={{ fontWeight: '800', color: theme.text, fontSize: 15 * fontScale, marginBottom: 12 }}>
-            Cadastrar Nova Prateleira / Gaveta
+            Adicionar Nova Prateleira ou Gaveta
           </Text>
 
           <Text style={{ fontWeight: '600', color: theme.text, fontSize: 12 * fontScale, marginBottom: 8 }}>
-            Tipo de Equipamento (Restrito pela US06) *
+            Onde fica guardado? *
           </Text>
           <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
             {(['armário', 'geladeira'] as const).map((tipo) => {
@@ -377,20 +378,20 @@ export default function SettingsStorageScreen() {
           />
 
           <AppButton
-            title={salvandoNovo ? 'Salvando na AWS...' : 'Homologar Prateleira na AWS'}
+            title={salvandoNovo ? 'Salvando...' : 'Salvar Prateleira'}
             variant="secondary"
             loading={salvandoNovo}
             onPress={salvarNovaPrateleira}
           />
         </View>
 
-        {/* Seção Organizada de Prateleiras Cadastradas na AWS */}
+        {/* Seção Organizada de Prateleiras Cadastradas */}
         <View style={{ marginBottom: 12 }}>
           <Text style={{ fontWeight: '800', color: theme.text, fontSize: 16 * fontScale }}>
             Locais Cadastrados ({locaisFiltrados.length} de {locais.length})
           </Text>
           <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, marginTop: 2 }}>
-            Organizados por equipamento e compartimento para navegação ágil.
+            Separados por armário e geladeira para facilitar a visualização.
           </Text>
         </View>
 

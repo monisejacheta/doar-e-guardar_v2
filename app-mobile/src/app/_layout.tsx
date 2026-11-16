@@ -48,13 +48,13 @@ function RootNavigationLayout() {
         <Stack.Screen name="reports-stock" options={{ title: 'Relatório de Estoque Atual' }} />
         <Stack.Screen name="reports-movements" options={{ title: 'Relatório de Movimentações' }} />
         <Stack.Screen name="reports-losses" options={{ title: 'Relatório de Perdas e Descartes' }} />
-        <Stack.Screen name="reports-expiry" options={{ title: 'Relatório de Validades (FEFO)' }} />
-        <Stack.Screen name="audit" options={{ title: 'Histórico e Auditoria' }} />
-        <Stack.Screen name="dora" options={{ title: 'Assistente Dora IA' }} />
+        <Stack.Screen name="reports-expiry" options={{ title: 'Relatório de Validades' }} />
+        <Stack.Screen name="audit" options={{ title: 'Histórico e Conferência' }} />
+        <Stack.Screen name="dora" options={{ title: 'Assistente Dora' }} />
         <Stack.Screen name="notifications" options={{ title: 'Avisos e Alertas' }} />
-        <Stack.Screen name="settings" options={{ title: 'Configurações do Sistema' }} />
-        <Stack.Screen name="settings-storage" options={{ title: 'Prateleiras e Locais AWS' }} />
-        <Stack.Screen name="diagnostic" options={{ title: 'Diagnóstico da Infraestrutura' }} />
+        <Stack.Screen name="settings" options={{ title: 'Ajustes do App' }} />
+        <Stack.Screen name="settings-storage" options={{ title: 'Prateleiras e Armários' }} />
+        <Stack.Screen name="diagnostic" options={{ title: 'Conexão e Status do App' }} />
         <Stack.Screen name="profile" options={{ title: 'Meu Perfil' }} />
         <Stack.Screen name="accessibility" options={{ title: 'Acessibilidade e Leitura' }} />
       </Stack>

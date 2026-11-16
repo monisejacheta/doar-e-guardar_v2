@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 export const estilosStockRemove = StyleSheet.create({
   container: { flex: 1 },
-  rolagem: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 100 },
+  rolagem: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 110 },
   
   botaoVoltar: {
     flexDirection: 'row',

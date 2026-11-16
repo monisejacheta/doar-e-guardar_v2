@@ -37,9 +37,9 @@ export async function requisicaoApi<T>(rota: string, options: RequisicaoHttpOpti
   } catch (err: any) {
     clearTimeout(timer);
     if (err?.name === 'AbortError') {
-      throw new Error('Tempo limite excedido ao comunicar com o servidor AWS. Tente novamente.');
+      throw new Error('A conexão demorou muito para responder. Tente novamente.');
     }
-    throw new Error('Falha de conexão com os serviços AWS. Verifique sua conexão com a internet.');
+    throw new Error('Não foi possível conectar. Verifique sua internet.');
   } finally {
     clearTimeout(timer);
   }

@@ -31,7 +31,7 @@ export function DoraHeader({
   const subtitulo = processandoIa
     ? 'digitando...'
     : carregandoEstoque
-      ? 'sincronizando despensa...'
+      ? 'atualizando despensa...'
       : `online • ${totalPacotesAtivos} pcts acompanhados`;
 
   return (
@@ -85,7 +85,7 @@ export function DoraHeader({
             style={[estilosDora.cabecalhoTitulo, { fontSize: 16 * fontScale }]}
             numberOfLines={1}
           >
-            Dora • Assistente IA
+            Dora • Sua Ajudante
           </Text>
           <Text
             style={[estilosDora.cabecalhoSubtitulo, { fontSize: 11.5 * fontScale }]}

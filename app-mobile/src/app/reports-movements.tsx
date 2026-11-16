@@ -104,7 +104,7 @@ export default function ReportsMovementsScreen() {
         setMovimentacoes([]);
       }
     } catch {
-      Alert.alert('Erro de Conexão', 'Não foi possível carregar a linha do tempo da AWS.');
+      Alert.alert('Sem Conexão', 'Não foi possível carregar o histórico agora.');
     } finally {
       setCarregando(false);
       setRecarregando(false);
@@ -159,7 +159,7 @@ export default function ReportsMovementsScreen() {
         corFundo: '#EEF2FF',
         corBordaFundo: '#C7D2FE',
         icone: 'Sliders',
-        rotulo: 'Ajuste de Auditoria',
+        rotulo: 'Ajuste de Contagem',
       };
     }
 
@@ -258,7 +258,7 @@ export default function ReportsMovementsScreen() {
             Linha do Tempo
           </Text>
           <Text style={[estilosReportsMove.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Acompanhe o histórico de entradas, saídas, transferências entre prateleiras e descartes na AWS.
+            Acompanhe o histórico de entradas, saídas, trocas de prateleira e descartes.
           </Text>
         </View>
 
@@ -313,7 +313,7 @@ export default function ReportsMovementsScreen() {
         {carregando ? (
           <View style={{ alignItems: 'center', paddingVertical: 40 }}>
             <ActivityIndicator size="large" color={theme.primary} />
-            <Text style={{ marginTop: 12, color: theme.subtext, fontWeight: '600' }}>Sincronizando registros da nuvem...</Text>
+            <Text style={{ marginTop: 12, color: theme.subtext, fontWeight: '600' }}>Carregando histórico...</Text>
           </View>
         ) : historicoFiltrado.length === 0 ? (
           <View style={[estilosReportsMove.emptyBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>

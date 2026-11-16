@@ -346,21 +346,21 @@ export async function cadastrarPrateleiraAws(dados: {
   if (tipo !== 'armário' && tipo !== 'geladeira') {
     return {
       sucesso: false,
-      mensagem: "Regra US06: São permitidos apenas compartimentos do tipo 'armário' ou 'geladeira'.",
+      mensagem: "Escolha se o espaço fica em um 'armário' ou em uma 'geladeira'.",
     };
   }
 
   if (!nome || !sublocal) {
     return {
       sucesso: false,
-      mensagem: 'Preencha o nome do móvel/equipamento e a identificação da prateleira ou gaveta.',
+      mensagem: 'Preencha o nome do armário ou geladeira e qual é a prateleira ou gaveta.',
     };
   }
 
   if (/corredor|rua\b|alameda|galp[aã]o/i.test(`${nome} ${sublocal} ${ambiente}`)) {
     return {
       sucesso: false,
-      mensagem: 'Regra US06: Não é permitido cadastrar ruas, corredores ou galpões.',
+      mensagem: 'Cadastre apenas armários ou geladeiras (não use nomes de ruas, corredores ou galpões).',
     };
   }
 
@@ -416,7 +416,7 @@ export async function cadastrarPrateleiraAws(dados: {
 
   return {
     sucesso: true,
-    mensagem: `Prateleira "${novoLocal.local_descricao}" cadastrada e sincronizada com sucesso!`,
+    mensagem: `A prateleira "${novoLocal.local_descricao}" foi salva com sucesso!`,
     local: novoLocal,
   };
 }
@@ -427,7 +427,7 @@ export async function excluirPrateleiraAws(
   if ((localAlvo.quantidade_pacotes_alocados || 0) > 0) {
     return {
       sucesso: false,
-      mensagem: `Exclusão bloqueada (US06): A prateleira "${localAlvo.local_descricao}" possui ${localAlvo.quantidade_lotes_ativos} lote(s) ativo(s) (${localAlvo.quantidade_pacotes_alocados} pacotes). Transfira os itens em "Movimentação Interna" antes de excluir.`,
+      mensagem: `A prateleira "${localAlvo.local_descricao}" ainda tem ${localAlvo.quantidade_lotes_ativos} lote(s) guardado(s) (${localAlvo.quantidade_pacotes_alocados} pacotes). Mude os itens de lugar em "Movimentação Interna" antes de remover.`,
     };
   }
 

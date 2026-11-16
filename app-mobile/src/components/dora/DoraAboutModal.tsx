@@ -159,7 +159,7 @@ export function DoraAboutModal({ visible, coresChat, onClose }: DoraAboutModalPr
                   { color: theme.text, fontSize: 13 * fontScale },
                 ]}
               >
-                • <Text style={{ fontWeight: '800' }}>Alertar validades (FEFO):</Text> mostro quais
+                • <Text style={{ fontWeight: '800' }}>Avisar sobre validades:</Text> mostro quais
                 produtos e lotes vencem primeiro para garantirmos que nada estrague.
               </Text>
               <Text

@@ -13,16 +13,15 @@ export default function ProfileViewScreen() {
 
   const u = auth?.currentUser;
   const campos = [
-    { rotulo: 'Nome de Exibição', valor: u?.displayName || 'Colaborador Casa da Criança' },
-    { rotulo: 'E-mail Institucional', valor: u?.email || 'operador@casadacrianca.org.br' },
-    { rotulo: 'Identificador Único (UID)', valor: u?.uid || 'sessao_institucional_aws' },
-    { rotulo: 'Papel / Permissão', valor: 'Operador de Estoque & Auditoria (Casa da Criança)' },
-    { rotulo: 'Unidade Vinculada', valor: 'Sede Casa da Criança - Despensa & Câmara Fria' },
+    { rotulo: 'Seu Nome', valor: u?.displayName || 'Colaborador Casa da Criança' },
+    { rotulo: 'Seu E-mail', valor: u?.email || 'operador@casadacrianca.org.br' },
+    { rotulo: 'Sua Função', valor: 'Equipe de Estoque e Cozinha (Casa da Criança)' },
+    { rotulo: 'Local de Trabalho', valor: 'Sede Casa da Criança - Despensa e Geladeiras' },
   ];
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -37,10 +36,10 @@ export default function ProfileViewScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-           Dados do Colaborador
+          Meus Dados
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Informações vinculadas à sua credencial de operador para rastreabilidade de lotes na AWS.
+          Veja as informações da sua conta usada no dia a dia da despensa.
         </Text>
 
         {campos.map((c) => (

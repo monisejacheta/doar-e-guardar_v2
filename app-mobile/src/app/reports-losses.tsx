@@ -86,7 +86,7 @@ export default function ReportsLossesScreen() {
           setVencidosPendentes(itensVencidos);
         }
       } catch {
-        Alert.alert('Erro', 'Não foi possível comunicar com os servidores da AWS.');
+        Alert.alert('Ops!', 'Não foi possível carregar os dados agora.');
       } finally {
         setCarregando(false);
       }
@@ -210,7 +210,7 @@ export default function ReportsLossesScreen() {
             Perdas e Descartes
           </Text>
           <Text style={[estilosReportsLosses.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Auditoria de produtos descartados e alertas de intervenção nas prateleiras da AWS.
+            Histórico de produtos descartados e avisos de itens vencidos nas prateleiras.
           </Text>
         </View>
 
@@ -219,15 +219,15 @@ export default function ReportsLossesScreen() {
             <View style={estilosReportsLosses.alertaPendenteTituloRow}>
               <Feather name="alert-octagon" size={20} color={theme.danger} style={{ marginRight: 8 }} />
               <Text style={[estilosReportsLosses.alertaPendenteTitulo, { color: theme.danger }]}>
-                Ação Requerida: Descartes Pendentes
+                Atenção: Descartes Pendentes
               </Text>
             </View>
 
             <Text style={[estilosReportsLosses.alertaPendenteTexto, { color: theme.danger }]}>
-              O sistema detectou que os itens abaixo estão <Text style={{ fontWeight: 'bold' }}>vencidos nas prateleiras</Text> e necessitam de descarte imediato.
+              Encontramos itens <Text style={{ fontWeight: 'bold' }}>vencidos nas prateleiras</Text> que precisam ser retirados.
               {'\n\n'}
-              <Text style={{ fontWeight: 'bold', textDecorationLine: 'underline' }}>Como descartar:</Text> Acesse o menu{' '}
-              <Text style={{ fontWeight: 'bold' }}>Estoque</Text> e utilize a opção <Text style={{ fontWeight: 'bold' }}>Saída / Baixa</Text> com a trava PERDA.
+              <Text style={{ fontWeight: 'bold', textDecorationLine: 'underline' }}>Como dar baixa:</Text> Vá até o menu{' '}
+              <Text style={{ fontWeight: 'bold' }}>Estoque</Text> e escolha <Text style={{ fontWeight: 'bold' }}>Saída / Baixa</Text> para registrar o descarte.
             </Text>
 
             {vencidosPendentes.map((lote, index) => (
@@ -387,7 +387,7 @@ export default function ReportsLossesScreen() {
                     </Text>
                   </View>
                   <Text style={[estilosReportsLosses.produtoSub, { color: theme.subtext }]}>
-                    EAN: {produto.ean} • Total Perdido: <Text style={{ color: theme.danger, fontWeight: 'bold' }}>{produto.volumePerdido} un</Text>
+                    Código: {produto.ean} • Total descartado: <Text style={{ color: theme.danger, fontWeight: 'bold' }}>{produto.volumePerdido} un</Text>
                   </Text>
                 </View>
 

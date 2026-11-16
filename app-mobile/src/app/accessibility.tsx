@@ -159,9 +159,9 @@ export default function AccessibilityScreen() {
 
           <View style={estilosAccessibility.gradeModosVisuais}>
             {[
-              { id: 'light', nome: 'Modo Claro Padrão (Azul & Verde)' },
-              { id: 'high-contrast', nome: 'Alto Contraste (Baixa Visão - WCAG AAA)' },
-              { id: 'dark', nome: 'Modo Escuro (Redução de Cansaço Visual)' },
+              { id: 'light', nome: 'Modo Claro Padrão (Azul e Verde)' },
+              { id: 'high-contrast', nome: 'Alto Contraste (Letras Mais Fortes)' },
+              { id: 'dark', nome: 'Modo Escuro (Descanso para os Olhos)' },
             ].map((item) => {
               const ativo = mode === item.id;
               return (

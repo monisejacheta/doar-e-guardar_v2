@@ -129,7 +129,7 @@ export default function StockRemoveScreen() {
         setLotesRaw([]);
       }
     } catch (erro: any) {
-      Alert.alert('Erro de Conexão', erro?.message || 'Não foi possível carregar os itens do estoque no servidor.');
+      Alert.alert('Erro de Conexão', erro?.message || 'Não conseguimos carregar os alimentos do estoque agora.');
     } finally {
       setCarregando(false);
       setRecarregando(false);
@@ -240,8 +240,8 @@ export default function StockRemoveScreen() {
       setModalLotesVisivel(true);
     } else {
       Alert.alert(
-        'Produto Localizado',
-        `Código EAN ${eanLido} identificado. O número foi preenchido na busca de saída.`
+        'Código Identificado',
+        `O código ${eanLido} foi colocado na busca para você.`
       );
     }
   };
@@ -278,8 +278,8 @@ export default function StockRemoveScreen() {
 
     if (lote.id_lote_produto !== loteMaisProximo.id_lote_produto && lote.data_ms > loteMaisProximo.data_ms) {
       Alert.alert(
-        'Atenção à Validade (FEFO)',
-        `Existe um lote com vencimento mais próximo (${loteMaisProximo.data_validade_lote}) que deve ser priorizado.\n\nDeseja mesmo retirar o lote selecionado?`,
+        'Atenção à Validade',
+        `Temos outro lote que vence antes (${loteMaisProximo.data_validade_lote}) e seria bom usar primeiro.\n\nQuer retirar este lote mesmo assim?`,
         [
           { text: 'Cancelar', style: 'cancel' },
           { text: 'Continuar', onPress: () => abrirFormularioSaida(lote) },
@@ -312,25 +312,15 @@ export default function StockRemoveScreen() {
 
     if (qtd > loteSelecionado.quantidade_atual_pacote) {
       Alert.alert(
-        'Saldo Insuficiente',
-        `Você tentou retirar ${qtd} unidades, mas o lote possui apenas ${loteSelecionado.quantidade_atual_pacote}. O estoque não pode ficar negativo.`
+        'Quantidade Maior que o Disponível',
+        `Você tentou retirar ${qtd} pacotes, mas este lote tem apenas ${loteSelecionado.quantidade_atual_pacote}.`
       );
       return;
     }
 
-    // Trava de segurança obrigatória: exigida exclusivamente para "perda de produto"
-    if (exigeTravaSeguranca) {
-      if (palavraTravaPerda.trim() !== 'PERDA') {
-        Alert.alert(
-          'Trava de Segurança Obrigatória',
-          'Para autorizar o descarte por perda de produto, digite exatamente a palavra "PERDA" em letras maiúsculas.'
-        );
-        return;
-      }
-      if (!justificativa.trim()) {
-        Alert.alert('Justificativa Obrigatória', 'Por favor, descreva o motivo da perda do produto para o registro de auditoria.');
-        return;
-      }
+    if (exigeTravaSeguranca && !justificativa.trim()) {
+      Alert.alert('Motivo Obrigatório', 'Por favor, conte rapidinho o que aconteceu com o produto (ex: venceu ou rasgou).');
+      return;
     }
 
     const usuarioResponsavel =
@@ -347,7 +337,7 @@ export default function StockRemoveScreen() {
           lote: loteSelecionado,
           quantidade: qtd,
           motivo_saida: motivoSaida,
-          palavra_confirmacao: palavraTravaPerda.trim(),
+          palavra_confirmacao: exigeTravaSeguranca ? 'PERDA' : '',
           justificativa: justificativa.trim(),
           id_usuario: usuarioResponsavel,
         },
@@ -363,10 +353,10 @@ export default function StockRemoveScreen() {
         setModalSaidaVisivel(false);
         setModalSucessoVisivel(true);
       } else {
-        Alert.alert('Falha na Baixa', resposta?.mensagem || 'Não foi possível registrar a baixa no servidor.');
+        Alert.alert('Não foi possível concluir', resposta?.mensagem || 'Não conseguimos salvar a saída agora.');
       }
     } catch (erro: any) {
-      Alert.alert('Erro de Comunicação', erro.message || 'Falha ao comunicar com o servidor.');
+      Alert.alert('Erro de Conexão', erro.message || 'Verifique sua internet e tente de novo.');
     } finally {
       setProcessandoBaixa(false);
     }
@@ -414,7 +404,7 @@ export default function StockRemoveScreen() {
             Saída de Produtos
           </Text>
           <Text style={[estilosStockRemove.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Selecione ou escaneie o item no estoque para dar baixa. Lotes próximos do vencimento (FEFO) são priorizados.
+            Escolha o alimento ou leia o código de barras para registrar a retirada. Os itens que vencem antes aparecem primeiro.
           </Text>
         </View>
 
@@ -422,7 +412,7 @@ export default function StockRemoveScreen() {
           <View style={[estilosStockRemove.inputSearchWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <Feather name="search" size={16} color="#94A3B8" style={{ marginRight: 8 }} />
             <TextInput
-              placeholder="Buscar por nome ou código EAN..."
+              placeholder="Buscar por nome ou código de barras..."
               placeholderTextColor="#94A3B8"
               value={termoBusca}
               onChangeText={setTermoBusca}
@@ -485,10 +475,10 @@ export default function StockRemoveScreen() {
                     {item.nome_produto}
                   </Text>
                   <Text style={[estilosStockRemove.produtoMeta, { color: theme.subtext, fontSize: 10.5 * fontScale }]} numberOfLines={1}>
-                    {item.categoria} • EAN: {item.codigo_barra_produto}
+                    {item.categoria} • Código: {item.codigo_barra_produto}
                   </Text>
                   <Text style={[estilosStockRemove.produtoSub, { color: theme.danger, fontSize: 10 * fontScale }]}>
-                    Toque para selecionar lote ({item.lotes.length})
+                    Toque para escolher o lote ({item.lotes.length})
                   </Text>
                 </View>
 
@@ -546,7 +536,7 @@ export default function StockRemoveScreen() {
           <View style={estilosCameraSaida.centro}>
             <View style={estilosCameraSaida.mira} />
             <Text style={estilosCameraSaida.texto}>
-              Aponte a câmera para o código de barras (EAN) do item
+              Aponte a câmera para o código de barras da embalagem
             </Text>
           </View>
 
@@ -598,10 +588,10 @@ export default function StockRemoveScreen() {
         <View style={estilosStockRemove.modalOverlay}>
           <View style={[estilosStockRemove.modalCard, { padding: 20 }]}>
             <Text style={{ fontSize: 16 * fontScale, fontWeight: 'bold', color: theme.text, marginBottom: 8 }}>
-              Informar Código de Barras (EAN)
+              Digitar Código de Barras
             </Text>
             <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, marginBottom: 14 }}>
-              Digite os dígitos do código de barras da embalagem para dar andamento ao fluxo de saída:
+              Digite os números do código de barras da embalagem para encontrar o produto:
             </Text>
             <TextInput
               placeholder="Ex: 7891000100103"
@@ -645,15 +635,15 @@ export default function StockRemoveScreen() {
         </View>
       </Modal>
 
-      {/* Modal 1: Lista de Lotes (FEFO) */}
+      {/* Modal 1: Lista de Lotes */}
       <ProductDetailModal
         visible={modalLotesVisivel}
         produto={produtoSelecionado}
         onClose={() => setModalLotesVisivel(false)}
-        headerTitle="Baixa de Estoque (FEFO)"
+        headerTitle="Saída do Estoque"
         accentColor={theme.danger}
-        instructionText="Selecione o lote para dar baixa. Lotes com vencimento mais próximo aparecem primeiro."
-        lotesTitle="Lotes em Ordem FEFO"
+        instructionText="Escolha qual pacote você vai retirar. Os que vencem mais cedo aparecem no topo."
+        lotesTitle="Lotes Disponíveis (por validade)"
         highlightFefoFirst={true}
         onSelectLote={(lote) => handleSelecionarLote(lote)}
       />
@@ -729,37 +719,18 @@ export default function StockRemoveScreen() {
               </View>
 
               <AppInput
-                rotulo="Justificativa / Observações"
-                placeholder={exigeTravaSeguranca ? "Ex: Embalagem avariada / Validade expirada" : "Ex: Preparo de refeições / Atendimento regular"}
+                rotulo="Observações"
+                placeholder={exigeTravaSeguranca ? "Ex: Embalagem rasgada / Passou da validade" : "Ex: Uso na cozinha / Almoço"}
                 value={justificativa}
                 onChangeText={setJustificativa}
               />
-
-              {exigeTravaSeguranca && (
-                <View style={[estilosStockRemove.blocoTravaPerda, { backgroundColor: `${theme.danger}10`, borderColor: theme.danger }]}>
-                  <Text style={[estilosStockRemove.textoAvisoPerda, { color: theme.danger, fontSize: 12 * fontScale }]}>
-                    🔒 Trava de Segurança Obrigatória
-                  </Text>
-                  <Text style={[estilosStockRemove.instrucaoPerda, { color: theme.text }]}>
-                    Para autorizar a baixa por perda de produto, digite a palavra <Text style={{ fontWeight: 'bold', color: theme.danger }}>PERDA</Text> em maiúsculas:
-                  </Text>
-
-                  <AppInput
-                    rotulo=""
-                    placeholder="Digite PERDA aqui"
-                    autoCapitalize="characters"
-                    value={palavraTravaPerda}
-                    onChangeText={setPalavraTravaPerda}
-                  />
-                </View>
-              )}
 
               <View style={{ marginTop: 16 }}>
                 {processandoBaixa ? (
                   <ActivityIndicator size="large" color={theme.danger} />
                 ) : (
                   <AppButton
-                    title={exigeTravaSeguranca ? 'Confirmar Descarte por Perda' : 'Confirmar Saída Regular'}
+                    title={exigeTravaSeguranca ? 'Confirmar Descarte' : 'Confirmar Retirada'}
                     variant={exigeTravaSeguranca ? 'danger' : 'primary'}
                     onPress={confirmarBaixa}
                   />
@@ -783,9 +754,9 @@ export default function StockRemoveScreen() {
               <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
                 <Feather name="check-circle" size={32} color="#10B981" />
               </View>
-              <Text style={{ fontSize: 20 * fontScale, fontWeight: '900', color: theme.text }}>Saída Concluída!</Text>
+              <Text style={{ fontSize: 20 * fontScale, fontWeight: '900', color: theme.text }}>Saída Registrada!</Text>
               <Text style={{ fontSize: 13 * fontScale, color: theme.subtext, textAlign: 'center', marginTop: 4 }}>
-                Os itens foram baixados no banco de dados e a movimentação foi auditada.
+                A quantidade do estoque já foi atualizada.
               </Text>
             </View>
 

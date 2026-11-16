@@ -47,7 +47,7 @@ export default function ReportsStockScreen() {
           setLotes(ativosNormalizados);
         }
       } catch {
-        Alert.alert('Erro', 'Não foi possível carregar os dados do estoque na AWS.');
+        Alert.alert('Ops!', 'Não foi possível carregar os dados do estoque agora.');
       } finally {
         setCarregando(false);
       }
@@ -162,10 +162,10 @@ export default function ReportsStockScreen() {
 
         <View style={estilosReportsStock.cabecalho}>
           <Text style={[estilosReportsStock.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-            Relatório de Estoque Atual
+            Estoque Atual
           </Text>
           <Text style={[estilosReportsStock.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Listagem consolidada de todos os itens e sua alocação nas prateleiras da AWS.
+            Veja tudo o que temos guardado e em qual prateleira cada alimento está.
           </Text>
         </View>
 
@@ -207,7 +207,7 @@ export default function ReportsStockScreen() {
           <View style={[estilosReportsStock.inputSearchWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
             <Feather name="search" size={16} color="#94A3B8" />
             <TextInput
-              placeholder="Buscar item, prateleira ou código EAN..."
+              placeholder="Buscar alimento, prateleira ou código..."
               placeholderTextColor="#94A3B8"
               value={termoBusca}
               onChangeText={setTermoBusca}
@@ -327,7 +327,7 @@ export default function ReportsStockScreen() {
                       )}
                     </View>
                     <Text style={[estilosReportsStock.produtoSub, { color: theme.subtext }]}>
-                      EAN: {produto.ean} • Saldo:{' '}
+                      Código: {produto.ean} • Total:{' '}
                       <Text style={{ color: isEstoqueBaixo ? tokens.colors.accentAmber500 : theme.text, fontWeight: 'bold' }}>
                         {produto.quantidadeTotal} un
                       </Text>

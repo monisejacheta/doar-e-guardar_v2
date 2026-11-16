@@ -287,10 +287,8 @@ export default function StockAddScreen() {
       setModalNovaCategoriaVisivel(false);
       setDropdownCategoriasAberto(false);
       Alert.alert(
-        'Nova Categoria Salva',
-        res.sincronizadaAws
-          ? `Categoria "${res.nomeFinal}" salva no AWS DynamoDB e exibida na tela!`
-          : `Categoria "${res.nomeFinal}" adicionada e persistida no dispositivo.`
+        'Categoria Salva',
+        `A categoria "${res.nomeFinal}" foi adicionada e já pode ser usada!`
       );
     } finally {
       setSalvandoCategoria(false);
@@ -411,8 +409,8 @@ export default function StockAddScreen() {
         const respostaPermissao = await solicitarPermissaoCamera();
         if (!respostaPermissao.granted) {
           Alert.alert(
-            'Permissão da Câmera Necessária',
-            'Autorize o acesso à câmera nas configurações do aparelho para ler códigos de barras, ou digite os números do EAN manualmente.'
+            'Permissão da Câmera',
+            'Libere o acesso à câmera nas configurações do celular para ler o código de barras, ou digite os números manualmente.'
           );
           return;
         }
@@ -423,7 +421,7 @@ export default function StockAddScreen() {
     } catch (erro: any) {
       Alert.alert(
         'Câmera Indisponível',
-        erro?.message || 'Não foi possível iniciar a câmera neste dispositivo. Digite o código EAN manualmente.'
+        erro?.message || 'Não conseguimos abrir a câmera agora. Digite os números do código de barras manualmente.'
       );
     }
   };
@@ -488,7 +486,7 @@ export default function StockAddScreen() {
     const ean = (eanInformado ?? codigoBarras).replace(/\D/g, '').trim();
 
     if (!ean || ean.length < 8 || ean.length > 14) {
-      Alert.alert('Código de Barras Inválido', 'Informe ou escaneie um código EAN/GTIN válido entre 8 e 14 dígitos numéricos.');
+      Alert.alert('Código Inválido', 'Digite ou leia um código de barras válido (de 8 a 14 números).');
       return;
     }
 
@@ -504,11 +502,11 @@ export default function StockAddScreen() {
       });
 
       if (!resp || !resp.sucesso) {
-        throw new Error(resp?.mensagem || 'O servidor não conseguiu verificar o código de barras.');
+        throw new Error(resp?.mensagem || 'Não conseguimos buscar esse código de barras agora.');
       }
 
       if (resp.existe_no_banco && resp.produto) {
-        // CENÁRIO A: PRODUTO JÁ EXISTE NO ESTOQUE DO BANCO DE DADOS
+        // CENÁRIO A: PRODUTO JÁ EXISTE NO ESTOQUE
         const p = resp.produto;
         const categoriaResolvida = inferirCategoriaAlimento(p.nome_produto || '', p.categoria);
         const fotoRemota = (p.url_foto_produto || p.foto_url || '').trim();
@@ -520,18 +518,17 @@ export default function StockAddScreen() {
         setUnidadeMedida(p.unidade_medida_pacote || 'pacotes');
         setEstoqueMinimo(String(p.estoque_minimo_pacote || 10));
         setUrlFotoProduto(fotoRemota);
-        setOrigemDados(p.origem || 'Produto já cadastrado no estoque');
+        setOrigemDados('Produto já conhecido na despensa');
         setProdutoExistenteNoBanco(true);
 
         // Avança para a Etapa 3 para registrar o novo lote
         setEtapa(3);
         rolarParaAbaixo();
       } else if (resp.produto && (resp.produto.nome_produto || '').trim()) {
-        // CENÁRIO B: PRODUTO NOVO ENCONTRADO NAS 3 APIS EXTERNAS EM CASCATA
+        // CENÁRIO B: PRODUTO NOVO ENCONTRADO NA BUSCA AUTOMÁTICA
         const p = resp.produto;
         const categoriaResolvida = inferirCategoriaAlimento(p.nome_produto, p.categoria);
         const fotoRemota = (p.url_foto_produto || p.foto_url || '').trim();
-        const provedorLabel = p.origem || resp.provedor_utilizado || 'API de Código de Barras';
 
         setIdProduto(p.id_produto || `prod_${ean}`);
         setNomeProduto(p.nome_produto.trim());
@@ -540,14 +537,13 @@ export default function StockAddScreen() {
         setUnidadeMedida(p.unidade_medida_pacote || 'pacotes');
         setEstoqueMinimo(String(p.estoque_minimo_pacote || 10));
         setUrlFotoProduto(fotoRemota);
-        setOrigemDados(`Localizado via ${provedorLabel}`);
+        setOrigemDados('Dados preenchidos automaticamente');
         setProdutoExistenteNoBanco(false);
 
-        // Abre a Etapa 2 para conferência dos dados retornados pela API antes do lote
         setEtapa(2);
         rolarParaAbaixo();
       } else {
-        // CENÁRIO C: NÃO ENCONTRADO NAS 3 APIS EXTERNAS -> LIBERA PREENCHIMENTO MANUAL
+        // CENÁRIO C: NÃO ENCONTRADO NA BUSCA AUTOMÁTICA -> LIBERA PREENCHIMENTO MANUAL
         setIdProduto(`prod_${ean}`);
         setNomeProduto('');
         setMarcaProduto('');
@@ -555,7 +551,7 @@ export default function StockAddScreen() {
         setUnidadeMedida('pacotes');
         setEstoqueMinimo('10');
         setUrlFotoProduto('');
-        setOrigemDados('Não catalogado nas 3 APIs externas • Preenchimento manual');
+        setOrigemDados('Novo produto • Preencha os dados abaixo');
         setErrosCascataApis(Array.isArray(resp.erros) ? resp.erros : []);
         setProdutoExistenteNoBanco(false);
 
@@ -563,14 +559,14 @@ export default function StockAddScreen() {
         rolarParaAbaixo();
 
         Alert.alert(
-          'Produto Não Catalogado nas APIs',
-          resp.mensagem || 'O código de barras foi consultado nas 3 APIs em cascata, mas não consta nas bases públicas. Preencha os dados do alimento manualmente.'
+          'Produto Novo',
+          'Não encontramos esse código na busca rápida. Preencha os dados do alimento abaixo para continuar!'
         );
       }
     } catch (erro: any) {
       Alert.alert(
-        'Erro ao Consultar Código de Barras',
-        erro?.message || 'Não foi possível comunicar com o backend para consultar as APIs de código de barras. Verifique sua conexão e tente novamente.'
+        'Não foi possível buscar o código',
+        erro?.message || 'Verifique sua internet e tente novamente, ou preencha os dados manualmente.'
       );
     } finally {
       setCarregandoVerificacao(false);
@@ -672,16 +668,16 @@ export default function StockAddScreen() {
           url_foto: urlFotoProduto,
         });
         setTipoFeedback('sucesso');
-        setMensagemFeedback(resp.mensagem || 'Entrada gravada com sucesso no banco de dados!');
+        setMensagemFeedback(resp.mensagem || 'Entrada salva com sucesso no estoque!');
         setModalFeedbackVisivel(true);
       } else {
         setTipoFeedback('erro');
-        setMensagemFeedback(resp?.mensagem || 'Não foi possível cadastrar o lote no servidor.');
+        setMensagemFeedback(resp?.mensagem || 'Não foi possível salvar o lote agora.');
         setModalFeedbackVisivel(true);
       }
     } catch (erro: any) {
       setTipoFeedback('erro');
-      setMensagemFeedback(erro.message || 'Falha de comunicação com o servidor AWS.');
+      setMensagemFeedback(erro.message || 'Não foi possível salvar agora. Verifique sua conexão.');
       setModalFeedbackVisivel(true);
     } finally {
       setSalvando(false);
@@ -719,10 +715,10 @@ export default function StockAddScreen() {
         >
           <View style={{ flex: 1, minWidth: 160 }}>
             <Text style={{ fontSize: 13 * fontScale, fontWeight: '800', color: theme.text }}>
-              Categorias de Alimentos (DynamoDB)
+              Categorias de Alimentos
             </Text>
             <Text style={{ fontSize: 11 * fontScale, color: theme.subtext, marginTop: 2 }}>
-              {categoriasVisiveis.length} categoria(s) ativa(s) • toque para selecionar
+              {categoriasVisiveis.length} categoria(s) disponível(is) • toque para escolher
             </Text>
           </View>
 
@@ -1038,14 +1034,14 @@ export default function StockAddScreen() {
           <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 6 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
             <Text style={{ marginHorizontal: 8, fontSize: 11 * fontScale, color: '#9CA3AF', fontWeight: '600' }}>
-              OU DIGITE OS NÚMEROS DO EAN
+              OU DIGITE OS NÚMEROS DO CÓDIGO
             </Text>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
           </View>
 
           <AppInput
-            rotulo="Número do Código de Barras (EAN-8 a EAN-14):"
-            placeholder="Digite os 8 a 14 dígitos do código"
+            rotulo="Número do Código de Barras:"
+            placeholder="Digite os 8 a 14 números da embalagem"
             keyboardType="numeric"
             value={codigoBarras}
             onChangeText={lidarComMascaraEan}
@@ -1056,7 +1052,7 @@ export default function StockAddScreen() {
             disabled={carregandoVerificacao}
             accessible={true}
             accessibilityRole="button"
-            accessibilityLabel="Consultar código de barras no estoque e nas APIs"
+            accessibilityLabel="Buscar código de barras e preencher dados"
             style={{
               backgroundColor: theme.primary,
               borderRadius: 12,
@@ -1071,12 +1067,12 @@ export default function StockAddScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <ActivityIndicator color="#FFFFFF" size="small" />
                 <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 * fontScale }}>
-                  Consultando Estoque e 3 APIs EAN...
+                  Buscando informações do produto...
                 </Text>
               </View>
             ) : (
               <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 * fontScale }}>
-                Consultar Código e Preencher ➔
+                Buscar Produto e Preencher ➔
               </Text>
             )}
           </TouchableOpacity>
@@ -1128,13 +1124,13 @@ export default function StockAddScreen() {
                 {nomeProduto}
               </Text>
               <Text style={{ fontSize: 11 * fontScale, color: '#4B5563', marginTop: 2 }}>
-                {categoria} • EAN: {codigoBarras}
+                {categoria} • Código: {codigoBarras}
               </Text>
             </View>
           </View>
         )}
 
-        {/* CENÁRIO B / C: PRODUTO NOVO (Formulário preenchido pela API em cascata ou liberado para cadastro manual) */}
+        {/* CENÁRIO B / C: PRODUTO NOVO */}
         {produtoExistenteNoBanco === false && etapa >= 2 && (
           <View
             style={{
@@ -1169,14 +1165,12 @@ export default function StockAddScreen() {
                   marginBottom: 12,
                 }}
               >
-                <Text style={{ fontSize: 11 * fontScale, fontWeight: '700', color: '#92400E', marginBottom: 4 }}>
-                  Retorno do Barramento em Cascata (EAN {codigoBarras}):
+                <Text style={{ fontSize: 11.5 * fontScale, fontWeight: '700', color: '#92400E', marginBottom: 2 }}>
+                  Esse código ({codigoBarras}) ainda não está cadastrado.
                 </Text>
-                {errosCascataApis.map((err, idx) => (
-                  <Text key={idx} style={{ fontSize: 10.5 * fontScale, color: '#B45309' }}>
-                    • {err}
-                  </Text>
-                ))}
+                <Text style={{ fontSize: 11 * fontScale, color: '#B45309' }}>
+                  É só preencher o nome e a categoria do alimento abaixo que já deixamos tudo salvo para as próximas vezes!
+                </Text>
               </View>
             )}
 
@@ -1200,12 +1194,12 @@ export default function StockAddScreen() {
               />
               <View style={{ flex: 1 }}>
                 <Text style={{ fontSize: 12 * fontScale, fontWeight: '700', color: theme.text }}>
-                  Imagem de Identificação
+                  Foto do Produto
                 </Text>
                 <Text style={{ fontSize: 11 * fontScale, color: '#6B7280', marginTop: 2 }}>
                   {urlFotoProduto && !erroFotoRemota
-                    ? 'Foto oficial retornada pela API de código de barras.'
-                    : `Ilustração institucional da categoria (${categoria}).`}
+                    ? 'Imagem encontrada automaticamente pelo código de barras.'
+                    : `Imagem ilustrativa da categoria (${categoria}).`}
                 </Text>
               </View>
             </View>
@@ -1611,7 +1605,7 @@ export default function StockAddScreen() {
               />
             </View>
             <Text style={[estilosCamera.instrucaoScanner, { fontSize: 14 * fontScale }]}>
-              Posicione o código de barras (EAN) da embalagem dentro do quadro
+              Aponte a câmera para o código de barras da embalagem
             </Text>
           </View>
 
@@ -1663,10 +1657,10 @@ export default function StockAddScreen() {
         <View style={estilosCamera.modalOverlay}>
           <View style={[estilosCamera.modalCard, { backgroundColor: theme.surface }]}>
             <Text style={{ fontSize: 16 * fontScale, fontWeight: 'bold', color: theme.text, marginBottom: 8 }}>
-              Informar Código de Barras (EAN)
+              Digitar Código de Barras
             </Text>
             <Text style={{ fontSize: 12 * fontScale, color: theme.subtext, marginBottom: 14 }}>
-              Digite os dígitos do código de barras da embalagem para dar andamento ao cadastro do produto:
+              Digite os números que ficam abaixo do código de barras na embalagem:
             </Text>
             <TextInput
               placeholder="Ex: 7891000100103"
@@ -1758,7 +1752,7 @@ export default function StockAddScreen() {
                   Nova Categoria de Alimento
                 </Text>
                 <Text style={{ fontSize: 11.5 * fontScale, color: theme.subtext }}>
-                  Cadastrar no banco de dados AWS
+                  Adicione um novo grupo para organizar a despensa
                 </Text>
               </View>
               <TouchableOpacity
@@ -1820,7 +1814,7 @@ export default function StockAddScreen() {
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13 * fontScale }}>
-                    Cadastrar na AWS
+                    Salvar Categoria
                   </Text>
                 )}
               </TouchableOpacity>
@@ -1926,19 +1920,19 @@ export default function StockAddScreen() {
                     </Text>
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 11 * fontScale, color: '#6B7280' }}>EAN:</Text>
+                    <Text style={{ fontSize: 11 * fontScale, color: '#6B7280' }}>Código de barras:</Text>
                     <Text style={{ fontSize: 11 * fontScale, fontWeight: '600', color: '#374151' }}>
                       {dadosResumo.codigo_barra}
                     </Text>
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 11 * fontScale, color: '#6B7280' }}>Validade (FEFO):</Text>
+                    <Text style={{ fontSize: 11 * fontScale, color: '#6B7280' }}>Validade:</Text>
                     <Text style={{ fontSize: 11 * fontScale, fontWeight: '800', color: '#1E3A8A' }}>
                       {dadosResumo.validade}
                     </Text>
                   </View>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                    <Text style={{ fontSize: 11 * fontScale, color: '#6B7280' }}>Local Físico:</Text>
+                    <Text style={{ fontSize: 11 * fontScale, color: '#6B7280' }}>Guardado em:</Text>
                     <Text style={{ fontSize: 11 * fontScale, fontWeight: '700', color: '#111827' }}>
                       {dadosResumo.local}
                     </Text>

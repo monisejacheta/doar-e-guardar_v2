@@ -379,7 +379,7 @@ export default function SettingsDonorsScreen() {
               </View>
 
               <AppInput
-                rotulo={tipo === 'PJ' ? 'CNPJ' : 'CPF (opcional LGPD)'}
+                rotulo={tipo === 'PJ' ? 'CNPJ' : 'CPF (opcional)'}
                 placeholder={tipo === 'PJ' ? '00.000.000/0001-00' : '000.000.000-00'}
                 value={documento}
                 onChangeText={setDocumento}

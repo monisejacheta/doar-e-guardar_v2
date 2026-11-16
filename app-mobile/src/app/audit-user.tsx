@@ -45,7 +45,7 @@ export default function AuditUserScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 96 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -57,17 +57,17 @@ export default function AuditUserScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }}>
-          Auditoria por Operador
+          Histórico por Pessoa
         </Text>
         <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale, marginTop: 4, marginBottom: 16 }}>
-          Histórico de responsabilidade operacional nas entradas, baixas e transferências de prateleira na AWS.
+          Veja quem registrou as entradas, saídas e mudanças de prateleira na despensa.
         </Text>
 
         {carregando ? (
           <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 24 }} />
         ) : porOperador.length === 0 ? (
           <Text style={{ color: theme.subtext, textAlign: 'center', marginTop: 24 }}>
-            Nenhuma operação registrada no histórico da AWS.
+            Nenhuma atividade registrada no histórico ainda.
           </Text>
         ) : (
           <View style={{ gap: 12 }}>

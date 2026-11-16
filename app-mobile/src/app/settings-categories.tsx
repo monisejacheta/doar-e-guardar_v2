@@ -176,7 +176,7 @@ export default function SettingsCategoriesScreen() {
               Categorias de Alimentos
             </Text>
             <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginTop: 2 }}>
-              Categorias sincronizadas com o AWS DynamoDB ({categoriasVisiveis.length} visíveis).
+              Tipos de alimentos usados na despensa ({categoriasVisiveis.length} visíveis).
             </Text>
           </View>
 
@@ -311,7 +311,7 @@ export default function SettingsCategoriesScreen() {
                       {cat.nome}
                     </Text>
                     <Text style={{ color: theme.subtext, fontSize: 11.5 * fontScale, marginTop: 2 }}>
-                      {cat.origem === 'dynamodb' ? 'AWS DynamoDB' : 'Catálogo local'} • {qtd} un.
+                      {cat.origem === 'dynamodb' ? 'Salva no sistema' : 'Salva no aparelho'} • {qtd} un.
                     </Text>
                   </View>
                 </View>

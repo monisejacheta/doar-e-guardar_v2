@@ -19,11 +19,11 @@ export default function DiagnosticAwsScreen() {
   const testarRotasLambda = useCallback(async () => {
     setTestando(true);
     const testes = [
-      { rota: '/api/estoque', modulo: 'estoque', acao: 'consultar_estoque', nome: 'Lambda Estoque (/api/estoque)' },
-      { rota: '/api/configuracoes', modulo: 'configuracoes', acao: 'listar_locais', nome: 'Lambda Prateleiras (/api/configuracoes)' },
-      { rota: '/api/relatorios', modulo: 'relatorios', acao: 'consultar_movimentacoes', nome: 'Lambda Relatórios (/api/relatorios)' },
-      { rota: '/api/auth/login', modulo: 'auth', acao: 'status', nome: 'Lambda Autenticação (/api/auth/login)' },
-      { rota: '/api/dora', modulo: 'dora', acao: 'ping', nome: 'Lambda Dora IA (/api/dora)' },
+      { rota: '/api/estoque', modulo: 'estoque', acao: 'consultar_estoque', nome: 'Controle de Estoque' },
+      { rota: '/api/configuracoes', modulo: 'configuracoes', acao: 'listar_locais', nome: 'Prateleiras e Armários' },
+      { rota: '/api/relatorios', modulo: 'relatorios', acao: 'consultar_movimentacoes', nome: 'Relatórios e Histórico' },
+      { rota: '/api/auth/login', modulo: 'auth', acao: 'status', nome: 'Acesso e Login' },
+      { rota: '/api/dora', modulo: 'dora', acao: 'ping', nome: 'Assistente Dora' },
     ];
 
     const lista: { rota: string; modulo: string; status: string; latenciaMs: number; ok: boolean }[] = [];
@@ -40,7 +40,7 @@ export default function DiagnosticAwsScreen() {
         lista.push({
           rota: t.nome,
           modulo: t.modulo,
-          status: resp?.sucesso !== false ? 'ONLINE (HTTP 200)' : 'ATENÇÃO',
+          status: resp?.sucesso !== false ? 'Funcionando bem' : 'Atenção',
           latenciaMs: ms,
           ok: resp?.sucesso !== false,
         });
@@ -48,7 +48,7 @@ export default function DiagnosticAwsScreen() {
         lista.push({
           rota: t.nome,
           modulo: t.modulo,
-          status: e?.message || 'FALHA DE RESPOSTA',
+          status: e?.message || 'Sem resposta no momento',
           latenciaMs: Date.now() - inicio,
           ok: false,
         });
@@ -69,28 +69,28 @@ export default function DiagnosticAwsScreen() {
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
-          accessibilityLabel="Voltar para Diagnóstico"
+          accessibilityLabel="Voltar para Status do App"
           onPress={() => roteador.back()}
           style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16, minHeight: 44 }}
         >
           <Feather name="arrow-left" size={20} color={theme.primary} />
           <Text style={{ color: theme.primary, fontWeight: 'bold', marginLeft: 8, fontSize: 15 * fontScale }}>
-            Voltar ao Diagnóstico
+            Voltar
           </Text>
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          Funções Serverless AWS Lambda
+          Conexão do Aplicativo
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Endpoint ativo: {API_BASE_URL}
+          Veja se cada parte do aplicativo está respondendo direitinho.
         </Text>
 
         {testando ? (
           <View style={{ paddingVertical: 40, alignItems: 'center' }}>
             <ActivityIndicator size="large" color={theme.primary} />
             <Text style={{ color: theme.subtext, marginTop: 12, fontSize: 13 * fontScale }}>
-              Medindo latência real das funções AWS Lambda...
+              Testando a conexão de cada parte do aplicativo...
             </Text>
           </View>
         ) : (
@@ -121,14 +121,14 @@ export default function DiagnosticAwsScreen() {
                 </Text>
               </View>
               <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, marginTop: 4 }}>
-                Status: {item.status}
+                Situação: {item.status}
               </Text>
             </View>
           ))
         )}
 
         <View style={{ marginTop: 12 }}>
-          <AppButton title="Executar Novo Ping AWS" variant="primary" loading={testando} onPress={testarRotasLambda} />
+          <AppButton title="Testar Conexão Novamente" variant="primary" loading={testando} onPress={testarRotasLambda} />
         </View>
       </ScrollView>
     </SafeAreaView>

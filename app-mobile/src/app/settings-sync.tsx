@@ -51,13 +51,13 @@ export default function SettingsSyncScreen() {
 
       if (exibirAlerta) {
         Alert.alert(
-          'Sincronização AWS Concluída',
-          `Tabelas DynamoDB conferidas às ${agora}:\n• ${lotesAtivos} lotes ativos\n• ${prateleiras.length} prateleiras homologadas\n• ${totalMov} registros de movimentação`
+          'Tudo Atualizado!',
+          `Dados conferidos às ${agora}:\n• ${lotesAtivos} lotes de alimentos guardados\n• ${prateleiras.length} prateleiras cadastradas\n• ${totalMov} registros no histórico`
         );
       }
     } catch (e: any) {
       if (exibirAlerta) {
-        Alert.alert('Erro de Sincronização', e?.message || 'Não foi possível comunicar com a AWS.');
+        Alert.alert('Não foi possível atualizar', e?.message || 'Verifique sua internet e tente novamente.');
       }
     } finally {
       setSincronizando(false);
@@ -70,7 +70,7 @@ export default function SettingsSyncScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 105 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -85,10 +85,10 @@ export default function SettingsSyncScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale, marginBottom: 6 }}>
-          6.8 Backup e Sincronização AWS
+          Atualização dos Dados
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Estado em tempo real das tabelas DynamoDB na nuvem AWS (`us-east-2`).
+          Veja se todas as informações da despensa estão em dia.
         </Text>
 
         {sincronizando ? (
@@ -96,22 +96,22 @@ export default function SettingsSyncScreen() {
         ) : (
           <View style={{ backgroundColor: theme.surface, borderRadius: 14, borderWidth: 1.5, borderColor: theme.secondary, padding: 16, marginBottom: 16, gap: 8 }}>
             <Text style={{ fontWeight: 'bold', color: theme.secondary, fontSize: 14 * fontScale }}>
-              ☁️ Nuvem AWS Sincronizada ({resumo.ultimaSincronizacao})
+              ✅ Dados em Dia ({resumo.ultimaSincronizacao})
             </Text>
             <Text style={{ color: theme.text, fontSize: 13 * fontScale }}>
-              • Lotes ativos em `tb_lotesProdutos`: <Text style={{ fontWeight: 'bold' }}>{resumo.lotes}</Text>
+              • Lotes de alimentos guardados: <Text style={{ fontWeight: 'bold' }}>{resumo.lotes}</Text>
             </Text>
             <Text style={{ color: theme.text, fontSize: 13 * fontScale }}>
-              • Prateleiras homologadas em `tb_locaisArmazenamento`: <Text style={{ fontWeight: 'bold' }}>{resumo.prateleiras}</Text>
+              • Prateleiras e armários cadastrados: <Text style={{ fontWeight: 'bold' }}>{resumo.prateleiras}</Text>
             </Text>
             <Text style={{ color: theme.text, fontSize: 13 * fontScale }}>
-              • Eventos auditados em `tb_movimentacoesEstoques`: <Text style={{ fontWeight: 'bold' }}>{resumo.movimentacoes}</Text>
+              • Movimentações salvas no histórico: <Text style={{ fontWeight: 'bold' }}>{resumo.movimentacoes}</Text>
             </Text>
           </View>
         )}
 
         <AppButton
-          title="Sincronizar Agora com a AWS"
+          title="Atualizar Dados Agora"
           variant="primary"
           loading={sincronizando}
           onPress={() => executarSincronizacaoAws(true)}

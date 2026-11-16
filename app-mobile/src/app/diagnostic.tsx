@@ -43,20 +43,20 @@ export default function DiagnosticScreen() {
 
         if (exibirAlerta) {
           Alert.alert(
-            'Diagnóstico Concluído',
-            `AWS Lambda e DynamoDB operacionais (${tempo} ms).\n• ${ativos.length} lotes ativos sincronizados.\n• ${resPrateleiras.locais.length} prateleiras homologadas.`
+            'Tudo Funcionando!',
+            `Conexão testada com sucesso (${tempo} ms).\n• ${ativos.length} lotes de alimentos guardados.\n• ${resPrateleiras.locais.length} prateleiras cadastradas.`
           );
         }
       } else {
         setStatusAws('OFFLINE');
         if (exibirAlerta) {
-          Alert.alert('Atenção', 'O servidor respondeu, mas sem confirmação de lotes.');
+          Alert.alert('Atenção', 'O sistema respondeu, mas ainda está carregando os dados.');
         }
       }
     } catch (erro: any) {
       setStatusAws('OFFLINE');
       if (exibirAlerta) {
-        Alert.alert('Falha de Conexão', erro?.message || 'Não foi possível alcançar a AWS Lambda.');
+        Alert.alert('Sem Conexão', erro?.message || 'Não foi possível conectar ao sistema agora.');
       }
     } finally {
       setVerificando(false);
@@ -70,33 +70,33 @@ export default function DiagnosticScreen() {
   const servicos = [
     {
       rota: '/diagnostic-aws',
-      nome: ' Funções Serverless AWS Lambda',
+      nome: 'Conexão com a Internet e Sistema',
       detalhe:
         latenciaMs !== null
-          ? `Região us-east-2 • Latência real: ${latenciaMs} ms`
-          : `Endpoint: ${API_BASE_URL.replace('https://', '').slice(0, 28)}...`,
+          ? `Resposta rápida • Tempo: ${latenciaMs} ms`
+          : 'Verificando velocidade de resposta do aplicativo...',
       status: statusAws,
       cor: statusAws === 'DISPONÍVEL' ? theme.secondary : statusAws === 'VERIFICANDO' ? tokens.colors.accentAmber500 : theme.danger,
     },
     {
       rota: '/diagnostic-database',
-      nome: 'Bancos de Dados (DynamoDB + Firebase)',
-      detalhe: `${totalLotes} lotes ativos • ${totalPrateleiras} prateleiras homologadas`,
-      status: statusAws === 'DISPONÍVEL' ? 'SINCRONIZADO' : statusAws,
+      nome: 'Dados Salvos da Despensa',
+      detalhe: `${totalLotes} lotes de alimentos • ${totalPrateleiras} prateleiras cadastradas`,
+      status: statusAws === 'DISPONÍVEL' ? 'EM DIA' : statusAws,
       cor: statusAws === 'DISPONÍVEL' ? theme.secondary : theme.danger,
     },
     {
       rota: '/diagnostic-apis',
-      nome: 'Cascata de 3 APIs (Código de Barras)',
-      detalhe: 'Open Food Facts • Cosmos/Bluesoft • Open Product Data / UPCitemdb',
-      status: 'TESTAR EAN',
+      nome: 'Leitura de Código de Barras',
+      detalhe: 'Teste se a busca automática de alimentos pelo código está funcionando',
+      status: 'TESTAR',
       cor: tokens.colors.accentAmber500,
     },
     {
       rota: '/diagnostic-config',
-      nome: 'Configurar Chaves e Integrações',
-      detalhe: 'Inspecionar endpoints AWS, timeouts e prioridade da cascata EAN',
-      status: 'INSPECIONAR',
+      nome: 'Informações do Aplicativo',
+      detalhe: 'Veja os detalhes de funcionamento e conexão do app',
+      status: 'VER MAIS',
       cor: theme.primary,
     },
   ];
@@ -119,10 +119,10 @@ export default function DiagnosticScreen() {
 
         <View style={estilosDiagnostic.cabecalho}>
           <Text style={[estilosDiagnostic.titulo, { color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-            Disponibilidade do Sistema
+            Status do Aplicativo
           </Text>
           <Text style={[estilosDiagnostic.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Verifique em tempo real a saúde dos servidores AWS, tabelas DynamoDB e cascata de APIs de código de barras.
+            Veja se a conexão com a internet, os dados salvos e o leitor de código de barras estão funcionando bem.
           </Text>
         </View>
 
@@ -154,11 +154,11 @@ export default function DiagnosticScreen() {
 
         <View style={{ marginTop: 12 }}>
           <AppButton
-            title="Testar Todas as Conexões Agora"
+            title="Testar Tudo Agora"
             variant="primary"
             loading={verificando}
             onPress={() => executarDiagnosticoReal(true)}
-            accessibilityHint="Executa uma chamada real à nuvem AWS e mede a latência atual"
+            accessibilityHint="Testa a conexão do aplicativo e verifica se está tudo funcionando"
           />
         </View>
       </ScrollView>

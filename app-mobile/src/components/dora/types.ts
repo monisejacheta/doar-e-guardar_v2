@@ -88,7 +88,7 @@ export const criarMensagemBoasVindas = (sufixo = 'inicial'): MensagemChat => ({
     `## Assistente de Estoque • Casa da Criança\n` +
     `• **Receitas reais:** Sugiro preparos com ingredientes compatíveis do estoque.\n` +
     `• **Previsão de consumo:** Calculo a duração estimada de cada alimento.\n` +
-    `• **Alerta de validade (FEFO):** Indico o que precisa sair primeiro.\n` +
+    `• **Avisos de validade:** Indico o que precisa ser usado primeiro.\n` +
     `• **Localização:** Mostro exatamente em qual prateleira cada lote está.`,
   sugestoesContinuacao: [
     '🍲 Me sugere uma receita?',

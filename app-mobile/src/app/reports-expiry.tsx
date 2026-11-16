@@ -48,7 +48,7 @@ export default function ReportsExpiryScreen() {
           setLotes([]);
         }
       } catch {
-        Alert.alert('Erro', 'Não foi possível carregar os lotes da AWS.');
+        Alert.alert('Ops!', 'Não foi possível carregar os lotes agora.');
         setLotes([]);
       } finally {
         setCarregando(false);
@@ -222,10 +222,10 @@ export default function ReportsExpiryScreen() {
 
         <View style={estilosReportsExpiry.cabecalho}>
           <Text style={[estilosReportsExpiry.titulo, { color: tokens.colors.accentAmber500, fontSize: tokens.typography.fontSize.xl * fontScale }]}>
-            Relatório de Validades
+            Prazos de Validade
           </Text>
           <Text style={[estilosReportsExpiry.subtitulo, { color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale }]}>
-            Regra FEFO: Rastreio de lotes por prateleira para priorização e prevenção de desperdícios.
+            Veja o que vence primeiro em cada prateleira para usar antes e evitar desperdícios.
           </Text>
         </View>
 
@@ -395,7 +395,7 @@ export default function ReportsExpiryScreen() {
                     </Text>
                   </View>
                   <Text style={[estilosReportsExpiry.produtoSub, { color: theme.subtext }]}>
-                    EAN: {produto.ean} • Saldo Total: <Text style={{ color: theme.text, fontWeight: 'bold' }}>{produto.volumeTotal} un</Text>
+                    Código: {produto.ean} • Total: <Text style={{ color: theme.text, fontWeight: 'bold' }}>{produto.volumeTotal} un</Text>
                   </Text>
                 </View>
 

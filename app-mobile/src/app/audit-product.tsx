@@ -47,7 +47,7 @@ export default function AuditProductScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 96 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
         <TouchableOpacity
           accessible={true}
           accessibilityRole="button"
@@ -59,10 +59,10 @@ export default function AuditProductScreen() {
         </TouchableOpacity>
 
         <Text style={{ fontWeight: '800', color: theme.primary, fontSize: tokens.typography.fontSize.xl * fontScale }}>
-          Auditoria por Produto
+          Histórico por Produto
         </Text>
         <Text style={{ color: theme.subtext, fontSize: tokens.typography.fontSize.sm * fontScale, marginTop: 4, marginBottom: 16 }}>
-          Rastro completo de entradas, saídas, ajustes e transferências de prateleira por alimento na AWS.
+          Veja todas as entradas, saídas, ajustes e mudanças de prateleira de cada alimento.
         </Text>
 
         <View
@@ -80,7 +80,7 @@ export default function AuditProductScreen() {
         >
           <Feather name="search" size={16} color={theme.subtext} style={{ marginRight: 8 }} />
           <TextInput
-            placeholder="Filtrar por nome do produto ou EAN..."
+            placeholder="Filtrar por nome do alimento ou código..."
             placeholderTextColor={theme.subtext}
             value={busca}
             onChangeText={setBusca}
@@ -92,7 +92,7 @@ export default function AuditProductScreen() {
           <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 24 }} />
         ) : agrupadoPorProduto.length === 0 ? (
           <Text style={{ color: theme.subtext, textAlign: 'center', marginTop: 24 }}>
-            Nenhum rastro de auditoria encontrado para o filtro informado.
+            Nenhum registro encontrado para essa busca.
           </Text>
         ) : (
           <View style={{ gap: 12 }}>
@@ -109,7 +109,7 @@ export default function AuditProductScreen() {
               >
                 <Text style={{ fontWeight: '800', color: theme.text, fontSize: 14 * fontScale }}>{prod.nome}</Text>
                 <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginBottom: 8 }}>
-                  EAN: {prod.ean} • {prod.registros.length} operação(ões) auditada(s)
+                  Código: {prod.ean} • {prod.registros.length} movimentação(ões)
                 </Text>
                 {prod.registros.slice(0, 6).map((reg, idx) => (
                   <View
