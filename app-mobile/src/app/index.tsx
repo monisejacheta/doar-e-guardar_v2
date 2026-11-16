@@ -3,7 +3,6 @@ import {
   StyleSheet,
   Text,
   View,
-  SafeAreaView,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -11,28 +10,104 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  ImageBackground,
+  Image,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather, FontAwesome } from '@expo/vector-icons';
+import Constants from 'expo-constants';
+import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
 import {
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
-  signInWithCredential,
-  GoogleAuthProvider,
-  signInAnonymously,
-  updateProfile,
 } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebaseConfig';
 import { useAppTheme } from '../context/ThemeContext';
 import { requisicaoApi } from '../services/api';
-import { authService, ContaGoogleSalva } from '../services/authService';
+import {
+  authService,
+  ContaGoogleSalva,
+  extrairParametrosOAuthDeUrl,
+} from '../services/authService';
 
 // Notifica a sessão web do navegador para concluir o redirecionamento OAuth quando necessário
 WebBrowser.maybeCompleteAuthSession();
+
+// Client ID Web oficial do projeto Firebase (doar-e-guardar-v2)
+const GOOGLE_WEB_CLIENT_ID_PADRAO =
+  '206062751062-u26ek6ap56v69rd32ec9q76mpvtts2q8.apps.googleusercontent.com';
+
+// Proxy HTTPS do Expo para redirecionamento OAuth seguro no Expo Go e APK Mobile
+const EXPO_PROXY_REDIRECT_URI =
+  process.env.EXPO_PUBLIC_GOOGLE_REDIRECT_URI ||
+  'https://auth.expo.io/@juuliano_mancini/doar-e-guardar';
+
+/**
+ * Gera a URL de retorno para o app extraindo o host:porta de todas as fontes possíveis no Expo SDK 58
+ * (Linking.createURL(''), Constants.expoConfig.hostUri e Constants.linkingUri) e retorna diagnóstico detalhado.
+ */
+function obterUrlsRetornoMobile(): {
+  returnUrlProxy: string;
+  returnUrlFiltro: string;
+  diagnostico: string;
+} {
+  let urlBaseLinking = '';
+  try {
+    urlBaseLinking = Linking.createURL('');
+  } catch {
+    urlBaseLinking = '';
+  }
+
+  const hostConfig = Constants.expoConfig?.hostUri || '';
+  const linkingUri = Constants.linkingUri || '';
+  const execEnv = String(Constants.executionEnvironment || 'desconhecido');
+  const appOwn = String(Constants.appOwnership || 'null');
+
+  let hostExtraido = hostConfig;
+  if (!hostExtraido && urlBaseLinking.startsWith('exp')) {
+    hostExtraido = urlBaseLinking
+      .replace(/^[a-zA-Z0-9+.-]+:\/\//, '')
+      .replace(/\/--(\/.*)?$/, '')
+      .replace(/\/+$/, '');
+  }
+  if (!hostExtraido && linkingUri) {
+    hostExtraido = linkingUri
+      .replace(/^[a-zA-Z0-9+.-]+:\/\//, '')
+      .replace(/\/--(\/.*)?$/, '')
+      .replace(/\/+$/, '');
+  }
+
+  hostExtraido = hostExtraido.replace(/^\/+/, '').replace(/\/+$/, '');
+
+  if (hostExtraido) {
+    const esquema = urlBaseLinking.startsWith('exps://') ? 'exps' : 'exp';
+    const returnUrlProxy = `${esquema}://${hostExtraido}/--/oauthredirect`;
+    const returnUrlFiltro = `${esquema}://${hostExtraido}`;
+    const diagnostico = [
+      `Ambiente: ${execEnv} (appOwnership: ${appOwn})`,
+      `Host Metro: ${hostExtraido}`,
+      `Linking base: ${urlBaseLinking || 'vazio'}`,
+      `returnUrl enviado ao proxy: ${returnUrlProxy}`,
+    ].join('\n');
+
+    return { returnUrlProxy, returnUrlFiltro, diagnostico };
+  }
+
+  const returnUrlProxy = 'appmobile://oauthredirect';
+  const returnUrlFiltro = 'appmobile://';
+  const diagnostico = [
+    `Ambiente: ${execEnv} (appOwnership: ${appOwn})`,
+    `Host Metro: não detectado`,
+    `Linking base: ${urlBaseLinking || 'vazio'}`,
+    `returnUrl enviado ao proxy: ${returnUrlProxy}`,
+  ].join('\n');
+
+  return { returnUrlProxy, returnUrlFiltro, diagnostico };
+}
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -52,21 +127,13 @@ export default function LoginScreen() {
   const [outroNomeGoogle, setOutroNomeGoogle] = useState('');
   const [conectandoGoogle, setConectandoGoogle] = useState(false);
 
-  // Configuração Nativa do Google Auth via Expo AuthSession (Account Chooser Oficial)
-  const googleClientIdFallback =
-    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+  // Configuração do Client ID Web homologado no Firebase / Google Cloud Console
+  const googleWebClientId =
     process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
-    '206062751062-web.apps.googleusercontent.com';
+    process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ||
+    GOOGLE_WEB_CLIENT_ID_PADRAO;
 
-  const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: googleClientIdFallback,
-    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || googleClientIdFallback,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || googleClientIdFallback,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || googleClientIdFallback,
-    selectAccount: true, // Aciona o Account Chooser (seletor de contas oficial do Google)
-  });
-
-  // Carrega contas Google memorizadas no dispositivo
+  // Carrega contas Google memorizadas no dispositivo e verifica redirect pendente na Web
   useEffect(() => {
     const carregarContas = async () => {
       try {
@@ -77,102 +144,72 @@ export default function LoginScreen() {
       }
     };
     carregarContas();
-  }, []);
 
-  // Processa o retorno nativo do Seletor de Contas Google
+    // Caso tenha usado signInWithRedirect em navegador mobile (Web)
+    if (Platform.OS === 'web' && auth) {
+      getRedirectResult(auth)
+        .then(async (resultado) => {
+          if (resultado?.user) {
+            setCarregando(true);
+            const idToken = await resultado.user.getIdToken();
+            await authService.finalizarSessaoGoogle(
+              {
+                id: resultado.user.uid,
+                name:
+                  resultado.user.displayName ||
+                  resultado.user.email?.split('@')[0] ||
+                  'Colaborador',
+                email: resultado.user.email || 'colaborador@casadacrianca.org.br',
+                foto: resultado.user.photoURL || '',
+              },
+              idToken
+            );
+            router.replace('/home');
+          }
+        })
+        .catch((err) => {
+          console.warn('[Firebase Redirect Web] Aviso:', err);
+        })
+        .finally(() => {
+          setCarregando(false);
+        });
+    }
+  }, [router]);
+
+  // Escuta deep links de retorno OAuth no Mobile (corrige race condition do AppState no Android)
   useEffect(() => {
-    const processarRetornoGoogleNativo = async () => {
-      if (response?.type === 'success') {
+    if (Platform.OS === 'web') return;
+
+    const tratarUrlRecebida = async (url: string | null) => {
+      if (!url) return;
+      const { idToken, accessToken } = extrairParametrosOAuthDeUrl(url);
+      if (idToken || accessToken) {
         setCarregando(true);
         try {
-          const params = (response.params || {}) as Record<string, string>;
-          const authObj = response.authentication;
-          const idTokenRecebido = params?.id_token || authObj?.idToken;
-          const accessTokenRecebido = params?.access_token || authObj?.accessToken;
-
-          let perfilUsuario = {
-            id: '',
-            name: '',
-            email: '',
-            foto: '',
-          };
-
-          // 1. Tenta buscar informações detalhadas do perfil via Google UserInfo API
-          if (accessTokenRecebido) {
-            try {
-              const resInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                headers: { Authorization: `Bearer ${accessTokenRecebido}` },
-              });
-              if (resInfo.ok) {
-                const dados = await resInfo.json();
-                perfilUsuario.id = dados.sub || '';
-                perfilUsuario.name = dados.name || dados.given_name || '';
-                perfilUsuario.email = dados.email || '';
-                perfilUsuario.foto = dados.picture || '';
-              }
-            } catch (errUser) {
-              console.warn('[Google UserInfo] Aviso:', errUser);
-            }
+          const usuario = await authService.autenticarComTokensGoogle(idToken, accessToken);
+          if (usuario) {
+            setModalGoogleVisivel(false);
+            router.replace('/home');
           }
-
-          // 2. Se não obtiver pelo UserInfo, decodifica o payload do id_token (JWT)
-          if ((!perfilUsuario.email || !perfilUsuario.name) && idTokenRecebido) {
-            try {
-              const partes = idTokenRecebido.split('.');
-              if (partes.length === 3) {
-                const base64Limpo = partes[1].replace(/-/g, '+').replace(/_/g, '/');
-                const jsonDecodificado = decodeURIComponent(
-                  escape(atob(base64Limpo))
-                );
-                const jwtData = JSON.parse(jsonDecodificado);
-                if (!perfilUsuario.id) perfilUsuario.id = jwtData.sub || '';
-                if (!perfilUsuario.name) perfilUsuario.name = jwtData.name || jwtData.given_name || '';
-                if (!perfilUsuario.email) perfilUsuario.email = jwtData.email || '';
-                if (!perfilUsuario.foto) perfilUsuario.foto = jwtData.picture || '';
-              }
-            } catch (jwtErr) {
-              console.warn('[JWT Decode] Falha ao decodificar id_token:', jwtErr);
-            }
-          }
-
-          // 3. Autentica no Firebase com a credencial nativa obtida
-          if (idTokenRecebido && auth) {
-            try {
-              const credential = GoogleAuthProvider.credential(idTokenRecebido, accessTokenRecebido);
-              const credencialFirebase = await signInWithCredential(auth, credential);
-              if (credencialFirebase.user) {
-                if (!perfilUsuario.id) perfilUsuario.id = credencialFirebase.user.uid;
-                if (!perfilUsuario.name) perfilUsuario.name = credencialFirebase.user.displayName || perfilUsuario.name;
-                if (!perfilUsuario.email) perfilUsuario.email = credencialFirebase.user.email || perfilUsuario.email;
-                if (!perfilUsuario.foto) perfilUsuario.foto = credencialFirebase.user.photoURL || perfilUsuario.foto;
-              }
-            } catch (fbErr) {
-              console.warn('[Firebase Auth] Erro ao autenticar credencial Google:', fbErr);
-            }
-          }
-
-          if (!perfilUsuario.email) {
-            throw new Error('Não foi possível identificar o e-mail da conta Google selecionada.');
-          }
-
-          await finalizarLoginComSessao(perfilUsuario, idTokenRecebido || accessTokenRecebido);
         } catch (erro: any) {
-          Alert.alert('Erro no Login Google', erro?.message || 'Falha ao processar os dados da conta Google.');
+          Alert.alert(
+            'Erro no Login Google',
+            erro?.message || 'Falha ao processar os dados da conta Google.'
+          );
         } finally {
           setCarregando(false);
         }
-      } else if (response?.type === 'error') {
-        setCarregando(false);
-        Alert.alert('Autenticação Google', response.error?.message || 'Erro ao autenticar com o Google.');
-      } else if (response?.type === 'cancel' || response?.type === 'dismiss') {
-        setCarregando(false);
       }
     };
 
-    if (response) {
-      processarRetornoGoogleNativo();
-    }
-  }, [response]);
+    const sub = Linking.addEventListener('url', (evento) => {
+      tratarUrlRecebida(evento.url);
+    });
+
+    return () => {
+      sub.remove();
+    };
+  }, [router]);
 
   // Finaliza a sessão tanto no Firebase Auth quanto na AWS Lambda e navega
   const finalizarLoginComSessao = async (
@@ -181,56 +218,83 @@ export default function LoginScreen() {
   ) => {
     setConectandoGoogle(true);
     try {
-      const emailLimpo = perfil.email.trim().toLowerCase();
-      const nomeLimpo = (perfil.name || '').trim() || emailLimpo.split('@')[0];
-      const tokenFinal = idTokenReal || `token_sessao_google_mobile_${Date.now()}`;
-
-      const perfilFinal = {
-        id: perfil.id || `usr_google_${emailLimpo.replace(/[^a-zA-Z0-9]/g, '_')}`,
-        name: nomeLimpo,
-        email: emailLimpo,
-        foto: perfil.foto || '',
-      };
-
-      // 1. Garante que o Firebase Auth tenha sessão ativa (auth.currentUser)
-      if (auth && !auth.currentUser) {
-        try {
-          const credAnonima = await signInAnonymously(auth);
-          if (credAnonima?.user) {
-            await updateProfile(credAnonima.user, {
-              displayName: perfilFinal.name,
-              photoURL: perfilFinal.foto || undefined,
-            });
-          }
-        } catch (fbErr) {
-          console.warn('[Firebase Auth] Sessão local ativa:', fbErr);
-        }
-      }
-
-      // 2. Salva localmente para persistência no dispositivo
-      await authService.salvarContaGoogleDispositivo(perfilFinal);
-      await authService.salvarSessaoLocal({
-        id_usuario: perfilFinal.id,
-        nome_usuario: perfilFinal.name,
-        email_usuario: perfilFinal.email,
-        nivel_acesso_permissao: 'funcionario_operador',
-        url_foto_perfil: perfilFinal.foto,
-        provedor_autenticacao: 'google',
-      });
-
-      // 3. Sincroniza com o backend AWS
-      try {
-        await authService.sincronizarUsuarioComBackend(tokenFinal, perfilFinal, Platform.OS === 'web' ? 'portal_web' : 'mobile_android');
-      } catch (apiErr) {
-        console.warn('[AWS Lambda] Contingência de login:', apiErr);
-      }
-
+      await authService.finalizarSessaoGoogle(perfil, idTokenReal);
       setModalGoogleVisivel(false);
       router.replace('/home');
     } catch (erro: any) {
       Alert.alert('Erro no Login', erro?.message || 'Falha ao autenticar sua conta Google.');
     } finally {
       setConectandoGoogle(false);
+    }
+  };
+
+  // Abre o seletor oficial de contas Google no navegador do smartphone (Chrome Custom Tabs / Safari)
+  const abrirSeletorGoogleNoNavegadorMobile = async () => {
+    setCarregando(true);
+    try {
+      // Fluxo OAuth oficial via Proxy HTTPS (compatível com Expo Go via npx expo start -c e APK)
+      const { returnUrlProxy, returnUrlFiltro } = obterUrlsRetornoMobile();
+      const state = Math.random().toString(36).substring(2, 15);
+      const nonce = Math.random().toString(36).substring(2, 15);
+
+      const paramsGoogle = new URLSearchParams({
+        client_id: googleWebClientId,
+        redirect_uri: EXPO_PROXY_REDIRECT_URI,
+        response_type: 'id_token token',
+        scope: 'openid profile email',
+        prompt: 'select_account',
+        state,
+        nonce,
+      });
+
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${paramsGoogle.toString()}`;
+      const paramsProxy = new URLSearchParams({
+        authUrl,
+        returnUrl: returnUrlProxy,
+      });
+      const startUrl = `${EXPO_PROXY_REDIRECT_URI}/start?${paramsProxy.toString()}`;
+
+      const resultadoSessao = await WebBrowser.openAuthSessionAsync(startUrl, returnUrlFiltro);
+
+      if (resultadoSessao.type === 'success' && resultadoSessao.url) {
+        const { idToken, accessToken, error, errorDescription } = extrairParametrosOAuthDeUrl(
+          resultadoSessao.url
+        );
+
+        if (error) {
+          throw new Error(errorDescription || error);
+        }
+
+        if (idToken || accessToken) {
+          const usuario = await authService.autenticarComTokensGoogle(idToken, accessToken);
+          if (usuario) {
+            setModalGoogleVisivel(false);
+            router.replace('/home');
+            return;
+          }
+        }
+      }
+
+      // Aguarda caso o evento Linking / oauthredirect esteja concluindo a validação no Android
+      for (let tentativa = 0; tentativa < 8; tentativa++) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        const sessaoAtiva = authService.obterUsuarioAtualSincrono();
+        if (sessaoAtiva) {
+          setModalGoogleVisivel(false);
+          router.replace('/home');
+          return;
+        }
+        if (!authService.estaProcessandoOAuth() && tentativa >= 1) {
+          break;
+        }
+      }
+    } catch (erroPrompt: any) {
+      console.warn('[Google Sign-In Mobile] Aviso no seletor do navegador:', erroPrompt);
+      setConectandoGoogle(false);
+      setMostrarInputOutraConta(false);
+      setModalGoogleVisivel(true);
+    } finally {
+      setCarregando(false);
     }
   };
 
@@ -242,22 +306,37 @@ export default function LoginScreen() {
         if (!auth || !googleProvider) {
           throw new Error('Provedor de autenticação Google indisponível no navegador.');
         }
-        const resultado = await signInWithPopup(auth, googleProvider);
-        if (!resultado || !resultado.user) {
-          throw new Error('Não foi possível obter dados da autenticação Google.');
-        }
-        const usuarioGoogle = resultado.user;
-        const idToken = await usuarioGoogle.getIdToken();
-        const perfilUsuario = {
-          id: usuarioGoogle.uid || 'usr_google_web',
-          name: usuarioGoogle.displayName || usuarioGoogle.email?.split('@')[0] || 'Colaborador',
-          email: usuarioGoogle.email || 'colaborador@casadacrianca.org.br',
-          foto: usuarioGoogle.photoURL || '',
-        };
+        try {
+          const resultado = await signInWithPopup(auth, googleProvider);
+          if (!resultado || !resultado.user) {
+            throw new Error('Não foi possível obter dados da autenticação Google.');
+          }
+          const usuarioGoogle = resultado.user;
+          const idToken = await usuarioGoogle.getIdToken();
+          const perfilUsuario = {
+            id: usuarioGoogle.uid || 'usr_google_web',
+            name:
+              usuarioGoogle.displayName || usuarioGoogle.email?.split('@')[0] || 'Colaborador',
+            email: usuarioGoogle.email || 'colaborador@casadacrianca.org.br',
+            foto: usuarioGoogle.photoURL || '',
+          };
 
-        await finalizarLoginComSessao(perfilUsuario, idToken);
+          await finalizarLoginComSessao(perfilUsuario, idToken);
+        } catch (popupErr: any) {
+          if (
+            popupErr?.code === 'auth/popup-blocked' ||
+            popupErr?.code === 'auth/operation-not-supported-in-this-environment'
+          ) {
+            await signInWithRedirect(auth, googleProvider);
+            return;
+          }
+          throw popupErr;
+        }
       } catch (erro: any) {
-        if (erro?.code === 'auth/popup-closed-by-user' || erro?.code === 'auth/cancelled-popup-request') {
+        if (
+          erro?.code === 'auth/popup-closed-by-user' ||
+          erro?.code === 'auth/cancelled-popup-request'
+        ) {
           return;
         }
         Alert.alert('Erro ao Entrar', erro?.message || 'Falha ao autenticar com o Google.');
@@ -265,22 +344,7 @@ export default function LoginScreen() {
         setCarregando(false);
       }
     } else {
-      // No APK Mobile Android/iOS: Aciona o seletor de contas nativo do Google (Account Chooser)
-      setCarregando(true);
-      try {
-        const resultadoPrompt = await promptAsync();
-        if (resultadoPrompt?.type === 'cancel' || resultadoPrompt?.type === 'dismiss') {
-          setCarregando(false);
-          return;
-        }
-      } catch (erroPrompt: any) {
-        setCarregando(false);
-        console.warn('[Google Sign-In] Erro no prompt nativo:', erroPrompt);
-        // Em caso de falha no acoplamento do navegador nativo, abre a opção de contingência
-        setConectandoGoogle(false);
-        setMostrarInputOutraConta(false);
-        setModalGoogleVisivel(true);
-      }
+      await abrirSeletorGoogleNoNavegadorMobile();
     }
   };
 
@@ -361,12 +425,13 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <ImageBackground
-        source={require('../../assets/images/wallpaperLogin.jpg')}
-        style={StyleSheet.absoluteFill}
-        imageStyle={{ opacity: 0.45, width: '100%', height: '100%' }}
-        resizeMode="cover"
-      />
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <Image
+          source={require('../../assets/images/wallpaperLogin.jpg')}
+          style={{ opacity: 0.45, width: '100%', height: '100%' }}
+          resizeMode="cover"
+        />
+      </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -509,7 +574,7 @@ export default function LoginScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* JANELA / MODAL OFICIAL PARA ESCOLHER A CONTA GOOGLE LOGADA NO APARELHO */}
+      {/* JANELA / MODAL DE CONTAS GOOGLE FORMATADA NO PADRÃO DO SISTEMA */}
       <Modal
         visible={modalGoogleVisivel}
         transparent={true}
@@ -519,52 +584,91 @@ export default function LoginScreen() {
         }}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: '#FFFFFF' }]}>
-            {/* Cabeçalho Oficial Google */}
-            <View style={styles.modalGoogleHeader}>
+          <View
+            style={[
+              styles.modalContent,
+              {
+                backgroundColor: theme.surface,
+                borderColor: theme.border,
+                borderTopWidth: 1.5,
+              },
+            ]}
+          >
+            <View style={[styles.modalGoogleHeader, { borderBottomColor: theme.border }]}>
               <View style={styles.logoRow}>
-                <FontAwesome name="google" size={26} color="#4285F4" />
-                <Text style={styles.googleBrandText}>Google</Text>
+                <FontAwesome name="google" size={24} color={theme.primary} />
+                <Text style={[styles.googleBrandText, { color: theme.primary }]}>
+                  Doar &amp; Guardar
+                </Text>
               </View>
-              <Text style={styles.modalTitle}>Escolha uma conta Google</Text>
-              <Text style={styles.modalSubtitle}>para continuar para Doar &amp; Guardar</Text>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>
+                Escolha sua conta Google
+              </Text>
+              <Text style={[styles.modalSubtitle, { color: theme.subtext }]}>
+                Acesso integrado à gestão solidária da Casa da Criança
+              </Text>
             </View>
 
             {conectandoGoogle ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#4285F4" />
-                <Text style={styles.loadingText}>Entrando com sua conta Google...</Text>
+                <ActivityIndicator size="large" color={theme.primary} />
+                <Text style={[styles.loadingText, { color: theme.text }]}>
+                  Entrando com sua conta Google...
+                </Text>
               </View>
             ) : (
               <ScrollView style={{ maxHeight: 390 }} showsVerticalScrollIndicator={false}>
+                {/* Opção 1: Tentar abrir novamente o Seletor Oficial do Google no navegador do aparelho */}
+                <TouchableOpacity
+                  style={[styles.contaItem, { borderBottomColor: theme.border }]}
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    setModalGoogleVisivel(false);
+                    abrirSeletorGoogleNoNavegadorMobile();
+                  }}
+                >
+                  <View style={[styles.avatarCirculo, { backgroundColor: `${theme.primary}18` }]}>
+                    <FontAwesome name="google" size={20} color={theme.primary} />
+                  </View>
+                  <View style={styles.contaInfo}>
+                    <Text style={[styles.contaNome, { color: theme.text }]}>
+                      Contas Google do Aparelho
+                    </Text>
+                    <Text style={[styles.contaEmail, { color: theme.subtext }]}>
+                      Selecionar conta logada no navegador do celular
+                    </Text>
+                  </View>
+                  <Feather name="external-link" size={18} color={theme.primary} />
+                </TouchableOpacity>
+
                 {/* Contas Memorizadas no Dispositivo */}
                 {contasSalvas.map((conta) => (
                   <TouchableOpacity
                     key={conta.email}
-                    style={styles.contaItem}
+                    style={[styles.contaItem, { borderBottomColor: theme.border }]}
                     activeOpacity={0.7}
                     onPress={() => finalizarLoginComSessao(conta)}
                   >
-                    <View style={[styles.avatarCirculo, { backgroundColor: '#E8F0FE' }]}>
-                      <Text style={styles.avatarTexto}>
+                    <View style={[styles.avatarCirculo, { backgroundColor: `${theme.primary}18` }]}>
+                      <Text style={[styles.avatarTexto, { color: theme.primary }]}>
                         {(conta.name || conta.email)[0].toUpperCase()}
                       </Text>
                     </View>
                     <View style={styles.contaInfo}>
-                      <Text style={styles.contaNome} numberOfLines={1}>
+                      <Text style={[styles.contaNome, { color: theme.text }]} numberOfLines={1}>
                         {conta.name}
                       </Text>
-                      <Text style={styles.contaEmail} numberOfLines={1}>
+                      <Text style={[styles.contaEmail, { color: theme.subtext }]} numberOfLines={1}>
                         {conta.email}
                       </Text>
                     </View>
-                    <Feather name="chevron-right" size={18} color="#9AA0A6" />
+                    <Feather name="chevron-right" size={18} color={theme.subtext} />
                   </TouchableOpacity>
                 ))}
 
                 {/* Opção da Conta Oficial Institucional */}
                 <TouchableOpacity
-                  style={styles.contaItem}
+                  style={[styles.contaItem, { borderBottomColor: theme.border }]}
                   activeOpacity={0.7}
                   onPress={() =>
                     finalizarLoginComSessao({
@@ -574,39 +678,61 @@ export default function LoginScreen() {
                     })
                   }
                 >
-                  <View style={[styles.avatarCirculo, { backgroundColor: '#E6F4EA' }]}>
-                    <Feather name="shield" size={18} color="#1E8E3E" />
+                  <View style={[styles.avatarCirculo, { backgroundColor: `${theme.secondary}18` }]}>
+                    <Feather name="shield" size={18} color={theme.secondary} />
                   </View>
                   <View style={styles.contaInfo}>
-                    <Text style={styles.contaNome}>Colaborador Institucional</Text>
-                    <Text style={styles.contaEmail}>colaborador@casadacrianca.org.br</Text>
+                    <Text style={[styles.contaNome, { color: theme.text }]}>
+                      Colaborador Institucional
+                    </Text>
+                    <Text style={[styles.contaEmail, { color: theme.subtext }]}>
+                      colaborador@casadacrianca.org.br
+                    </Text>
                   </View>
-                  <Feather name="chevron-right" size={18} color="#9AA0A6" />
+                  <Feather name="chevron-right" size={18} color={theme.subtext} />
                 </TouchableOpacity>
 
                 {/* Opção: Digitar o e-mail Google logado no aparelho */}
                 {!mostrarInputOutraConta ? (
                   <TouchableOpacity
-                    style={styles.contaItem}
+                    style={[styles.contaItem, { borderBottomColor: theme.border }]}
                     activeOpacity={0.7}
                     onPress={() => setMostrarInputOutraConta(true)}
                   >
-                    <View style={[styles.avatarCirculo, { backgroundColor: '#F1F3F4' }]}>
-                      <Feather name="user-check" size={18} color="#5F6368" />
+                    <View style={[styles.avatarCirculo, { backgroundColor: theme.background }]}>
+                      <Feather name="user-check" size={18} color={theme.subtext} />
                     </View>
                     <View style={styles.contaInfo}>
-                      <Text style={styles.contaNome}>Digitar meu e-mail Google</Text>
-                      <Text style={styles.contaEmail}>Selecione seu e-mail @gmail.com ativo</Text>
+                      <Text style={[styles.contaNome, { color: theme.text }]}>
+                        Digitar meu e-mail Google
+                      </Text>
+                      <Text style={[styles.contaEmail, { color: theme.subtext }]}>
+                        Selecione seu e-mail @gmail.com ativo
+                      </Text>
                     </View>
-                    <Feather name="plus" size={18} color="#5F6368" />
+                    <Feather name="plus" size={18} color={theme.subtext} />
                   </TouchableOpacity>
                 ) : (
-                  <View style={styles.formOutraConta}>
-                    <Text style={styles.labelOutraConta}>Seu e-mail Google do aparelho:</Text>
+                  <View
+                    style={[
+                      styles.formOutraConta,
+                      { backgroundColor: theme.background, borderColor: theme.border },
+                    ]}
+                  >
+                    <Text style={[styles.labelOutraConta, { color: theme.text }]}>
+                      Seu e-mail Google do aparelho:
+                    </Text>
                     <TextInput
-                      style={styles.inputGoogle}
+                      style={[
+                        styles.inputGoogle,
+                        {
+                          backgroundColor: theme.surface,
+                          borderColor: theme.border,
+                          color: theme.text,
+                        },
+                      ]}
                       placeholder="seu.email@gmail.com"
-                      placeholderTextColor="#9AA0A6"
+                      placeholderTextColor={theme.subtext}
                       value={outroEmailGoogle}
                       onChangeText={setOutroEmailGoogle}
                       autoCapitalize="none"
@@ -614,21 +740,33 @@ export default function LoginScreen() {
                       autoFocus={true}
                     />
 
-                    <Text style={[styles.labelOutraConta, { marginTop: 8 }]}>Seu nome (opcional):</Text>
+                    <Text style={[styles.labelOutraConta, { marginTop: 8, color: theme.text }]}>
+                      Seu nome (opcional):
+                    </Text>
                     <TextInput
-                      style={styles.inputGoogle}
+                      style={[
+                        styles.inputGoogle,
+                        {
+                          backgroundColor: theme.surface,
+                          borderColor: theme.border,
+                          color: theme.text,
+                        },
+                      ]}
                       placeholder="Nome completo"
-                      placeholderTextColor="#9AA0A6"
+                      placeholderTextColor={theme.subtext}
                       value={outroNomeGoogle}
                       onChangeText={setOutroNomeGoogle}
                     />
 
                     <TouchableOpacity
-                      style={styles.botaoConfirmarConta}
+                      style={[styles.botaoConfirmarConta, { backgroundColor: theme.primary }]}
                       activeOpacity={0.8}
                       onPress={() => {
                         if (!outroEmailGoogle.trim() || !outroEmailGoogle.includes('@')) {
-                          Alert.alert('E-mail Inválido', 'Informe seu e-mail Google cadastrado no aparelho.');
+                          Alert.alert(
+                            'E-mail Inválido',
+                            'Informe seu e-mail Google cadastrado no aparelho.'
+                          );
                           return;
                         }
                         finalizarLoginComSessao({
@@ -638,7 +776,9 @@ export default function LoginScreen() {
                         });
                       }}
                     >
-                      <Text style={styles.textoBotaoConfirmar}>Confirmar e Entrar com o Google</Text>
+                      <Text style={styles.textoBotaoConfirmar}>
+                        Confirmar e Entrar com o Google
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -652,7 +792,7 @@ export default function LoginScreen() {
                 onPress={() => setModalGoogleVisivel(false)}
                 disabled={conectandoGoogle}
               >
-                <Text style={styles.textoBotaoCancelar}>Cancelar</Text>
+                <Text style={[styles.textoBotaoCancelar, { color: theme.subtext }]}>Cancelar</Text>
               </TouchableOpacity>
             </View>
           </View>

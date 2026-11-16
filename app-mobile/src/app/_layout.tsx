@@ -12,7 +12,8 @@ const WALLPAPER_APP_ASSET = require('../../assets/images/wallpaperApp.jpg');
 function RootNavigationLayout() {
   const { theme, mode } = useAppTheme();
   const rotaAtual = usePathname();
-  const ehTelaLogin = rotaAtual === '/';
+  const ehTelaLogin =
+    rotaAtual === '/' || rotaAtual === '/oauthredirect' || rotaAtual === '/expo-auth-session';
   const wallpaperOpacity = mode === 'high-contrast' ? 0.1 : mode === 'dark' ? 0.22 : 0.35;
 
   return (
@@ -39,6 +40,8 @@ function RootNavigationLayout() {
         }}
       >
         <Stack.Screen name="index" options={{ title: 'Doar & Guardar - Entrada' }} />
+        <Stack.Screen name="oauthredirect" options={{ title: 'Autenticando...' }} />
+        <Stack.Screen name="expo-auth-session" options={{ title: 'Autenticando...' }} />
         <Stack.Screen name="home" options={{ title: 'Início', headerBackVisible: false }} />
         <Stack.Screen name="stock" options={{ title: 'Gerenciamento de Estoque' }} />
         <Stack.Screen name="stock-add" options={{ title: 'Entrada de Alimentos' }} />

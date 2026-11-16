@@ -318,9 +318,22 @@ export default function StockRemoveScreen() {
       return;
     }
 
-    if (exigeTravaSeguranca && !justificativa.trim()) {
-      Alert.alert('Motivo Obrigatório', 'Por favor, conte rapidinho o que aconteceu com o produto (ex: venceu ou rasgou).');
-      return;
+    // Trava de segurança obrigatória: exigida exclusivamente para "perda de produto"
+    if (exigeTravaSeguranca) {
+      if (palavraTravaPerda.trim() !== 'PERDA') {
+        Alert.alert(
+          'Trava de Segurança Obrigatória',
+          'Para autorizar o descarte por perda de produto, digite exatamente a palavra "PERDA" em letras maiúsculas.'
+        );
+        return;
+      }
+      if (!justificativa.trim()) {
+        Alert.alert(
+          'Motivo Obrigatório',
+          'Por favor, conte rapidinho o que aconteceu com o produto (ex: venceu ou rasgou).'
+        );
+        return;
+      }
     }
 
     const usuarioResponsavel =
@@ -337,7 +350,7 @@ export default function StockRemoveScreen() {
           lote: loteSelecionado,
           quantidade: qtd,
           motivo_saida: motivoSaida,
-          palavra_confirmacao: exigeTravaSeguranca ? 'PERDA' : '',
+          palavra_confirmacao: palavraTravaPerda.trim(),
           justificativa: justificativa.trim(),
           id_usuario: usuarioResponsavel,
         },
@@ -724,6 +737,26 @@ export default function StockRemoveScreen() {
                 value={justificativa}
                 onChangeText={setJustificativa}
               />
+
+              {exigeTravaSeguranca && (
+                <View style={[estilosStockRemove.blocoTravaPerda, { backgroundColor: `${theme.danger}10`, borderColor: theme.danger }]}>
+                  <Text style={[estilosStockRemove.textoAvisoPerda, { color: theme.danger, fontSize: 12 * fontScale }]}>
+                    🔒 Trava de Segurança Obrigatória
+                  </Text>
+                  <Text style={[estilosStockRemove.instrucaoPerda, { color: theme.text }]}>
+                    Para autorizar a baixa por perda de produto, digite a palavra{' '}
+                    <Text style={{ fontWeight: 'bold', color: theme.danger }}>PERDA</Text> em maiúsculas:
+                  </Text>
+
+                  <AppInput
+                    rotulo=""
+                    placeholder="Digite PERDA aqui"
+                    autoCapitalize="characters"
+                    value={palavraTravaPerda}
+                    onChangeText={setPalavraTravaPerda}
+                  />
+                </View>
+              )}
 
               <View style={{ marginTop: 16 }}>
                 {processandoBaixa ? (

@@ -1,6 +1,9 @@
 // app-mobile/src/services/firebaseConfig.ts
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import * as FirebaseAuth from 'firebase/auth';
+import { getAuth, initializeAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -15,7 +18,24 @@ const firebaseConfig = {
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-export const auth = getAuth(app);
+function inicializarFirebaseAuth() {
+  if (Platform.OS !== 'web') {
+    try {
+      const getRnPersistence = (FirebaseAuth as any).getReactNativePersistence;
+      if (typeof getRnPersistence === 'function') {
+        return initializeAuth(app, {
+          persistence: getRnPersistence(AsyncStorage),
+        });
+      }
+    } catch {
+      // Se já foi inicializado (ex.: Hot Reload), retorna a instância existente
+    }
+  }
+  return getAuth(app);
+}
+
+export const auth = inicializarFirebaseAuth();
+export const db = getFirestore(app);
 
 // Instancia o provedor do Google
 export const googleProvider = new GoogleAuthProvider();
