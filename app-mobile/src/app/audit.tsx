@@ -129,15 +129,56 @@ export default function AuditScreen() {
   const { saudeEstoque, eventosLinhaTempo } = useMemo(() => {
     const lista: EventoLinhaTempo[] = [];
 
+    const normalizarSemAcento = (valor: unknown): string =>
+      String(valor || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+
     movimentacoes.forEach((m, idx) => {
-      const tipoOp = String(m.tipo_operacao || m.operacao || 'movimentacao').toLowerCase();
+      const tipoOp = normalizarSemAcento(m.tipo_operacao || m.operacao || 'movimentacao');
+      const motivoBruto = String(m.motivo_saida || m.motivo || m.id_motivo_saida || '').trim();
+      const motivoNorm = normalizarSemAcento(motivoBruto);
       const nomeProd = String(m.nome_produto || m.nome || 'Produto');
       const lote = String(m.numero_codigo_lote || m.lote || 'S/L');
-      const local = normalizarDescricaoPrateleira(m.local_descricao || m.local || 'Despensa');
+      const localBruto = String(m.local_descricao || m.local || 'Despensa');
+      const local = localBruto.includes('→')
+        ? localBruto
+            .split('→')
+            .map((p) => normalizarDescricaoPrateleira(p))
+            .join(' → ')
+        : normalizarDescricaoPrateleira(localBruto);
       const qtd = Number(m.quantidade_movimentada_pacote ?? m.qtd ?? 0);
       const dataStr = String(m.data_hora_movimentacao || m.data || '');
       const usuario = String(m.id_usuario_responsavel || m.responsavel || 'Operador');
-      const justificativa = String(m.justificativa_detalhe || m.justificativa || '');
+      const justificativa = String(m.justificativa_detalhe || m.justificativa || '').trim();
+      const justificativaNorm = normalizarSemAcento(justificativa);
+
+      const ehTransferencia =
+        tipoOp.includes('movimenta') ||
+        tipoOp.includes('transfer') ||
+        motivoNorm.includes('movimenta') ||
+        motivoNorm.includes('transfer') ||
+        justificativaNorm.includes('transferido para') ||
+        localBruto.includes('→');
+
+      const ehPerda =
+        !ehTransferencia &&
+        (tipoOp.includes('perda') ||
+          tipoOp.includes('descarte') ||
+          motivoNorm.includes('perda') ||
+          motivoNorm.includes('descarte') ||
+          justificativaNorm.includes('vencid') ||
+          justificativaNorm.includes('avari'));
+
+      const ehSaida =
+        !ehTransferencia &&
+        (ehPerda ||
+          tipoOp.includes('saida') ||
+          tipoOp.includes('baixa') ||
+          motivoNorm.includes('saida') ||
+          motivoNorm.includes('baixa'));
 
       let categoriaAcao = 'Movimentação';
       let icone: React.ComponentProps<typeof Feather>['name'] = 'repeat';
@@ -150,9 +191,9 @@ export default function AuditScreen() {
         icone = 'arrow-down-left';
         cor = corSecundaria;
         titulo = `Entrada: ${nomeProd} (+${qtd} pcts)`;
-      } else if (tipoOp.includes('saida') || tipoOp.includes('baixa') || tipoOp.includes('perda')) {
-        categoriaAcao = tipoOp.includes('perda') ? 'Perda / Descarte' : 'Saída';
-        icone = 'arrow-up-right';
+      } else if (ehSaida) {
+        categoriaAcao = ehPerda ? 'Perda / Descarte' : 'Saída';
+        icone = ehPerda ? 'trash-2' : 'arrow-up-right';
         cor = '#DC2626';
         titulo = `${categoriaAcao}: ${nomeProd} (-${qtd} pcts)`;
       } else if (tipoOp.includes('ajuste')) {
@@ -686,49 +727,51 @@ export default function AuditScreen() {
               </TouchableOpacity>
             </View>
 
-            <View
-              style={[
-                estilosAudit.boxInfoAtual,
-                { backgroundColor: '#EFF6FF', borderColor: '#1E3A8A30' },
-              ]}
-            >
-              <Text style={{ fontWeight: '800', color: '#1E293B', fontSize: 14 * fontScale, textAlign: 'center' }}>
-                {loteSelecionado?.nome_produto}
-              </Text>
-              <Text style={{ color: '#475569', fontSize: 11.5 * fontScale, marginTop: 4 }}>
-                Lote: {loteSelecionado?.numero_codigo_lote} | {loteSelecionado?.local_descricao}
-              </Text>
-              <Text style={{ fontWeight: '900', color: corPrimaria, fontSize: 17 * fontScale, marginTop: 8 }}>
-                Sistema informa: {loteSelecionado?.quantidade_atual_pacote} pcts
-              </Text>
-            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View
+                style={[
+                  estilosAudit.boxInfoAtual,
+                  { backgroundColor: '#EFF6FF', borderColor: '#1E3A8A30' },
+                ]}
+              >
+                <Text style={{ fontWeight: '800', color: '#1E293B', fontSize: 14 * fontScale, textAlign: 'center' }}>
+                  {loteSelecionado?.nome_produto}
+                </Text>
+                <Text style={{ color: '#475569', fontSize: 11.5 * fontScale, marginTop: 4, textAlign: 'center' }}>
+                  Lote: {loteSelecionado?.numero_codigo_lote} | {loteSelecionado?.local_descricao}
+                </Text>
+                <Text style={{ fontWeight: '900', color: corPrimaria, fontSize: 17 * fontScale, marginTop: 8, textAlign: 'center' }}>
+                  Sistema informa: {loteSelecionado?.quantidade_atual_pacote} pcts
+                </Text>
+              </View>
 
-            <AppNumericInput
-              rotulo="Quantidade encontrada na prateleira:"
-              placeholder="0"
-              min={0}
-              value={quantidadeFisica}
-              onChangeText={setQuantidadeFisica}
-            />
+              <AppNumericInput
+                rotulo="Quantidade encontrada na prateleira:"
+                placeholder="0"
+                min={0}
+                value={quantidadeFisica}
+                onChangeText={setQuantidadeFisica}
+              />
 
-            <AppInput
-              rotulo="Justificativa da diferença:"
-              placeholder="Ex: Embalagem danificada não registrada."
-              value={justificativaAjuste}
-              onChangeText={setJustificativaAjuste}
-            />
+              <AppInput
+                rotulo="Justificativa da diferença:"
+                placeholder="Ex: Embalagem danificada não registrada."
+                value={justificativaAjuste}
+                onChangeText={setJustificativaAjuste}
+              />
 
-            <View style={{ marginTop: 10 }}>
-              {processandoAjuste ? (
-                <ActivityIndicator size="large" color={corPrimaria} />
-              ) : (
-                <AppButton
-                  title="Salvar Nova Quantidade"
-                  variant="secondary"
-                  onPress={confirmarAjusteFisico}
-                />
-              )}
-            </View>
+              <View style={{ marginTop: 10 }}>
+                {processandoAjuste ? (
+                  <ActivityIndicator size="large" color={corPrimaria} />
+                ) : (
+                  <AppButton
+                    title="Salvar Nova Quantidade"
+                    variant="secondary"
+                    onPress={confirmarAjusteFisico}
+                  />
+                )}
+              </View>
+            </ScrollView>
           </View>
         </View>
       </Modal>

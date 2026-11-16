@@ -105,6 +105,8 @@ export const estilosReportsMove = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 10,
     paddingBottom: 8,
     borderBottomWidth: 1,
@@ -113,6 +115,7 @@ export const estilosReportsMove = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    flexShrink: 1,
   },
   iconeOperacaoBox: {
     width: 32,
@@ -121,12 +124,15 @@ export const estilosReportsMove = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1.5,
+    flexShrink: 0,
   },
   textoOperacao: {
     fontWeight: '800',
+    flexShrink: 1,
   },
   textoDataHora: {
     fontWeight: '700',
+    flexShrink: 1,
   },
 
   // Detalhes do Produto no Card
@@ -137,9 +143,11 @@ export const estilosReportsMove = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 2,
     lineHeight: 18,
+    flexShrink: 1,
   },
   textoLoteLocal: {
     fontWeight: '600',
+    flexShrink: 1,
   },
 
   // Resumo Quantidade (Rodapé)
@@ -147,15 +155,20 @@ export const estilosReportsMove = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 8,
     marginTop: 4,
   },
   caixaResponsavel: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flex: 1,
+    flexShrink: 1,
   },
   textoResponsavel: {
     fontWeight: '600',
+    flexShrink: 1,
   },
   caixaQuantidade: {
     paddingHorizontal: 8,

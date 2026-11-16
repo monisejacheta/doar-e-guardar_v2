@@ -50,18 +50,42 @@ export default function ReportsMovementsScreen() {
 
   const normalizarRegistroMovimentacao = (m: any): MovimentacaoItem => {
     const opBruta = String(m.operacao || m.tipo_operacao || 'Entrada');
-    const motivoBruto = String(m.motivo_saida || m.motivo || '');
+    const opNorm = opBruta
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const motivoBruto = String(m.motivo_saida || m.motivo || m.id_motivo_saida || '');
+    const motivoNorm = motivoBruto
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const justificativaNorm = String(m.justificativa || m.justificativa_detalhe || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+
     const ehTransf =
-      opBruta.toLowerCase().includes('movimenta') ||
-      motivoBruto.toLowerCase().includes('transfer') ||
+      opNorm.includes('movimenta') ||
+      opNorm.includes('transfer') ||
+      motivoNorm.includes('movimenta') ||
+      motivoNorm.includes('transfer') ||
+      justificativaNorm.includes('transferido para') ||
       String(m.local_descricao || m.local || '').includes('→');
 
     let operacaoFinal: MovimentacaoItem['operacao'] = 'Entrada';
     if (ehTransf) {
       operacaoFinal = 'Movimentação';
-    } else if (opBruta.toLowerCase().includes('saí') || opBruta.toLowerCase().includes('sai')) {
+    } else if (
+      opNorm.includes('saida') ||
+      opNorm.includes('baixa') ||
+      opNorm.includes('perda') ||
+      opNorm.includes('descarte') ||
+      motivoNorm.includes('perda') ||
+      motivoNorm.includes('descarte') ||
+      motivoNorm.includes('saida')
+    ) {
       operacaoFinal = 'Saída';
-    } else if (opBruta.toLowerCase().includes('ajust')) {
+    } else if (opNorm.includes('ajust')) {
       operacaoFinal = 'Ajuste';
     }
 
@@ -112,7 +136,10 @@ export default function ReportsMovementsScreen() {
   }, []);
 
   useEffect(() => {
-    carregarMovimentacoes();
+    const timer = setTimeout(() => {
+      void carregarMovimentacoes();
+    }, 0);
+    return () => clearTimeout(timer);
   }, [carregarMovimentacoes]);
 
   const formatarDataAmigavel = (dataIso: string) => {

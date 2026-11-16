@@ -249,20 +249,53 @@ export default function NotificationsScreen() {
           : [];
 
       movs.slice(0, 25).forEach((mov, idx) => {
-        const tipoOp = String(
-          mov.tipo_operacao || mov.operacao || mov.acao || 'movimentacao',
-        ).toLowerCase();
+        const tipoOp = normalizarTextoBusca(
+          String(mov.tipo_operacao || mov.operacao || mov.acao || 'movimentacao'),
+        );
+        const motivoBruto = String(mov.motivo_saida || mov.motivo || mov.id_motivo_saida || '').trim();
+        const motivoNorm = normalizarTextoBusca(motivoBruto);
+        const justificativaBruta = String(mov.justificativa_detalhe || mov.justificativa || '').trim();
+        const justificativaNorm = normalizarTextoBusca(justificativaBruta);
+        const localBruto = String(mov.local_descricao || mov.local || 'Despensa Principal');
         const nomeProd = String(mov.nome_produto || mov.nome || 'Produto');
         const qtd = Number(mov.quantidade_movimentada_pacote || mov.qtd || 0);
-        const localDesc = normalizarDescricaoPrateleira(
-          mov.local_descricao || mov.local || 'Despensa Principal',
-        );
+        const localDesc = localBruto.includes('→')
+          ? localBruto
+              .split('→')
+              .map((p) => normalizarDescricaoPrateleira(p))
+              .join(' → ')
+          : normalizarDescricaoPrateleira(localBruto);
         const responsavel = String(
           mov.id_usuario_responsavel || mov.responsavel || 'Equipe',
         );
         const dataHora = mov.data_hora_movimentacao || mov.data || '';
         const timestampMov = parseTimestampMs(dataHora, agoraMs - (idx + 1) * 60000);
         const idBase = String(mov.id_movimentacao || mov.id_movimentacao_estoque || idx);
+
+        const ehTransferencia =
+          tipoOp.includes('movimenta') ||
+          tipoOp.includes('transfer') ||
+          motivoNorm.includes('movimenta') ||
+          motivoNorm.includes('transfer') ||
+          justificativaNorm.includes('transferido para') ||
+          localBruto.includes('→');
+
+        const ehPerda =
+          !ehTransferencia &&
+          (tipoOp.includes('perda') ||
+            tipoOp.includes('descarte') ||
+            motivoNorm.includes('perda') ||
+            motivoNorm.includes('descarte') ||
+            justificativaNorm.includes('vencid') ||
+            justificativaNorm.includes('avari'));
+
+        const ehSaida =
+          !ehTransferencia &&
+          (ehPerda ||
+            tipoOp.includes('saida') ||
+            tipoOp.includes('baixa') ||
+            motivoNorm.includes('saida') ||
+            motivoNorm.includes('baixa'));
 
         if (tipoOp.includes('entrada') || tipoOp.includes('cadastr')) {
           lista.push({
@@ -278,19 +311,22 @@ export default function NotificationsScreen() {
             prioridade: 4,
             rotaDestino: '/home',
           });
-        } else if (tipoOp.includes('saida') || tipoOp.includes('baixa') || tipoOp.includes('perda')) {
+        } else if (ehSaida) {
+          const detalheSaida =
+            justificativaBruta ||
+            (ehPerda ? 'Baixa por perda / descarte' : motivoBruto || 'Retirada registrada');
           lista.push({
             id: `notif-mov-${idBase}`,
             tipo: 'saida',
-            etiqueta: tipoOp.includes('perda') ? 'Baixa por Perda' : 'Saída do Estoque',
-            icone: 'arrow-up-right',
+            etiqueta: ehPerda ? 'Baixa por Perda' : 'Saída do Estoque',
+            icone: ehPerda ? 'trash-2' : 'arrow-up-right',
             cor: '#DC2626',
-            titulo: `Saída de ${nomeProd} (-${qtd} pcts)`,
-            mensagem: `${mov.justificativa_detalhe || mov.motivo_saida || 'Retirada registrada'} • por ${responsavel}.`,
+            titulo: `${ehPerda ? 'Descarte' : 'Saída'} de ${nomeProd} (-${qtd} pcts)`,
+            mensagem: `${detalheSaida} • ${localDesc} • por ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
             timestampMs: timestampMov,
             prioridade: 4,
-            rotaDestino: '/audit',
+            rotaDestino: ehPerda ? '/reports-losses' : '/audit',
           });
         } else if (tipoOp.includes('ajuste')) {
           lista.push({
@@ -300,7 +336,7 @@ export default function NotificationsScreen() {
             icone: 'sliders',
             cor: '#1E3A8A',
             titulo: `Ajuste de quantidade em ${nomeProd}`,
-            mensagem: `${mov.justificativa_detalhe || 'Conferência de prateleira'} • ${responsavel}.`,
+            mensagem: `${justificativaBruta || 'Conferência de prateleira'} • ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
             timestampMs: timestampMov,
             prioridade: 5,
@@ -314,7 +350,7 @@ export default function NotificationsScreen() {
             icone: 'repeat',
             cor: '#1E3A8A',
             titulo: `Transferência de ${nomeProd} (${qtd} pcts)`,
-            mensagem: `Movido para ${localDesc} por ${responsavel}.`,
+            mensagem: `Movido em ${localDesc} por ${responsavel}.`,
             dataLabel: formatarDataCurta(dataHora),
             timestampMs: timestampMov,
             prioridade: 5,

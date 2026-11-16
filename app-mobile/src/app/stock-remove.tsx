@@ -187,19 +187,6 @@ export default function StockRemoveScreen() {
     );
   }, [todosProdutosAgrupados, termoBusca]);
 
-  const obterPlaceholderPorCategoria = (categoria: string) => {
-    const cat = (categoria || '').toLowerCase();
-    try {
-      if (cat.includes('lati') || cat.includes('leite')) return require('../../assets/images/placeholder_laticinios.png');
-      if (cat.includes('grão') || cat.includes('arroz') || cat.includes('feij')) return require('../../assets/images/placeholder_graos.png');
-      if (cat.includes('massa') || cat.includes('macarr')) return require('../../assets/images/placeholder_massas.png');
-      if (cat.includes('óleo') || cat.includes('oleo') || cat.includes('gordura')) return require('../../assets/images/placeholder_oleos.png');
-      return require('../../assets/images/placeholder_geral.png');
-    } catch {
-      return require('../../assets/images/placeholder_geral.png');
-    }
-  };
-
   const abrirScannerBusca = async () => {
     try {
       if (!permissaoCamera?.granted) {
@@ -669,18 +656,22 @@ export default function StockRemoveScreen() {
         onRequestClose={() => setModalSaidaVisivel(false)}
       >
         <View style={estilosStockRemove.modalOverlay}>
-          <View style={[estilosStockRemove.modalCard, { backgroundColor: theme.surface, padding: 24 }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 }}>
-              <Text style={{ fontWeight: '900', color: theme.danger, fontSize: 16 * fontScale }}>Confirmar Retirada</Text>
-              <TouchableOpacity onPress={() => setModalSaidaVisivel(false)}>
+          <View style={[estilosStockRemove.modalCard, { backgroundColor: theme.surface, padding: 20 }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+              <Text style={{ fontWeight: '900', color: theme.danger, fontSize: 16 * fontScale, flex: 1, flexShrink: 1 }}>
+                {exigeTravaSeguranca ? 'Confirmar Descarte' : 'Confirmar Retirada'}
+              </Text>
+              <TouchableOpacity onPress={() => setModalSaidaVisivel(false)} style={{ padding: 4 }}>
                 <Feather name="x" size={20} color="#475569" />
               </TouchableOpacity>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
               <View style={{ backgroundColor: '#F1F5F9', padding: 12, borderRadius: 10, marginBottom: 16, borderWidth: 1, borderColor: '#E2E8F0' }}>
-                <Text style={{ fontWeight: 'bold', color: theme.text }}>{loteSelecionado?.nome_produto}</Text>
-                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>
+                <Text style={{ fontWeight: 'bold', color: theme.text, fontSize: 13.5 * fontScale, flexShrink: 1 }}>
+                  {loteSelecionado?.nome_produto}
+                </Text>
+                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginTop: 3, flexShrink: 1 }}>
                   Lote: {loteSelecionado?.numero_codigo_lote} • Local: {loteSelecionado?.local_descricao}
                 </Text>
               </View>
@@ -782,55 +773,71 @@ export default function StockRemoveScreen() {
         onRequestClose={concluirEFecharTudo}
       >
         <View style={estilosStockRemove.modalOverlay}>
-          <View style={[estilosStockRemove.modalCard, { backgroundColor: theme.surface, padding: 24 }]}>
-            <View style={{ alignItems: 'center', marginBottom: 16 }}>
-              <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                <Feather name="check-circle" size={32} color="#10B981" />
+          <View style={[estilosStockRemove.modalCard, { backgroundColor: theme.surface, padding: 20 }]}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ alignItems: 'center', marginBottom: 16 }}>
+                <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#ECFDF5', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                  <Feather name="check-circle" size={32} color="#10B981" />
+                </View>
+                <Text style={{ fontSize: 19 * fontScale, fontWeight: '900', color: theme.text, textAlign: 'center', flexShrink: 1 }}>
+                  {resumoBaixa?.motivo === 'perda de produto' ? 'Descarte Registrado!' : 'Saída Registrada!'}
+                </Text>
+                <Text style={{ fontSize: 13 * fontScale, color: theme.subtext, textAlign: 'center', marginTop: 4, flexShrink: 1 }}>
+                  A quantidade do estoque já foi atualizada.
+                </Text>
               </View>
-              <Text style={{ fontSize: 20 * fontScale, fontWeight: '900', color: theme.text }}>Saída Registrada!</Text>
-              <Text style={{ fontSize: 13 * fontScale, color: theme.subtext, textAlign: 'center', marginTop: 4 }}>
-                A quantidade do estoque já foi atualizada.
-              </Text>
-            </View>
 
-            {loteSelecionado && resumoBaixa && (
-              <View style={{ backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 14, padding: 16, marginBottom: 20 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border, paddingBottom: 12 }}>
-                  <Image
-                    source={resolverFotoProduto(loteSelecionado.foto_url || loteSelecionado.url_foto_produto, loteSelecionado.categoria)}
-                    style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12 }}
-                  />
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ fontWeight: 'bold', color: theme.text, fontSize: 13 * fontScale }} numberOfLines={2}>
-                      {loteSelecionado.nome_produto}
+              {loteSelecionado && resumoBaixa && (
+                <View style={{ backgroundColor: theme.background, borderWidth: 1, borderColor: theme.border, borderRadius: 14, padding: 14, marginBottom: 20 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, borderBottomWidth: 1, borderBottomColor: theme.border, paddingBottom: 12 }}>
+                    <Image
+                      source={resolverFotoProduto(loteSelecionado.foto_url || loteSelecionado.url_foto_produto, loteSelecionado.categoria)}
+                      style={{ width: 44, height: 44, borderRadius: 8, marginRight: 12, flexShrink: 0 }}
+                    />
+                    <View style={{ flex: 1, flexShrink: 1 }}>
+                      <Text style={{ fontWeight: 'bold', color: theme.text, fontSize: 13 * fontScale, flexShrink: 1 }}>
+                        {loteSelecionado.nome_produto}
+                      </Text>
+                      <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginTop: 2, flexShrink: 1 }}>
+                        Lote: {loteSelecionado.numero_codigo_lote}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                    <Text style={{ color: theme.text, fontWeight: '600', fontSize: 12.5 * fontScale, flexShrink: 1 }}>
+                      Quantidade Removida:
                     </Text>
-                    <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginTop: 2 }}>
-                      Lote: {loteSelecionado.numero_codigo_lote}
+                    <Text
+                      style={{
+                        color: resumoBaixa.motivo === 'perda de produto' ? theme.danger : theme.secondary,
+                        fontWeight: '900',
+                        fontSize: 12.5 * fontScale,
+                        flexShrink: 1,
+                        textAlign: 'right',
+                      }}
+                    >
+                      {resumoBaixa.qtd} pacotes ({resumoBaixa.motivo})
+                    </Text>
+                  </View>
+
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                    <Text style={{ color: theme.subtext, fontSize: 12.5 * fontScale, flexShrink: 1 }}>
+                      Novo saldo do lote:
+                    </Text>
+                    <Text style={{ color: theme.text, fontWeight: 'bold', fontSize: 12.5 * fontScale, flexShrink: 1, textAlign: 'right' }}>
+                      {resumoBaixa.saldoNovo} pacotes
                     </Text>
                   </View>
                 </View>
+              )}
 
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <Text style={{ color: theme.text, fontWeight: '600' }}>Quantidade Removida:</Text>
-                  <Text style={{ color: resumoBaixa.motivo === 'perda de produto' ? theme.danger : theme.secondary, fontWeight: '900' }}>
-                    {resumoBaixa.qtd} pacotes ({resumoBaixa.motivo})
-                  </Text>
-                </View>
-
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Text style={{ color: theme.subtext }}>Novo saldo do lote:</Text>
-                  <Text style={{ color: theme.text, fontWeight: 'bold' }}>
-                    {resumoBaixa.saldoNovo} pacotes
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            <AppButton
-              title="Ok, Entendi"
-              variant="primary"
-              onPress={concluirEFecharTudo}
-            />
+              <AppButton
+                title="Ok, Entendi"
+                variant="primary"
+                onPress={concluirEFecharTudo}
+              />
+            </ScrollView>
           </View>
         </View>
       </Modal>

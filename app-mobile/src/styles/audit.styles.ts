@@ -210,10 +210,13 @@ export const estilosAudit = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
     marginBottom: 8,
   },
   modalTitulo: {
     fontWeight: '800',
+    flex: 1,
+    flexShrink: 1,
   },
   botaoFecharModal: {
     minWidth: 48,
@@ -240,6 +243,8 @@ export const estilosAudit = StyleSheet.create({
   linhaLoteModal: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
     marginTop: 3,
   },
   textoLoteModal: {

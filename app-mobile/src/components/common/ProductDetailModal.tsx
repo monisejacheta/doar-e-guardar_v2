@@ -497,11 +497,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: 10,
     marginTop: 4,
   },
   sectionTitle: {
     fontWeight: '800',
+    flexShrink: 1,
   },
   sectionCount: {
     fontWeight: '600',
@@ -519,15 +522,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
   },
   loteIdGroup: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     flex: 1,
+    flexShrink: 1,
   },
   loteCode: {
     fontWeight: '800',
+    flexShrink: 1,
   },
   loteRightGroup: {
     flexDirection: 'row',
@@ -546,18 +553,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    flexShrink: 1,
   },
   loteInfoText: {
     fontWeight: '600',
+    flex: 1,
+    flexShrink: 1,
   },
   loteFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
     marginTop: 2,
   },
   loteExpiryText: {
     fontWeight: '700',
+    flexShrink: 1,
   },
   statusBadge: {
     paddingHorizontal: 8,

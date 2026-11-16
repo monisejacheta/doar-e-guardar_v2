@@ -37,6 +37,8 @@ export const estilosReportsLosses = StyleSheet.create({
   alertaPendenteTitulo: {
     fontWeight: '900',
     fontSize: 16,
+    flex: 1,
+    flexShrink: 1,
   },
   alertaPendenteTexto: {
     fontSize: 13,
@@ -46,13 +48,15 @@ export const estilosReportsLosses = StyleSheet.create({
   alertaPendenteItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 8,
     paddingVertical: 10,
     borderTopWidth: 1,
   },
 
   secaoCard: { borderWidth: 1, borderRadius: 14, padding: 16, marginBottom: 16 },
-  tituloSecaoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  tituloSecao: { fontWeight: 'bold' },
+  tituloSecaoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
+  tituloSecao: { fontWeight: 'bold', flexShrink: 1 },
   
   btnToggleMetrica: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 },
   btnToggleTexto: { fontSize: 11, fontWeight: '700', marginLeft: 6 },
@@ -107,16 +111,20 @@ export const estilosReportsLosses = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
     marginBottom: 6,
   },
   textoMotivo: {
     fontSize: 12,
     fontWeight: '800',
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    flexShrink: 1,
   },
   textoDataHora: {
     fontSize: 11,
-    fontWeight: '600'
+    fontWeight: '600',
+    flexShrink: 1,
   },
   linhaJustificativa: {
     marginBottom: 6,
@@ -124,15 +132,19 @@ export const estilosReportsLosses = StyleSheet.create({
   textoJustificativa: {
     fontSize: 12,
     fontWeight: '600',
-    fontStyle: 'italic'
+    fontStyle: 'italic',
+    flexShrink: 1,
   },
   linhaResponsavelQtd: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
   },
   textoDetalhes: {
     fontSize: 11,
-    fontWeight: '500'
+    fontWeight: '500',
+    flexShrink: 1,
   }
 });

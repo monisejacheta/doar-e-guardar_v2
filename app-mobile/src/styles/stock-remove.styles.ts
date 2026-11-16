@@ -72,6 +72,7 @@ export const estilosStockRemove = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 380,
+    maxHeight: '90%',
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     elevation: 6,
@@ -156,8 +157,10 @@ export const estilosStockRemove = StyleSheet.create({
     borderWidth: 1.5,
     borderRadius: 10,
     justifyContent: 'center',
+    flexShrink: 1,
+    maxWidth: '100%',
   },
-  textoMotivo: { fontWeight: '600', fontSize: 12 },
+  textoMotivo: { fontWeight: '600', fontSize: 12, flexShrink: 1 },
 
   blocoTravaPerda: {
     borderWidth: 1.5,
@@ -166,6 +169,6 @@ export const estilosStockRemove = StyleSheet.create({
     marginTop: 10,
     marginBottom: 16,
   },
-  textoAvisoPerda: { fontWeight: 'bold', marginBottom: 6 },
-  instrucaoPerda: { fontSize: 12, lineHeight: 18, marginBottom: 10 },
+  textoAvisoPerda: { fontWeight: 'bold', marginBottom: 6, flexShrink: 1 },
+  instrucaoPerda: { fontSize: 12, lineHeight: 18, marginBottom: 10, flexShrink: 1 },
 });

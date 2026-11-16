@@ -240,6 +240,7 @@ export const estilosStockMove = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 380,
+    maxHeight: '90%',
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     elevation: 6,

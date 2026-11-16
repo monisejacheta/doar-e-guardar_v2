@@ -39,6 +39,38 @@ export default function AuditPeriodScreen() {
     });
   }, [movimentacoes, diasFiltro]);
 
+  const formatarRotuloOperacao = (m: any): { rotulo: string; cor: string } => {
+    const opNorm = String(m.operacao || m.tipo_operacao || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const motivoNorm = String(m.motivo_saida || m.motivo || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const localBruto = String(m.local_descricao || m.local || '');
+
+    if (
+      opNorm.includes('movimenta') ||
+      opNorm.includes('transfer') ||
+      motivoNorm.includes('movimenta') ||
+      motivoNorm.includes('transfer') ||
+      localBruto.includes('→')
+    ) {
+      return { rotulo: 'Movimentação Interna', cor: theme.primary };
+    }
+    if (opNorm.includes('perda') || motivoNorm.includes('perda') || motivoNorm.includes('descarte')) {
+      return { rotulo: 'Saída (Perda / Descarte)', cor: theme.danger };
+    }
+    if (opNorm.includes('saida') || opNorm.includes('baixa') || motivoNorm.includes('saida')) {
+      return { rotulo: 'Saída', cor: theme.danger };
+    }
+    if (opNorm.includes('ajuste')) {
+      return { rotulo: 'Ajuste de Contagem', cor: '#D97706' };
+    }
+    return { rotulo: 'Entrada', cor: theme.secondary };
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
@@ -101,23 +133,28 @@ export default function AuditPeriodScreen() {
             <Text style={{ fontWeight: '800', color: theme.text, fontSize: 14 * fontScale, marginBottom: 10 }}>
               {filtradas.length} registro(s) nos últimos {diasFiltro} dias
             </Text>
-            {filtradas.map((m, i) => (
-              <View
-                key={m.id_movimentacao || i}
-                style={{
-                  borderTopWidth: i === 0 ? 0 : 1,
-                  borderTopColor: theme.border,
-                  paddingVertical: 8,
-                }}
-              >
-                <Text style={{ fontWeight: '700', color: theme.text, fontSize: 13 * fontScale }}>
-                  {m.nome_produto || m.nome} ({m.operacao || m.tipo_operacao})
-                </Text>
-                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>
-                  {String(m.data_hora_movimentacao || m.data || '').replace('T', ' ')} • {m.quantidade_movimentada_pacote || m.qtd} pct(s)
-                </Text>
-              </View>
-            ))}
+            {filtradas.map((m, i) => {
+              const infoOp = formatarRotuloOperacao(m);
+              return (
+                <View
+                  key={m.id_movimentacao || m.id_movimentacao_estoque || i}
+                  style={{
+                    borderTopWidth: i === 0 ? 0 : 1,
+                    borderTopColor: theme.border,
+                    paddingVertical: 8,
+                  }}
+                >
+                  <Text style={{ fontWeight: '700', color: theme.text, fontSize: 13 * fontScale, flexShrink: 1 }}>
+                    {m.nome_produto || m.nome}{' '}
+                    <Text style={{ color: infoOp.cor, fontWeight: '800' }}>({infoOp.rotulo})</Text>
+                  </Text>
+                  <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginTop: 2, flexShrink: 1 }}>
+                    {String(m.data_hora_movimentacao || m.data || '').replace('T', ' ')} •{' '}
+                    {m.quantidade_movimentada_pacote || m.qtd} pct(s)
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         )}
       </ScrollView>

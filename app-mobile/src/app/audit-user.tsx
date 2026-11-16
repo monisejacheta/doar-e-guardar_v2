@@ -82,10 +82,12 @@ export default function AuditUserScreen() {
                   padding: 16,
                 }}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1, flexShrink: 1 }}>
                     <Feather name="user-check" size={20} color={theme.primary} />
-                    <Text style={{ fontWeight: '800', color: theme.text, fontSize: 14 * fontScale }}>{op.usuario}</Text>
+                    <Text style={{ fontWeight: '800', color: theme.text, fontSize: 14 * fontScale, flex: 1, flexShrink: 1 }}>
+                      {op.usuario}
+                    </Text>
                   </View>
                   <Text style={{ fontWeight: '800', color: theme.secondary, fontSize: 12 * fontScale }}>
                     {op.totalOperacoes} ação(ões)

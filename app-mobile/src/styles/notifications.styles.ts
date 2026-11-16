@@ -84,6 +84,7 @@ export const estilosNotificacoes = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     gap: 10,
     marginBottom: 2,
   },
@@ -125,9 +126,11 @@ export const estilosNotificacoes = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
     marginTop: 2,
+    flexShrink: 0,
   },
   conteudoCard: {
     flex: 1,
+    flexShrink: 1,
   },
   topoCardRow: {
     flexDirection: 'row',
@@ -141,6 +144,7 @@ export const estilosNotificacoes = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
+    flexShrink: 1,
   },
   badgeTipoTexto: {
     fontWeight: '800',
@@ -148,13 +152,16 @@ export const estilosNotificacoes = StyleSheet.create({
   },
   dataTexto: {
     fontWeight: '600',
+    flexShrink: 1,
   },
   tituloCard: {
     fontWeight: '800',
     marginBottom: 3,
+    flexShrink: 1,
   },
   mensagemCard: {
     lineHeight: 19,
+    flexShrink: 1,
   },
   botaoDismiss: {
     minWidth: 48,

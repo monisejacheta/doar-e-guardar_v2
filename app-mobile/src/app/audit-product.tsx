@@ -45,6 +45,38 @@ export default function AuditProductScreen() {
     );
   }, [movimentacoes, busca]);
 
+  const formatarRotuloOperacao = (reg: any): { rotulo: string; cor: string } => {
+    const opNorm = String(reg.operacao || reg.tipo_operacao || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const motivoNorm = String(reg.motivo_saida || reg.motivo || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const localBruto = String(reg.local_descricao || reg.local || '');
+
+    if (
+      opNorm.includes('movimenta') ||
+      opNorm.includes('transfer') ||
+      motivoNorm.includes('movimenta') ||
+      motivoNorm.includes('transfer') ||
+      localBruto.includes('→')
+    ) {
+      return { rotulo: 'Movimentação Interna', cor: theme.primary };
+    }
+    if (opNorm.includes('perda') || motivoNorm.includes('perda') || motivoNorm.includes('descarte')) {
+      return { rotulo: 'Saída (Perda / Descarte)', cor: theme.danger };
+    }
+    if (opNorm.includes('saida') || opNorm.includes('baixa') || motivoNorm.includes('saida')) {
+      return { rotulo: 'Saída', cor: theme.danger };
+    }
+    if (opNorm.includes('ajuste')) {
+      return { rotulo: 'Ajuste de Contagem', cor: '#D97706' };
+    }
+    return { rotulo: 'Entrada', cor: theme.secondary };
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 110 }} keyboardShouldPersistTaps="handled">
@@ -111,26 +143,29 @@ export default function AuditProductScreen() {
                 <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, marginBottom: 8 }}>
                   Código: {prod.ean} • {prod.registros.length} movimentação(ões)
                 </Text>
-                {prod.registros.slice(0, 6).map((reg, idx) => (
-                  <View
-                    key={reg.id_movimentacao || idx}
-                    style={{
-                      borderTopWidth: 1,
-                      borderTopColor: theme.border,
-                      paddingTop: 8,
-                      marginTop: 6,
-                    }}
-                  >
-                    <Text style={{ fontWeight: '700', color: theme.primary, fontSize: 12 * fontScale }}>
-                      {reg.operacao || reg.tipo_operacao} • {reg.quantidade_movimentada_pacote || reg.qtd} pct(s) (Lote{' '}
-                      {reg.numero_codigo_lote || reg.lote})
-                    </Text>
-                    <Text style={{ color: theme.subtext, fontSize: 11 * fontScale }}>
-                      Prateleira: {normalizarDescricaoPrateleira(reg.local_descricao || reg.local)} • Resp:{' '}
-                      {reg.id_usuario_responsavel || reg.responsavel}
-                    </Text>
-                  </View>
-                ))}
+                {prod.registros.slice(0, 6).map((reg, idx) => {
+                  const infoOp = formatarRotuloOperacao(reg);
+                  return (
+                    <View
+                      key={reg.id_movimentacao || reg.id_movimentacao_estoque || idx}
+                      style={{
+                        borderTopWidth: 1,
+                        borderTopColor: theme.border,
+                        paddingTop: 8,
+                        marginTop: 6,
+                      }}
+                    >
+                      <Text style={{ fontWeight: '700', color: infoOp.cor, fontSize: 12 * fontScale, flexShrink: 1 }}>
+                        {infoOp.rotulo} • {reg.quantidade_movimentada_pacote || reg.qtd} pct(s) (Lote{' '}
+                        {reg.numero_codigo_lote || reg.lote})
+                      </Text>
+                      <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, flexShrink: 1 }}>
+                        Prateleira: {normalizarDescricaoPrateleira(reg.local_descricao || reg.local)} • Resp:{' '}
+                        {reg.id_usuario_responsavel || reg.responsavel}
+                      </Text>
+                    </View>
+                  );
+                })}
               </View>
             ))}
           </View>
