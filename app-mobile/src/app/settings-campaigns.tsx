@@ -3,6 +3,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Modal,
+  Pressable,
   RefreshControl,
   ScrollView,
   Text,
@@ -13,7 +15,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { useAppTheme } from '../context/ThemeContext';
-import { AppInput } from '../components/common/AppInput';
 import { AppButton } from '../components/common/AppButton';
 import { requisicaoApi } from '../services/api';
 
@@ -23,6 +24,10 @@ interface CampanhaAws {
   meta: string;
   status_aprovacao: string;
   data_fim?: string;
+  descricao?: string;
+  itens_necessarios?: string;
+  responsavel?: string;
+  atualizado_em?: string;
 }
 
 export default function SettingsCampaignsScreen() {
@@ -32,10 +37,7 @@ export default function SettingsCampaignsScreen() {
   const [campanhas, setCampanhas] = useState<CampanhaAws[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [atualizando, setAtualizando] = useState(false);
-  const [salvando, setSalvando] = useState(false);
-
-  const [titulo, setTitulo] = useState('');
-  const [meta, setMeta] = useState('');
+  const [campanhaSelecionada, setCampanhaSelecionada] = useState<CampanhaAws | null>(null);
 
   const carregarCampanhas = useCallback(async () => {
     try {
@@ -59,62 +61,6 @@ export default function SettingsCampaignsScreen() {
   useEffect(() => {
     carregarCampanhas();
   }, [carregarCampanhas]);
-
-  const cadastrarCampanha = async () => {
-    if (!titulo.trim()) {
-      Alert.alert('Campo obrigatório', 'Informe o título da campanha.');
-      return;
-    }
-    setSalvando(true);
-    try {
-      const resp: any = await requisicaoApi('/api/configuracoes', {
-        metodo: 'POST',
-        dados: {
-          modulo: 'configuracoes',
-          acao: 'cadastrar_campanha',
-          titulo: titulo.trim(),
-          meta: meta.trim() || 'Reposição da Despensa',
-          status_aprovacao: 'Ativa',
-        },
-      });
-      if (resp?.sucesso) {
-        setTitulo('');
-        setMeta('');
-        await carregarCampanhas();
-      } else {
-        Alert.alert('Aviso', resp?.mensagem || 'Não foi possível salvar a campanha.');
-      }
-    } catch (err: any) {
-      Alert.alert('Erro', err?.message || 'Falha ao cadastrar campanha na AWS.');
-    } finally {
-      setSalvando(false);
-    }
-  };
-
-  const excluirCampanha = (item: CampanhaAws) => {
-    Alert.alert('Excluir Campanha', `Deseja remover "${item.titulo}" da AWS?`, [
-      { text: 'Cancelar', style: 'cancel' },
-      {
-        text: 'Excluir',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await requisicaoApi('/api/configuracoes', {
-              metodo: 'POST',
-              dados: {
-                modulo: 'configuracoes',
-                acao: 'excluir_campanha',
-                id_campanha: item.id_campanha,
-              },
-            });
-            await carregarCampanhas();
-          } catch (err: any) {
-            Alert.alert('Erro', err?.message || 'Não foi possível excluir a campanha.');
-          }
-        },
-      },
-    ]);
-  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'transparent' }}>
@@ -148,53 +94,26 @@ export default function SettingsCampaignsScreen() {
           Campanhas de Doações
         </Text>
         <Text style={{ color: theme.subtext, fontSize: 13 * fontScale, marginBottom: 16 }}>
-          Cadastre e gerencie as campanhas sincronizadas com a AWS.
+          Toque em uma campanha para ver os detalhes. Puxe para baixo para atualizar.
         </Text>
-
-        <View
-          style={{
-            backgroundColor: theme.surface,
-            borderRadius: 14,
-            borderWidth: 1,
-            borderColor: theme.border,
-            padding: 16,
-            marginBottom: 20,
-          }}
-        >
-          <Text style={{ fontWeight: '700', color: theme.text, marginBottom: 10, fontSize: 14 * fontScale }}>
-            Nova Campanha
-          </Text>
-          <AppInput
-            rotulo="Título da campanha"
-            placeholder="Ex: Arrecadação de Leite Integral"
-            value={titulo}
-            onChangeText={setTitulo}
-          />
-          <AppInput
-            rotulo="Foco / Meta"
-            placeholder="Ex: Alimentação das Crianças"
-            value={meta}
-            onChangeText={setMeta}
-          />
-          <AppButton
-            title={salvando ? 'Salvando na AWS...' : 'Cadastrar Campanha'}
-            onPress={cadastrarCampanha}
-            disabled={salvando}
-          />
-        </View>
 
         {carregando ? (
           <ActivityIndicator size="large" color={theme.primary} style={{ marginTop: 20 }} />
         ) : campanhas.length === 0 ? (
           <View style={{ padding: 20, backgroundColor: theme.surface, borderRadius: 14, alignItems: 'center' }}>
             <Text style={{ color: theme.subtext, fontSize: 13 * fontScale }}>
-              Nenhuma campanha cadastrada na AWS no momento.
+              Nenhuma campanha ativa encontrada na AWS no momento.
             </Text>
           </View>
         ) : (
           campanhas.map((c) => (
-            <View
+            <TouchableOpacity
               key={c.id_campanha}
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel={`Ver detalhes da campanha ${c.titulo}`}
+              activeOpacity={0.8}
+              onPress={() => setCampanhaSelecionada(c)}
               style={{
                 backgroundColor: theme.surface,
                 borderRadius: 14,
@@ -203,11 +122,11 @@ export default function SettingsCampaignsScreen() {
                 padding: 16,
                 marginBottom: 12,
                 flexDirection: 'row',
-                justifyContent: 'space-between',
                 alignItems: 'center',
+                justifyContent: 'space-between',
               }}
             >
-              <View style={{ flex: 1, paddingRight: 12 }}>
+              <View style={{ flex: 1, paddingRight: 10 }}>
                 <Text style={{ fontWeight: 'bold', color: theme.text, fontSize: 14 * fontScale }}>{c.titulo}</Text>
                 {!!c.meta && (
                   <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, marginTop: 4 }}>Foco: {c.meta}</Text>
@@ -216,19 +135,114 @@ export default function SettingsCampaignsScreen() {
                   ✅ {c.status_aprovacao || 'Ativa'}
                 </Text>
               </View>
-              <TouchableOpacity
-                accessible={true}
-                accessibilityRole="button"
-                accessibilityLabel={`Excluir campanha ${c.titulo}`}
-                onPress={() => excluirCampanha(c)}
-                style={{ padding: 8 }}
-              >
-                <Feather name="trash-2" size={18} color={theme.danger} />
-              </TouchableOpacity>
-            </View>
+              <Feather name="chevron-right" size={20} color={theme.subtext} />
+            </TouchableOpacity>
           ))
         )}
       </ScrollView>
+
+      <Modal
+        visible={Boolean(campanhaSelecionada)}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setCampanhaSelecionada(null)}
+      >
+        <Pressable
+          onPress={() => setCampanhaSelecionada(null)}
+          style={{
+            flex: 1,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            justifyContent: 'center',
+            padding: 20,
+          }}
+        >
+          <Pressable
+            onPress={() => {}}
+            style={{
+              backgroundColor: theme.surface,
+              borderRadius: 18,
+              borderWidth: 1.5,
+              borderColor: theme.secondary,
+              padding: 20,
+              maxHeight: '85%',
+            }}
+          >
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+              <Text style={{ flex: 1, fontWeight: '800', color: theme.primary, fontSize: 18 * fontScale, paddingRight: 12 }}>
+                {campanhaSelecionada?.titulo}
+              </Text>
+              <TouchableOpacity
+                accessible={true}
+                accessibilityRole="button"
+                accessibilityLabel="Fechar detalhes da campanha"
+                onPress={() => setCampanhaSelecionada(null)}
+                style={{ padding: 4 }}
+              >
+                <Feather name="x" size={22} color={theme.subtext} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={{ marginBottom: 16 }}>
+              <View style={{ marginBottom: 10 }}>
+                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>STATUS</Text>
+                <Text style={{ color: theme.secondary, fontSize: 14 * fontScale, fontWeight: '700', marginTop: 2 }}>
+                  ✅ {campanhaSelecionada?.status_aprovacao || 'Ativa'}
+                </Text>
+              </View>
+
+              <View style={{ marginBottom: 10 }}>
+                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>FOCO / META</Text>
+                <Text style={{ color: theme.text, fontSize: 14 * fontScale, marginTop: 2 }}>
+                  {campanhaSelecionada?.meta || 'Não informado'}
+                </Text>
+              </View>
+
+              {!!campanhaSelecionada?.descricao && (
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>DESCRIÇÃO</Text>
+                  <Text style={{ color: theme.text, fontSize: 14 * fontScale, marginTop: 2 }}>
+                    {campanhaSelecionada.descricao}
+                  </Text>
+                </View>
+              )}
+
+              {!!campanhaSelecionada?.itens_necessarios && (
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>ITENS NECESSÁRIOS</Text>
+                  <Text style={{ color: theme.text, fontSize: 14 * fontScale, marginTop: 2 }}>
+                    {campanhaSelecionada.itens_necessarios}
+                  </Text>
+                </View>
+              )}
+
+              {!!campanhaSelecionada?.responsavel && (
+                <View style={{ marginBottom: 10 }}>
+                  <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>RESPONSÁVEL</Text>
+                  <Text style={{ color: theme.text, fontSize: 14 * fontScale, marginTop: 2 }}>
+                    {campanhaSelecionada.responsavel}
+                  </Text>
+                </View>
+              )}
+
+              <View style={{ marginBottom: 10 }}>
+                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>ENCERRAMENTO</Text>
+                <Text style={{ color: theme.text, fontSize: 14 * fontScale, marginTop: 2 }}>
+                  {campanhaSelecionada?.data_fim || 'Sem data definida'}
+                </Text>
+              </View>
+
+              <View>
+                <Text style={{ color: theme.subtext, fontSize: 11 * fontScale, fontWeight: '700' }}>CÓDIGO DA CAMPANHA</Text>
+                <Text style={{ color: theme.subtext, fontSize: 12 * fontScale, marginTop: 2 }}>
+                  {campanhaSelecionada?.id_campanha}
+                </Text>
+              </View>
+            </ScrollView>
+
+            <AppButton title="Fechar" onPress={() => setCampanhaSelecionada(null)} />
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
