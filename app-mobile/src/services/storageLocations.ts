@@ -260,20 +260,18 @@ export async function carregarPrateleirasAws(lotesPreCarregados?: any[]): Promis
     }
   }
 
-  // 3. Consulta endpoint de configurações da AWS (/api/configuracoes) caso suportado pela Lambda ativa
-  if (rotaConfiguracoesSuportada !== false) {
-    try {
-      const respConf: any = await requisicaoApi('/api/configuracoes', {
-        metodo: 'POST',
-        dados: { modulo: 'configuracoes', acao: 'listar_locais' },
-      });
-      if (respConf?.sucesso && Array.isArray(respConf.locais)) {
-        rotaConfiguracoesSuportada = true;
-        respConf.locais.forEach((l: any) => registrarNoMapa(l, 'aws_configuracoes'));
-      }
-    } catch {
-      rotaConfiguracoesSuportada = false;
+  // 3. Consulta endpoint de configurações da AWS (/api/configuracoes)
+  try {
+    const respConf: any = await requisicaoApi('/api/configuracoes', {
+      metodo: 'POST',
+      dados: { modulo: 'configuracoes', acao: 'listar_locais' },
+    });
+    if (respConf?.sucesso && Array.isArray(respConf.locais)) {
+      rotaConfiguracoesSuportada = true;
+      respConf.locais.forEach((l: any) => registrarNoMapa(l, 'aws_configuracoes'));
     }
+  } catch {
+    // Mantém conciliação com locais encontrados nos lotes da AWS
   }
 
   // 4. Reconcilia todas as prateleiras encontradas nos lotes da AWS e contabiliza ocupação
@@ -378,6 +376,7 @@ export async function cadastrarPrateleiraAws(dados: {
     origem_sincronizacao: 'aws_configuracoes',
   };
 
+  let sincronizadoAws = false;
   try {
     const resp: any = await requisicaoApi('/api/configuracoes', {
       metodo: 'POST',
@@ -387,12 +386,15 @@ export async function cadastrarPrateleiraAws(dados: {
         ...novoLocal,
       },
     });
-    if (resp?.sucesso && resp?.local) {
-      novoLocal.id_local_armazenamento = String(resp.local.id_local_armazenamento || novoLocal.id_local_armazenamento);
+    if (resp?.sucesso) {
+      sincronizadoAws = true;
+      if (resp?.local) {
+        novoLocal.id_local_armazenamento = String(resp.local.id_local_armazenamento || novoLocal.id_local_armazenamento);
+      }
     }
   } catch {
     try {
-      await requisicaoApi('/api/estoque', {
+      const respEst: any = await requisicaoApi('/api/estoque', {
         metodo: 'POST',
         dados: {
           modulo: 'estoque',
@@ -400,9 +402,17 @@ export async function cadastrarPrateleiraAws(dados: {
           ...novoLocal,
         },
       });
+      if (respEst?.sucesso) sincronizadoAws = true;
     } catch {
-      // Mantém sincronizado na sessão caso a Lambda remota ainda não exponha a ação
+      // Falha na AWS tratada abaixo
     }
+  }
+
+  if (!sincronizadoAws) {
+    return {
+      sucesso: false,
+      mensagem: 'Não foi possível salvar a prateleira na AWS. Verifique sua conexão e tente novamente.',
+    };
   }
 
   const jaExisteIdx = cacheLocaisSessao.findIndex((l) => mesmaPrateleira(l.local_descricao, novoLocal.local_descricao));
@@ -432,7 +442,7 @@ export async function excluirPrateleiraAws(
   }
 
   try {
-    await requisicaoApi('/api/configuracoes', {
+    const resp: any = await requisicaoApi('/api/configuracoes', {
       metodo: 'POST',
       dados: {
         modulo: 'configuracoes',
@@ -441,8 +451,17 @@ export async function excluirPrateleiraAws(
         local_descricao: localAlvo.local_descricao,
       },
     });
-  } catch {
-    //Continua para remover do catálogo ativo
+    if (resp && resp.sucesso === false) {
+      return {
+        sucesso: false,
+        mensagem: resp.mensagem || 'Não foi possível remover a prateleira na AWS.',
+      };
+    }
+  } catch (err: any) {
+    return {
+      sucesso: false,
+      mensagem: err?.message || 'Falha ao excluir prateleira na AWS. Verifique sua conexão.',
+    };
   }
 
   cacheLocaisSessao = cacheLocaisSessao.filter(
