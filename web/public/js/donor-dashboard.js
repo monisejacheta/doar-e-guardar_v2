@@ -14,14 +14,29 @@ function escaparHtmlDoador(texto) {
 function extrairMetaCampanhaDoador(textoBruto) {
   const texto = String(textoBruto || '');
   const matchRecebido = texto.match(/\[RECEBIDO:(\d+)\]/);
+  const matchItens = texto.match(/\[ITENS:([^\]]*)\]/);
+  let recebidoPorItens = null;
+  if (matchItens && matchItens[1]) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(matchItens[1]));
+      if (Array.isArray(parsed) && parsed.some((it) => it && it.recebido !== null && it.recebido !== undefined)) {
+        recebidoPorItens = parsed.reduce((acc, it) => acc + Math.max(0, Number(it?.recebido || 0)), 0);
+      }
+    } catch (_) {
+      recebidoPorItens = null;
+    }
+  }
   const textoLimpo = texto
     .replace(/\[RECEBIDO:\d+\]/g, '')
     .replace(/\[PARECER:.*?\]/g, '')
     .replace(/\[INICIO:.*?\]/g, '')
+    .replace(/\[COLETAS:.*?\]/g, '')
+    .replace(/\[ITENS:[^\]]*\]/g, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
   return {
     itemFoco: textoLimpo || 'Alimentos Não Perecíveis',
-    recebido: matchRecebido ? Number(matchRecebido[1]) : 0
+    recebido: recebidoPorItens !== null ? recebidoPorItens : (matchRecebido ? Number(matchRecebido[1]) : 0)
   };
 }
 
@@ -33,7 +48,8 @@ function normalizarCampanhaDoador(c) {
   else if (statusRaw.includes('reprov') || statusRaw.includes('recus')) status = 'reprovada';
 
   const parsed = extrairMetaCampanhaDoador(c.itens_necessarios || c.itemFoco || '');
-  const meta = parseInt(String(c.meta ?? c.metaUnidades ?? 50).replace(/[^\d]/g, ''), 10) || 50;
+  const matchMeta = String(c.meta ?? c.metaUnidades ?? 50).match(/\d+/);
+  const meta = matchMeta ? (parseInt(matchMeta[0], 10) || 50) : 50;
   const arrecadado = parsed.recebido || Number(c.arrecadadoUnidades ?? 0);
   const pct = meta > 0 ? Math.min(100, Math.round((arrecadado / meta) * 100)) : 0;
 

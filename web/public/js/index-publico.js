@@ -27,10 +27,25 @@ function extrairLocaisColetaCampanha(c) {
 }
 
 function extrairItensNecessariosCampanha(c) {
-  const bruto = String(c.itens_necessarios || '')
+  const texto = String(c.itens_necessarios || '');
+  const matchItens = texto.match(/\[ITENS:([^\]]*)\]/i);
+  if (matchItens && matchItens[1]) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(matchItens[1]));
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((it) => String(it?.nome || '').trim()).filter(Boolean);
+      }
+    } catch (_) {
+      // fallback para parsing textual
+    }
+  }
+
+  const bruto = texto
     .replace(/\[RECEBIDO:[^\]]*\]/gi, '')
     .replace(/\[INICIO:[^\]]*\]/gi, '')
     .replace(/\[COLETAS:[^\]]*\]/gi, '')
+    .replace(/\[PARECER:[^\]]*\]/gi, '')
+    .replace(/\[ITENS:[^\]]*\]/gi, '')
     .trim();
 
   if (!bruto) return [];

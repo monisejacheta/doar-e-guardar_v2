@@ -500,33 +500,148 @@ function extrairMetaRecebidoParecer(textoBruto) {
   const matchRecebido = texto.match(/\[RECEBIDO:(\d+)\]/);
   const matchParecer = texto.match(/\[PARECER:(.*?)\]/);
   const matchInicio = texto.match(/\[INICIO:(.*?)\]/);
+  const matchColetas = texto.match(/\[COLETAS:(.*?)\]/);
+  const matchItens = texto.match(/\[ITENS:([^\]]*)\]/);
+
+  let itensJson = null;
+  if (matchItens && matchItens[1]) {
+    try {
+      const parsed = JSON.parse(decodeURIComponent(matchItens[1]));
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        itensJson = parsed;
+      }
+    } catch (_) {
+      itensJson = null;
+    }
+  }
+
   const textoLimpo = texto
     .replace(/\[RECEBIDO:\d+\]/g, '')
     .replace(/\[PARECER:.*?\]/g, '')
     .replace(/\[INICIO:.*?\]/g, '')
+    .replace(/\[COLETAS:.*?\]/g, '')
+    .replace(/\[ITENS:[^\]]*\]/g, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
 
   return {
     textoLimpo,
     recebido: matchRecebido ? Number(matchRecebido[1]) : null,
     parecer: matchParecer ? matchParecer[1].trim() : '',
-    inicio: matchInicio ? matchInicio[1].trim() : ''
+    inicio: matchInicio ? matchInicio[1].trim() : '',
+    coletas: matchColetas ? matchColetas[1].trim() : '',
+    itensJson
   };
 }
 
-function montarItensComMetadados(itemFoco, arrecadadoUnidades, parecerTecnico = '', dataInicio = '') {
-  let base = String(itemFoco || 'Alimentos Não Perecíveis')
+function sanitizarListaItensCampanha(lista) {
+  if (!Array.isArray(lista)) return [];
+  return lista
+    .map((it) => {
+      const nome = String(it?.nome || it?.item || '').trim();
+      if (!nome) return null;
+      const meta = Math.max(1, parseInt(it?.meta ?? it?.qtd ?? 1, 10) || 1);
+      const temRecebido = it?.recebido !== null && it?.recebido !== undefined && it?.recebido !== '';
+      const valRecebido = temRecebido ? Number(it.recebido) : null;
+      return {
+        nome,
+        meta,
+        recebido: (valRecebido !== null && Number.isFinite(valRecebido))
+          ? Math.max(0, Math.round(valRecebido))
+          : null
+      };
+    })
+    .filter(Boolean);
+}
+
+function extrairItensDetalhadosCampanha(textoBruto, metaTotalFallback = 50, recebidoFallback = null) {
+  const parsed = extrairMetaRecebidoParecer(textoBruto);
+  if (Array.isArray(parsed.itensJson) && parsed.itensJson.length > 0) {
+    const sanitizados = sanitizarListaItensCampanha(parsed.itensJson);
+    if (sanitizados.length > 0) return sanitizados;
+  }
+
+  const limpo = parsed.textoLimpo;
+  if (!limpo) {
+    return [{
+      nome: 'Alimentos Não Perecíveis',
+      meta: Math.max(1, Number(metaTotalFallback) || 50),
+      recebido: (recebidoFallback !== null && Number.isFinite(Number(recebidoFallback)))
+        ? Math.max(0, Math.round(Number(recebidoFallback)))
+        : null
+    }];
+  }
+
+  const regexItem = /(.+?)\(\s*(\d+)\s*un\.?\s*\)(?:\s*,\s*|$)/gi;
+  const encontrados = [];
+  let match;
+  let ultimoIndice = 0;
+
+  while ((match = regexItem.exec(limpo)) !== null) {
+    const nome = String(match[1] || '').replace(/^,\s*/, '').trim();
+    const meta = Math.max(1, parseInt(match[2], 10) || 1);
+    if (nome) {
+      encontrados.push({ nome, meta, recebido: null });
+    }
+    ultimoIndice = regexItem.lastIndex;
+  }
+
+  const restante = limpo.slice(ultimoIndice).replace(/^,\s*/, '').trim();
+  if (restante && encontrados.length > 0) {
+    encontrados.push({ nome: restante, meta: 1, recebido: null });
+  }
+
+  if (encontrados.length === 1) {
+    encontrados[0].recebido = (recebidoFallback !== null && Number.isFinite(Number(recebidoFallback)))
+      ? Math.max(0, Math.round(Number(recebidoFallback)))
+      : null;
+    return encontrados;
+  }
+
+  if (encontrados.length > 1) {
+    return encontrados;
+  }
+
+  return [{
+    nome: limpo,
+    meta: Math.max(1, Number(metaTotalFallback) || 50),
+    recebido: (recebidoFallback !== null && Number.isFinite(Number(recebidoFallback)))
+      ? Math.max(0, Math.round(Number(recebidoFallback)))
+      : null
+  }];
+}
+
+function montarItensComMetadados(itemFoco, arrecadadoUnidades, parecerTecnico = '', dataInicio = '', coletas = '', itensDetalhados = []) {
+  const itensSanitizados = sanitizarListaItensCampanha(itensDetalhados);
+  let base = String(itemFoco || '')
     .replace(/\[RECEBIDO:\d+\]/g, '')
     .replace(/\[PARECER:.*?\]/g, '')
     .replace(/\[INICIO:.*?\]/g, '')
+    .replace(/\[COLETAS:.*?\]/g, '')
+    .replace(/\[ITENS:[^\]]*\]/g, '')
+    .replace(/\s{2,}/g, ' ')
     .trim();
-  const partes = [base, `[RECEBIDO:${Math.max(0, Number(arrecadadoUnidades || 0))}]`];
-  if (dataInicio) partes.push(`[INICIO:${dataInicio}]`);
+
+  if (itensSanitizados.length > 1 || (!base && itensSanitizados.length > 0)) {
+    base = itensSanitizados.map((it) => `${it.nome} (${it.meta} un.)`).join(', ');
+  } else if (!base) {
+    base = 'Alimentos Não Perecíveis';
+  }
+
+  const totalNum = Number(arrecadadoUnidades);
+  const recebidoSeguro = Number.isFinite(totalNum) ? Math.max(0, Math.round(totalNum)) : 0;
+
+  const partes = [base];
+  if (coletas) partes.push(`[COLETAS:${String(coletas).replace(/[\[\]]/g, '').trim()}]`);
+  if (itensSanitizados.length > 0) partes.push(`[ITENS:${encodeURIComponent(JSON.stringify(itensSanitizados))}]`);
+  partes.push(`[RECEBIDO:${recebidoSeguro}]`);
+  if (dataInicio) partes.push(`[INICIO:${String(dataInicio).split('T')[0]}]`);
   if (parecerTecnico) partes.push(`[PARECER:${String(parecerTecnico).replace(/[\[\]]/g, '')}]`);
   return partes.join(' ');
 }
 
 function normalizarObjetoCampanha(c) {
+  const jaNormalizada = Boolean(c.__normalizada);
   const id = String(c.id_campanha || c.id_campanha_doacao || c.idCampanha || c.id || `camp_${Date.now()}`);
   const statusBruto = String(c.status_aprovacao || c.status_campanha || c.status || 'Pendente de Análise').toLowerCase();
   let statusCodigo = 'pendente';
@@ -544,24 +659,66 @@ function normalizarObjetoCampanha(c) {
   }
 
   const parsedItens = extrairMetaRecebidoParecer(c.itens_necessarios || c.itemFoco || '');
-  const itemFoco = parsedItens.textoLimpo || c.itemFoco || 'Alimentos Não Perecíveis';
-  const metaNumero = parseInt(String(c.meta ?? c.metaUnidades ?? 50).replace(/[^\d]/g, ''), 10) || 50;
-  const arrecadadoUnidades = parsedItens.recebido !== null
-    ? parsedItens.recebido
-    : Number(c.arrecadadoUnidades ?? c.quantidade_arrecadada ?? 0);
+  const metaBruta = (jaNormalizada && c.metaUnidades !== undefined)
+    ? c.metaUnidades
+    : (c.meta ?? c.metaUnidades ?? 50);
+  const matchMeta = String(metaBruta).match(/\d+/);
+  let metaNumero = matchMeta ? (parseInt(matchMeta[0], 10) || 50) : 50;
+
+  const recebidoBrutoInicial = (jaNormalizada && c.arrecadadoUnidades !== undefined && c.arrecadadoUnidades !== null)
+    ? Math.max(0, Math.round(Number(c.arrecadadoUnidades) || 0))
+    : (parsedItens.recebido !== null
+      ? Math.max(0, Math.round(Number(parsedItens.recebido) || 0))
+      : null);
+
+  const itensDetalhados = ((jaNormalizada || Array.isArray(c.itensDetalhados)) && Array.isArray(c.itensDetalhados) && c.itensDetalhados.length > 0)
+    ? sanitizarListaItensCampanha(c.itensDetalhados)
+    : extrairItensDetalhadosCampanha(c.itens_necessarios || c.itemFoco || '', metaNumero, recebidoBrutoInicial);
+
+  if (itensDetalhados.length > 1) {
+    const somaMetasItens = itensDetalhados.reduce((acc, it) => acc + it.meta, 0);
+    if (somaMetasItens > 0) metaNumero = somaMetasItens;
+  }
+
+  const itemFoco = (jaNormalizada && c.itemFoco)
+    ? String(c.itemFoco).replace(/\[COLETAS:.*?\]/g, '').replace(/\[ITENS:[^\]]*\]/g, '').trim()
+    : (parsedItens.textoLimpo || (itensDetalhados.length > 1
+      ? itensDetalhados.map((it) => `${it.nome} (${it.meta} un.)`).join(', ')
+      : (itensDetalhados[0]?.nome || c.itemFoco || 'Alimentos Não Perecíveis')));
+
+  let arrecadadoUnidades = 0;
+  const possuiRecebidoPorItem = itensDetalhados.some((it) => it.recebido !== null);
+  if (jaNormalizada && c.arrecadadoUnidades !== undefined && c.arrecadadoUnidades !== null) {
+    arrecadadoUnidades = Math.max(0, Math.round(Number(c.arrecadadoUnidades) || 0));
+  } else if (Array.isArray(parsedItens.itensJson) && possuiRecebidoPorItem) {
+    arrecadadoUnidades = itensDetalhados.reduce((acc, it) => acc + (Number(it.recebido) || 0), 0);
+  } else if (parsedItens.recebido !== null) {
+    arrecadadoUnidades = Math.max(0, Math.round(Number(parsedItens.recebido) || 0));
+  } else {
+    arrecadadoUnidades = Math.max(0, Math.round(Number(c.arrecadadoUnidades ?? c.quantidade_arrecadada ?? 0) || 0));
+  }
 
   const titulo = c.titulo || c.nome_campanha || 'Campanha Solidária';
   const descricao = c.descricao || c.objetivo_descricao_campanha || '';
-  const dataInicio = parsedItens.inicio || c.data_inicio_campanha || c.criadoEm || new Date().toISOString().split('T')[0];
+  const dataInicioRaw = (jaNormalizada && c.dataInicio)
+    ? c.dataInicio
+    : (parsedItens.inicio || c.data_inicio_campanha || c.criadoEm || new Date().toISOString().split('T')[0]);
+  const dataInicio = String(dataInicioRaw).split('T')[0];
   const dataLimite = c.data_fim || c.data_termino_campanha || c.dataLimite || '2026-12-31';
   const criadorNome = c.responsavel || c.nome_proponente || c.criadorNome || 'Doador Comunitário';
-  const parecer = parsedItens.parecer || c.justificativa_parecer_tecnico || c.parecerTecnico || '';
+  const coletas = (jaNormalizada && c.coletas !== undefined)
+    ? String(c.coletas || '')
+    : parsedItens.coletas;
+  const parecer = (jaNormalizada && c.parecerTecnico !== undefined)
+    ? String(c.parecerTecnico || '')
+    : (parsedItens.parecer || c.justificativa_parecer_tecnico || c.parecerTecnico || '');
 
   const diferencaMeta = arrecadadoUnidades - metaNumero;
   const percentualAtingido = metaNumero > 0 ? Math.round((arrecadadoUnidades / metaNumero) * 100) : 0;
 
   return {
     ...c,
+    __normalizada: true,
     id_campanha: id,
     id_campanha_doacao: id,
     idCampanha: id,
@@ -570,6 +727,8 @@ function normalizarObjetoCampanha(c) {
     descricao,
     objetivo_descricao_campanha: descricao,
     itemFoco,
+    itensDetalhados,
+    coletas,
     metaUnidades: metaNumero,
     arrecadadoUnidades,
     diferencaMeta,
@@ -608,7 +767,9 @@ async function salvarOuModerarCampanhaAdmin(campanha, ehNova = false) {
     normalizada.itemFoco,
     normalizada.arrecadadoUnidades,
     normalizada.parecerTecnico,
-    normalizada.dataInicio
+    normalizada.dataInicio,
+    normalizada.coletas,
+    normalizada.itensDetalhados
   );
 
   const payload = {
@@ -624,8 +785,15 @@ async function salvarOuModerarCampanhaAdmin(campanha, ehNova = false) {
     data_fim: normalizada.data_fim
   };
 
-  await executarAcaoEstoqueAws(payload);
-  return await carregarCampanhasReconciliadas();
+  const resp = await executarAcaoEstoqueAws(payload);
+  const lista = await carregarCampanhasReconciliadas();
+  if (resp && resp.campanha) {
+    const campResp = normalizarObjetoCampanha(resp.campanha);
+    const idx = lista.findIndex((c) => c.idCampanha === campResp.idCampanha);
+    if (idx >= 0) lista[idx] = campResp;
+    else lista.unshift(campResp);
+  }
+  return lista;
 }
 
 async function excluirCampanhaAdmin(idCampanha) {

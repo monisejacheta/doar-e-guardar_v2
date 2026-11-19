@@ -160,6 +160,30 @@ function renderizarCardsCampanhas() {
       `;
     }
 
+    const itens = Array.isArray(camp.itensDetalhados) && camp.itensDetalhados.length > 0
+      ? camp.itensDetalhados
+      : [{ nome: camp.itemFoco, meta: camp.metaUnidades, recebido: camp.arrecadadoUnidades }];
+    const multiItens = itens.length > 1;
+    const listaItensHtml = multiItens ? `
+      <ul class="space-y-1 pt-1 border-t border-blue-100/80">
+        ${itens.map((it) => {
+          const temValor = typeof it.recebido === 'number';
+          const statusItem = temValor
+            ? (it.recebido >= it.meta ? 'text-emerald-700' : 'text-amber-700')
+            : 'text-slate-600';
+          const textoQtd = temValor
+            ? `${it.recebido} / ${it.meta} un.`
+            : `Meta: ${it.meta} un.`;
+          return `
+            <li class="flex items-center justify-between gap-2 text-[11px]">
+              <span class="text-slate-700 font-medium truncate">${escaparHtml(it.nome)}</span>
+              <span class="font-bold ${statusItem} shrink-0">${textoQtd}</span>
+            </li>
+          `;
+        }).join('')}
+      </ul>
+    ` : '';
+
     return `
       <article class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
         <div class="space-y-2.5">
@@ -175,12 +199,13 @@ function renderizarCardsCampanhas() {
 
           <div class="p-3 rounded-xl bg-pastelBlue/30 border border-pastelBlue space-y-1.5">
             <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <span class="font-semibold text-slate-700 min-w-0 truncate">Item: <strong class="text-brandBlue">${escaparHtml(camp.itemFoco)}</strong></span>
+              <span class="font-semibold text-slate-700 min-w-0 truncate">${multiItens ? `Itens (${itens.length})` : `Item: <strong class="text-brandBlue">${escaparHtml(camp.itemFoco)}</strong>`}</span>
               <span class="font-bold text-brandBlue shrink-0">${camp.arrecadadoUnidades} / ${camp.metaUnidades} un. (${camp.percentualAtingido}%)</span>
             </div>
             <div class="w-full h-2 bg-white rounded-full overflow-hidden border border-blue-100">
               <div class="h-full ${camp.arrecadadoUnidades >= camp.metaUnidades ? 'bg-emerald-600' : 'bg-brandBlue'} rounded-full" style="width: ${progressoBarra}%"></div>
             </div>
+            ${listaItensHtml}
             <p class="text-[11px] font-medium text-slate-500 truncate">Responsável: <strong class="text-slate-700">${escaparHtml(camp.criadorNome)}</strong></p>
           </div>
 
@@ -199,14 +224,62 @@ function renderizarCardsCampanhas() {
   }).join('');
 }
 
+function criarHtmlLinhaItemNovaCampanha(nome = '', meta = '', removivel = false) {
+  return `
+    <div class="nova-camp-item-row grid grid-cols-12 gap-2 items-center p-2 rounded-xl bg-slate-50 border border-slate-200">
+      <div class="${removivel ? 'col-span-7' : 'col-span-8'}">
+        <input type="text" required placeholder="Ex: Leite UHT Integral 1L" value="${escaparHtml(nome)}" class="nova-camp-item-nome w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+      </div>
+      <div class="col-span-4">
+        <input type="number" required min="1" step="1" placeholder="Meta" value="${escaparHtml(meta)}" oninput="atualizarMetaTotalNovaCampanha()" class="nova-camp-item-meta w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-brandBlue focus:outline-none focus:border-brandBlue">
+      </div>
+      ${removivel ? `
+        <div class="col-span-1 flex justify-end">
+          <button type="button" onclick="removerLinhaItemNovaCampanha(this)" class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-red-50 hover:bg-red-100 text-red-600 transition" title="Remover item">
+            <i class="ph-bold ph-trash text-xs"></i>
+          </button>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function adicionarLinhaItemNovaCampanha(nome = '', meta = '') {
+  const container = document.getElementById('nova-camp-itens-container');
+  if (!container) return;
+  const removivel = container.querySelectorAll('.nova-camp-item-row').length > 0;
+  container.insertAdjacentHTML('beforeend', criarHtmlLinhaItemNovaCampanha(nome, meta, removivel));
+  atualizarMetaTotalNovaCampanha();
+}
+
+function removerLinhaItemNovaCampanha(botao) {
+  const container = document.getElementById('nova-camp-itens-container');
+  const linha = botao?.closest('.nova-camp-item-row');
+  if (!container || !linha) return;
+  if (container.querySelectorAll('.nova-camp-item-row').length <= 1) return;
+  linha.remove();
+  atualizarMetaTotalNovaCampanha();
+}
+
+function atualizarMetaTotalNovaCampanha() {
+  const metas = Array.from(document.querySelectorAll('.nova-camp-item-meta'))
+    .map((el) => Math.max(0, parseInt(el.value || '0', 10) || 0));
+  const total = metas.reduce((acc, v) => acc + v, 0);
+  const label = document.getElementById('nova-camp-meta-total-label');
+  if (label) label.textContent = `Meta total: ${total} un.`;
+}
+
 function abrirModalNovaCampanha() {
   const dt = new Date();
   dt.setDate(dt.getDate() + 30);
   document.getElementById('nova-camp-data').value = dt.toISOString().split('T')[0];
   document.getElementById('nova-camp-titulo').value = '';
-  document.getElementById('nova-camp-item').value = '';
-  document.getElementById('nova-camp-meta').value = 100;
   document.getElementById('nova-camp-desc').value = '';
+  const container = document.getElementById('nova-camp-itens-container');
+  if (container) {
+    container.innerHTML = criarHtmlLinhaItemNovaCampanha('', 100, false);
+  }
+  atualizarMetaTotalNovaCampanha();
   abrirModal('modal-nova-campanha-admin');
 }
 
@@ -214,12 +287,16 @@ async function aprovarCampanhaDireto(idCampanha) {
   const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
   if (!camp) return;
   try {
-    camp.status = 'aprovada';
-    camp.status_aprovacao = 'Aprovada';
-    camp.parecerTecnico = 'Campanha aprovada pela equipe administrativa.';
-    await salvarOuModerarCampanhaAdmin(camp, false);
+    const atualizada = {
+      ...camp,
+      status: 'aprovada',
+      status_aprovacao: 'Aprovada',
+      parecerTecnico: 'Campanha aprovada pela equipe administrativa.'
+    };
+    campanhasCache = await salvarOuModerarCampanhaAdmin(atualizada, false);
+    atualizarContadoresStatus();
+    renderizarCardsCampanhas();
     mostrarFeedbackModeracao(`Campanha "${camp.titulo}" aprovada e publicada!`, true);
-    await carregarTelaModeracao();
   } catch (erro) {
     mostrarFeedbackModeracao(`Erro ao aprovar campanha: ${erro.message}`, false);
   }
@@ -242,13 +319,17 @@ async function confirmarReprovacaoCampanha(event) {
   if (!camp) return;
 
   try {
-    camp.status = 'reprovada';
-    camp.status_aprovacao = 'Reprovada';
-    camp.parecerTecnico = parecer;
-    await salvarOuModerarCampanhaAdmin(camp, false);
+    const atualizada = {
+      ...camp,
+      status: 'reprovada',
+      status_aprovacao: 'Reprovada',
+      parecerTecnico: parecer
+    };
+    campanhasCache = await salvarOuModerarCampanhaAdmin(atualizada, false);
     fecharModal('modal-reprovar-campanha');
+    atualizarContadoresStatus();
+    renderizarCardsCampanhas();
     mostrarFeedbackModeracao(`Campanha "${camp.titulo}" recusada com justificativa salva.`, true);
-    await carregarTelaModeracao();
   } catch (erro) {
     mostrarFeedbackModeracao(`Erro ao recusar campanha: ${erro.message}`, false);
   }
@@ -257,32 +338,140 @@ async function confirmarReprovacaoCampanha(event) {
 function abrirModalBaixaCampanha(idCampanha) {
   const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
   if (!camp) return;
+
+  const itens = Array.isArray(camp.itensDetalhados) && camp.itensDetalhados.length > 0
+    ? camp.itensDetalhados
+    : [{ nome: camp.itemFoco, meta: camp.metaUnidades, recebido: camp.arrecadadoUnidades }];
+  const multiItens = itens.length > 1;
+  const metaTotal = multiItens
+    ? itens.reduce((acc, it) => acc + Math.max(1, Number(it.meta) || 1), 0)
+    : camp.metaUnidades;
+
   document.getElementById('baixa-camp-id').value = camp.idCampanha;
-  document.getElementById('baixa-camp-meta').value = camp.metaUnidades;
+  document.getElementById('baixa-camp-meta').value = metaTotal;
   document.getElementById('subtitulo-baixa-campanha').textContent = camp.titulo;
-  document.getElementById('baixa-camp-item').textContent = camp.itemFoco;
-  document.getElementById('baixa-camp-meta-label').textContent = `${camp.metaUnidades} un.`;
-  document.getElementById('baixa-camp-recebido').value = camp.arrecadadoUnidades || camp.metaUnidades;
+  document.getElementById('baixa-camp-item-rotulo').textContent = multiItens ? `Itens (${itens.length})` : 'Item';
+  document.getElementById('baixa-camp-item').textContent = multiItens
+    ? itens.map((it) => `${it.nome} (${it.meta} un.)`).join(', ')
+    : (itens[0]?.nome || camp.itemFoco);
+  document.getElementById('baixa-camp-meta-label').textContent = `${metaTotal} un.`;
+  document.getElementById('baixa-camp-itens-instrucao').textContent = multiItens
+    ? 'Informe a quantidade arrecadada de cada item *'
+    : 'Quantos produtos reais foram recebidos? *';
   document.getElementById('baixa-camp-obs').value = '';
+
+  const container = document.getElementById('baixa-camp-itens-container');
+  container.innerHTML = itens.map((it, idx) => {
+    let valorInicial = '';
+    if (typeof it.recebido === 'number') {
+      valorInicial = String(it.recebido);
+    } else if (!multiItens && (camp.status === 'encerrada' || camp.arrecadadoUnidades > 0)) {
+      valorInicial = String(camp.arrecadadoUnidades);
+    }
+
+    return `
+      <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
+        <div class="flex items-center justify-between gap-2 text-xs">
+          <label for="baixa-item-recebido-${idx}" class="font-bold text-brandBlue min-w-0 break-words flex-1">
+            ${escaparHtml(it.nome)}
+          </label>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-[11px] font-semibold text-slate-500">Meta: <strong class="text-slate-700">${it.meta} un.</strong></span>
+            <span id="baixa-item-diff-${idx}" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">Pendente</span>
+          </div>
+        </div>
+        <input
+          type="number"
+          id="baixa-item-recebido-${idx}"
+          data-item-idx="${idx}"
+          data-item-meta="${it.meta}"
+          data-item-nome="${escaparHtml(it.nome)}"
+          value="${escaparHtml(valorInicial)}"
+          placeholder="Qtd. recebida (meta: ${it.meta})"
+          required
+          min="0"
+          step="1"
+          oninput="atualizarPreviewResultadoMeta()"
+          class="input-baixa-item-recebido w-full px-3.5 py-2 bg-white border-2 border-brandBlue/30 rounded-xl text-sm font-extrabold text-brandBlue focus:outline-none focus:border-brandBlue"
+        >
+      </div>
+    `;
+  }).join('');
+
   atualizarPreviewResultadoMeta();
   abrirModal('modal-baixa-campanha');
 }
 
 function atualizarPreviewResultadoMeta() {
   const meta = Number(document.getElementById('baixa-camp-meta').value || 0);
-  const recebido = Number(document.getElementById('baixa-camp-recebido').value || 0);
+  const inputs = Array.from(document.querySelectorAll('.input-baixa-item-recebido'));
   const box = document.getElementById('preview-resultado-meta');
-  const diff = recebido - meta;
-  const pct = meta > 0 ? Math.round((recebido / meta) * 100) : 0;
+  const totalLabel = document.getElementById('baixa-camp-total-parcial');
+
+  let somaRecebida = 0;
+  let preenchidos = 0;
+
+  inputs.forEach((input, idx) => {
+    const raw = String(input.value || '').trim();
+    const metaItem = Number(input.dataset.itemMeta || 0);
+    const badge = document.getElementById(`baixa-item-diff-${idx}`);
+
+    if (raw === '') {
+      if (badge) {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-200 text-slate-600';
+        badge.textContent = 'Pendente';
+      }
+      return;
+    }
+
+    const val = Number(raw);
+    if (!Number.isFinite(val) || val < 0) {
+      if (badge) {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-700';
+        badge.textContent = 'Inválido';
+      }
+      return;
+    }
+
+    preenchidos += 1;
+    somaRecebida += val;
+
+    if (badge) {
+      const diffItem = val - metaItem;
+      if (diffItem > 0) {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-pastelGreen text-emerald-900';
+        badge.textContent = `+${diffItem} un.`;
+      } else if (diffItem === 0) {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-pastelGreen text-emerald-900';
+        badge.textContent = 'Meta exata';
+      } else {
+        badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900';
+        badge.textContent = `${diffItem} un.`;
+      }
+    }
+  });
+
+  if (totalLabel) {
+    totalLabel.textContent = `Total: ${somaRecebida} / ${meta} un.`;
+  }
+
+  if (inputs.length > 0 && preenchidos < inputs.length) {
+    box.className = 'p-3 rounded-xl border bg-pastelBlue/40 border-blue-200 text-brandBlue text-xs font-bold flex items-center justify-between gap-2';
+    box.innerHTML = `<span><i class="ph-bold ph-info mr-1"></i> Preencha todos os itens (${preenchidos}/${inputs.length})</span><span>Parcial: ${somaRecebida} un.</span>`;
+    return;
+  }
+
+  const diff = somaRecebida - meta;
+  const pct = meta > 0 ? Math.round((somaRecebida / meta) * 100) : 0;
 
   if (diff > 0) {
-    box.className = 'p-3 rounded-xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between';
+    box.className = 'p-3 rounded-xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between gap-2';
     box.innerHTML = `<span><i class="ph-bold ph-trend-up mr-1"></i> Acima da meta!</span><span>+${diff} un. (${pct}%)</span>`;
   } else if (diff === 0) {
-    box.className = 'p-3 rounded-xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between';
+    box.className = 'p-3 rounded-xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between gap-2';
     box.innerHTML = `<span><i class="ph-bold ph-check-circle mr-1"></i> Meta exata atingida!</span><span>0 diferença (100%)</span>`;
   } else {
-    box.className = 'p-3 rounded-xl border bg-amber-50 border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-between';
+    box.className = 'p-3 rounded-xl border bg-amber-50 border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-between gap-2';
     box.innerHTML = `<span><i class="ph-bold ph-trend-down mr-1"></i> Abaixo da meta</span><span>${diff} un. (${pct}%)</span>`;
   }
 }
@@ -290,34 +479,70 @@ function atualizarPreviewResultadoMeta() {
 async function confirmarBaixaCampanha(event) {
   event.preventDefault();
   const idCampanha = document.getElementById('baixa-camp-id').value;
-  const recebidoReal = Math.max(0, Number(document.getElementById('baixa-camp-recebido').value));
   const obs = document.getElementById('baixa-camp-obs').value.trim();
   const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
   if (!camp) return;
+
+  const inputs = Array.from(document.querySelectorAll('.input-baixa-item-recebido'));
+  const itensBase = Array.isArray(camp.itensDetalhados) && camp.itensDetalhados.length > 0
+    ? camp.itensDetalhados
+    : [{ nome: camp.itemFoco, meta: camp.metaUnidades, recebido: null }];
+
+  const itensAtualizados = [];
+  for (let i = 0; i < inputs.length; i += 1) {
+    const input = inputs[i];
+    const raw = String(input.value || '').trim();
+    const val = Number(raw);
+    if (raw === '' || !Number.isFinite(val) || val < 0 || !Number.isInteger(val)) {
+      input.focus();
+      mostrarFeedbackModeracao('Informe uma quantidade inteira válida (0 ou maior) para cada item da campanha.', false);
+      return;
+    }
+    const base = itensBase[i] || { nome: input.dataset.itemNome || 'Item', meta: Number(input.dataset.itemMeta || 1) };
+    itensAtualizados.push({
+      nome: base.nome,
+      meta: Math.max(1, Number(base.meta) || 1),
+      recebido: val
+    });
+  }
+
+  const recebidoReal = itensAtualizados.reduce((acc, it) => acc + it.recebido, 0);
+  const metaTotal = itensAtualizados.length > 1
+    ? itensAtualizados.reduce((acc, it) => acc + it.meta, 0)
+    : camp.metaUnidades;
 
   const btn = document.getElementById('btn-confirmar-baixa-camp');
   btn.disabled = true;
   btn.textContent = 'Salvando...';
 
   try {
-    const diff = recebidoReal - camp.metaUnidades;
-    const pct = camp.metaUnidades > 0 ? Math.round((recebidoReal / camp.metaUnidades) * 100) : 0;
+    const diff = recebidoReal - metaTotal;
+    const pct = metaTotal > 0 ? Math.round((recebidoReal / metaTotal) * 100) : 0;
+    const detalheItensTexto = itensAtualizados.length > 1
+      ? ` Itens: ${itensAtualizados.map((it) => `${it.nome}: ${it.recebido}/${it.meta} un.`).join('; ')}.`
+      : '';
     const resumoTexto = diff >= 0
-      ? `Meta atingida/superada: ${recebidoReal}/${camp.metaUnidades} un. (+${diff} un. | ${pct}%).`
-      : `Abaixo da meta: ${recebidoReal}/${camp.metaUnidades} un. (${diff} un. | ${pct}%).`;
+      ? `Meta atingida/superada: ${recebidoReal}/${metaTotal} un. (+${diff} un. | ${pct}%).${detalheItensTexto}`
+      : `Abaixo da meta: ${recebidoReal}/${metaTotal} un. (${diff} un. | ${pct}%).${detalheItensTexto}`;
 
-    camp.status = 'encerrada';
-    camp.status_aprovacao = 'Encerrada';
-    camp.arrecadadoUnidades = recebidoReal;
-    camp.parecerTecnico = obs ? `${resumoTexto} ${obs}` : resumoTexto;
+    const atualizada = {
+      ...camp,
+      status: 'encerrada',
+      status_aprovacao: 'Encerrada',
+      metaUnidades: metaTotal,
+      arrecadadoUnidades: recebidoReal,
+      itensDetalhados: itensAtualizados,
+      parecerTecnico: obs ? `${resumoTexto} ${obs}` : resumoTexto
+    };
 
-    await salvarOuModerarCampanhaAdmin(camp, false);
+    campanhasCache = await salvarOuModerarCampanhaAdmin(atualizada, false);
     fecharModal('modal-baixa-campanha');
+    atualizarContadoresStatus();
+    renderizarCardsCampanhas();
     mostrarFeedbackModeracao(
       `Baixa confirmada em "${camp.titulo}"! Recebido: ${recebidoReal} un. (${diff >= 0 ? `+${diff} acima` : `${diff} abaixo`} da meta).`,
       true
     );
-    await carregarTelaModeracao();
   } catch (erro) {
     mostrarFeedbackModeracao(`Erro ao confirmar baixa: ${erro.message}`, false);
   } finally {
@@ -328,6 +553,26 @@ async function confirmarBaixaCampanha(event) {
 
 async function salvarNovaCampanhaInstitucional(event) {
   event.preventDefault();
+  const linhas = Array.from(document.querySelectorAll('.nova-camp-item-row'));
+  const itens = [];
+  for (const linha of linhas) {
+    const inputNome = linha.querySelector('.nova-camp-item-nome');
+    const inputMeta = linha.querySelector('.nova-camp-item-meta');
+    const nome = String(inputNome?.value || '').trim();
+    const meta = parseInt(inputMeta?.value || '0', 10);
+    if (!nome || !Number.isFinite(meta) || meta < 1) {
+      (nome ? inputMeta : inputNome)?.focus();
+      mostrarFeedbackModeracao('Preencha o nome e uma meta válida (mínimo 1) para cada item.', false);
+      return;
+    }
+    itens.push({ nome, meta, recebido: null });
+  }
+
+  const metaTotal = itens.reduce((acc, it) => acc + it.meta, 0);
+  const itemFoco = itens.length > 1
+    ? itens.map((it) => `${it.nome} (${it.meta} un.)`).join(', ')
+    : itens[0].nome;
+
   const btn = document.getElementById('btn-publicar-camp');
   btn.disabled = true;
   btn.textContent = 'Publicando...';
@@ -336,8 +581,9 @@ async function salvarNovaCampanhaInstitucional(event) {
     const nova = {
       id_campanha: `camp_${Date.now()}`,
       titulo: document.getElementById('nova-camp-titulo').value.trim(),
-      itemFoco: document.getElementById('nova-camp-item').value.trim(),
-      metaUnidades: Number(document.getElementById('nova-camp-meta').value),
+      itemFoco,
+      itensDetalhados: itens,
+      metaUnidades: metaTotal,
       arrecadadoUnidades: 0,
       dataInicio: new Date().toISOString().split('T')[0],
       data_fim: document.getElementById('nova-camp-data').value,
@@ -347,10 +593,11 @@ async function salvarNovaCampanhaInstitucional(event) {
       parecerTecnico: 'Campanha oficial criada pela equipe administrativa.'
     };
 
-    await salvarOuModerarCampanhaAdmin(nova, true);
+    campanhasCache = await salvarOuModerarCampanhaAdmin(nova, true);
     fecharModal('modal-nova-campanha-admin');
+    atualizarContadoresStatus();
+    renderizarCardsCampanhas();
     mostrarFeedbackModeracao(`Campanha "${nova.titulo}" publicada com sucesso!`, true);
-    await carregarTelaModeracao();
   } catch (erro) {
     mostrarFeedbackModeracao(`Erro ao criar campanha: ${erro.message}`, false);
   } finally {
@@ -362,9 +609,10 @@ async function salvarNovaCampanhaInstitucional(event) {
 async function confirmarExclusaoCampanha(idCampanha, titulo) {
   if (!confirm(`Deseja excluir permanentemente a campanha "${titulo}"?`)) return;
   try {
-    await excluirCampanhaAdmin(idCampanha);
+    campanhasCache = await excluirCampanhaAdmin(idCampanha);
+    atualizarContadoresStatus();
+    renderizarCardsCampanhas();
     mostrarFeedbackModeracao(`Campanha "${titulo}" removida com sucesso.`, true);
-    await carregarTelaModeracao();
   } catch (erro) {
     mostrarFeedbackModeracao(`Erro ao excluir campanha: ${erro.message}`, false);
   }
@@ -373,6 +621,9 @@ async function confirmarExclusaoCampanha(idCampanha, titulo) {
 window.carregarTelaModeracao = carregarTelaModeracao;
 window.filtrarStatusCampanha = filtrarStatusCampanha;
 window.abrirModalNovaCampanha = abrirModalNovaCampanha;
+window.adicionarLinhaItemNovaCampanha = adicionarLinhaItemNovaCampanha;
+window.removerLinhaItemNovaCampanha = removerLinhaItemNovaCampanha;
+window.atualizarMetaTotalNovaCampanha = atualizarMetaTotalNovaCampanha;
 window.aprovarCampanhaDireto = aprovarCampanhaDireto;
 window.abrirModalReprovacao = abrirModalReprovacao;
 window.confirmarReprovacaoCampanha = confirmarReprovacaoCampanha;

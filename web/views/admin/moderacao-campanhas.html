@@ -103,7 +103,7 @@
 
   <!-- MODAL 1: DAR BAIXA / CONFIRMAR RECEBIMENTO REAL -->
   <div id="modal-baixa-campanha" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative transform scale-95 transition-transform duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative transform scale-95 transition-transform duration-300">
       <button type="button" onclick="fecharModal('modal-baixa-campanha')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
         <i class="ph ph-x text-lg"></i>
       </button>
@@ -120,25 +120,28 @@
         <input type="hidden" id="baixa-camp-id">
         <input type="hidden" id="baixa-camp-meta">
 
-        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-          <div>
-            <span class="text-slate-500 block font-medium">Item</span>
-            <strong id="baixa-camp-item" class="text-brandBlue">--</strong>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3 text-xs">
+          <div class="min-w-0 flex-1">
+            <span id="baixa-camp-item-rotulo" class="text-slate-500 block font-medium">Item</span>
+            <strong id="baixa-camp-item" class="text-brandBlue block break-words">--</strong>
           </div>
-          <div class="text-right">
-            <span class="text-slate-500 block font-medium">Meta</span>
+          <div class="text-right shrink-0">
+            <span class="text-slate-500 block font-medium">Meta Total</span>
             <strong id="baixa-camp-meta-label" class="text-brandBlue text-sm">0 un.</strong>
           </div>
         </div>
 
         <div>
-          <label for="baixa-camp-recebido" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">
-            Quantos produtos reais foram recebidos? *
-          </label>
-          <input type="number" id="baixa-camp-recebido" required min="0" step="1" oninput="atualizarPreviewResultadoMeta()" class="w-full px-4 py-2 bg-white border-2 border-brandBlue/30 rounded-xl text-base font-extrabold text-brandBlue focus:outline-none focus:border-brandBlue">
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <label id="baixa-camp-itens-instrucao" class="block text-[11px] font-bold text-brandBlue uppercase">
+              Quantos produtos reais foram recebidos? *
+            </label>
+            <span id="baixa-camp-total-parcial" class="text-[11px] font-extrabold text-brandBlue bg-pastelBlue/70 px-2 py-0.5 rounded-md">Total: 0 un.</span>
+          </div>
+          <div id="baixa-camp-itens-container" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
         </div>
 
-        <div id="preview-resultado-meta" class="p-3 rounded-xl border text-xs font-bold flex items-center justify-between">
+        <div id="preview-resultado-meta" class="p-3 rounded-xl border text-xs font-bold flex items-center justify-between gap-2">
           <span>Informe a quantidade recebida para calcular o resultado.</span>
         </div>
 
@@ -188,7 +191,7 @@
 
   <!-- MODAL 3: NOVA CAMPANHA -->
   <div id="modal-nova-campanha-admin" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-6 relative transform scale-95 transition-transform duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 relative transform scale-95 transition-transform duration-300">
       <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
         <i class="ph ph-x text-lg"></i>
       </button>
@@ -204,15 +207,17 @@
           <input type="text" id="nova-camp-titulo" required placeholder="Ex: Campanha Emergencial de Leite Integral" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Alimento / Item Principal *</label>
-            <input type="text" id="nova-camp-item" required placeholder="Ex: Leite UHT Integral 1L" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label class="block text-[11px] font-bold text-brandBlue uppercase">Alimentos / Itens e Metas *</label>
+            <div class="flex items-center gap-2">
+              <span id="nova-camp-meta-total-label" class="text-[11px] font-extrabold text-brandBlue bg-pastelBlue/70 px-2 py-0.5 rounded-md">Meta total: 100 un.</span>
+              <button type="button" onclick="adicionarLinhaItemNovaCampanha()" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-[11px] transition">
+                <i class="ph-bold ph-plus"></i> Adicionar item
+              </button>
+            </div>
           </div>
-          <div>
-            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Meta (unidades) *</label>
-            <input type="number" id="nova-camp-meta" required min="1" value="100" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
-          </div>
+          <div id="nova-camp-itens-container" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -241,8 +246,8 @@
     </div>
   </div>
 
-  <script src="../../public/js/admin.js?v=10"></script>
-  <script src="../../public/js/admin-campanhas.js?v=10"></script>
+  <script src="../../public/js/admin.js?v=11"></script>
+  <script src="../../public/js/admin-campanhas.js?v=11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       renderizarSidebarAdmin('moderacao-campanhas');

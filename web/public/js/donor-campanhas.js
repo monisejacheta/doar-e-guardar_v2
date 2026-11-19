@@ -241,7 +241,13 @@ async function submeterCampanha(event) {
   const pontosSanitizados = pontos.map((p) => p.replace(/[\[\]|]/g, ' ').replace(/\s+/g, ' ').trim());
   const totalMeta = itensAdicionadosCampanha.reduce((acc, it) => acc + it.qtd, 0);
   const resumoItens = itensAdicionadosCampanha.map((it) => `${it.nome} (${it.qtd} un.)`).join(', ');
-  const itensCodificados = `${resumoItens} [RECEBIDO:0] [INICIO:${dInicio}] [COLETAS:${pontosSanitizados.join(' | ')}]`;
+  const itensDetalhados = itensAdicionadosCampanha.map((it) => ({
+    nome: String(it.nome || '').trim(),
+    meta: Math.max(1, Number(it.qtd) || 1),
+    recebido: null
+  }));
+  const itensTag = encodeURIComponent(JSON.stringify(itensDetalhados));
+  const itensCodificados = `${resumoItens} [RECEBIDO:0] [INICIO:${dInicio}] [COLETAS:${pontosSanitizados.join(' | ')}] [ITENS:${itensTag}]`;
   const objetivoTexto = document.getElementById('objetivo-campanha').value.trim();
 
   try {
