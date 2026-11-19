@@ -40,10 +40,10 @@ export default function SettingsStorageScreen() {
   const [filtroTipo, setFiltroTipo] = useState<'TODOS' | 'armário' | 'geladeira'>('TODOS');
   const [buscaTermo, setBuscaTermo] = useState('');
 
-  // Formulário de nova prateleira (US06)
+  // Formulário de nova prateleira (US06) — permite múltiplas prateleiras por armário/geladeira
   const [nomeLocal, setNomeLocal] = useState('');
   const [tipoLocal, setTipoLocal] = useState<'armário' | 'geladeira'>('armário');
-  const [sublocal, setSublocal] = useState('');
+  const [sublocais, setSublocais] = useState<string[]>(['']);
   const [ambiente, setAmbiente] = useState('Despensa Principal');
   const [salvandoNovo, setSalvandoNovo] = useState(false);
 
@@ -134,23 +134,61 @@ export default function SettingsStorageScreen() {
     }
   };
 
+  const adicionarCampoPrateleira = () => {
+    setSublocais((atual) => [...atual, '']);
+  };
+
+  const atualizarCampoPrateleira = (indice: number, valor: string) => {
+    setSublocais((atual) => atual.map((item, idx) => (idx === indice ? valor : item)));
+  };
+
+  const removerCampoPrateleira = (indice: number) => {
+    setSublocais((atual) => (atual.length > 1 ? atual.filter((_, idx) => idx !== indice) : atual));
+  };
+
   const salvarNovaPrateleira = async () => {
+    const prateleirasValidas = sublocais.map((s) => s.trim()).filter(Boolean);
+    if (!nomeLocal.trim() || prateleirasValidas.length === 0) {
+      Alert.alert('Campos obrigatórios', 'Preencha o nome do armário/geladeira e pelo menos uma prateleira ou gaveta.');
+      return;
+    }
+
     setSalvandoNovo(true);
     try {
-      const res = await cadastrarPrateleiraAws({
-        nome_local: nomeLocal,
-        tipo_local: tipoLocal,
-        sublocal_compartimento: sublocal,
-        localizacao_ambiente: ambiente,
-      });
+      let salvas = 0;
+      let ultimoErro = '';
 
-      if (res.sucesso) {
-        setNomeLocal('');
-        setSublocal('');
+      for (const itemSublocal of prateleirasValidas) {
+        const res = await cadastrarPrateleiraAws({
+          nome_local: nomeLocal,
+          tipo_local: tipoLocal,
+          sublocal_compartimento: itemSublocal,
+          localizacao_ambiente: ambiente,
+        });
+        if (res.sucesso) {
+          salvas += 1;
+        } else {
+          ultimoErro = res.mensagem;
+        }
+      }
+
+      if (salvas > 0) {
         await carregarDados(true);
-        Alert.alert('Prateleira Salva!', res.mensagem);
+      }
+
+      if (salvas === prateleirasValidas.length) {
+        setNomeLocal('');
+        setSublocais(['']);
+        Alert.alert(
+          'Prateleiras Salvas!',
+          salvas === 1
+            ? 'Prateleira cadastrada na AWS com sucesso!'
+            : `${salvas} prateleiras cadastradas em "${nomeLocal.trim()}" com sucesso!`
+        );
+      } else if (salvas > 0) {
+        Alert.alert('Atenção', `${salvas} prateleira(s) salva(s), mas houve erro em uma delas: ${ultimoErro}`);
       } else {
-        Alert.alert('Atenção', res.mensagem);
+        Alert.alert('Atenção', ultimoErro || 'Não foi possível salvar as prateleiras na AWS.');
       }
     } finally {
       setSalvandoNovo(false);
@@ -363,12 +401,70 @@ export default function SettingsStorageScreen() {
             onChangeText={setNomeLocal}
           />
 
-          <AppInput
-            rotulo="Identificação da Prateleira ou Gaveta *"
-            placeholder="Ex: Prateleira 2 ou Gaveta Superior"
-            value={sublocal}
-            onChangeText={setSublocal}
-          />
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+              gap: 8,
+            }}
+          >
+            <Text style={{ flex: 1, fontWeight: '700', color: theme.text, fontSize: 13 * fontScale }}>
+              Identificação da Prateleira ou Gaveta *
+            </Text>
+            <TouchableOpacity
+              accessible={true}
+              accessibilityRole="button"
+              accessibilityLabel="Adicionar nova prateleira"
+              onPress={adicionarCampoPrateleira}
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: 6,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                borderRadius: 10,
+                backgroundColor: theme.primary,
+              }}
+            >
+              <Feather name="plus" size={14} color="#FFFFFF" />
+              <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 12 * fontScale }}>
+                Nova prateleira
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {sublocais.map((valorSublocal, idx) => (
+            <View key={`sublocal-${idx}`} style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
+              <View style={{ flex: 1 }}>
+                <AppInput
+                  rotulo={`Prateleira / Gaveta ${idx + 1}`}
+                  placeholder={idx === 0 ? 'Ex: Prateleira 1 ou Gaveta Superior' : `Ex: Prateleira ${idx + 1}`}
+                  value={valorSublocal}
+                  onChangeText={(texto) => atualizarCampoPrateleira(idx, texto)}
+                />
+              </View>
+              {sublocais.length > 1 && (
+                <TouchableOpacity
+                  accessible={true}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remover campo prateleira ${idx + 1}`}
+                  onPress={() => removerCampoPrateleira(idx)}
+                  style={{
+                    marginBottom: 14,
+                    padding: 12,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: theme.danger,
+                    backgroundColor: theme.background,
+                  }}
+                >
+                  <Feather name="trash-2" size={16} color={theme.danger} />
+                </TouchableOpacity>
+              )}
+            </View>
+          ))}
 
           <AppInput
             rotulo="Ambiente Físico"

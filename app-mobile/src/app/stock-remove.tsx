@@ -83,20 +83,20 @@ export default function StockRemoveScreen() {
   const [modalSucessoVisivel, setModalSucessoVisivel] = useState(false);
   const [resumoBaixa, setResumoBaixa] = useState<{ qtd: number; saldoNovo: number; motivo: string } | null>(null);
 
-  // Estados do Formulário - Motivos de Saída simplificados para duas opções exatas
+  // Estados do Formulário - Motivos de Saída fixos (apenas duas opções oficiais)
   const motivosDisponiveis = [
-    'saida regular',
-    'perda de produto',
+    'Saida Regular',
+    'Perda de produtos',
   ];
 
   const [quantidadeSaida, setQuantidadeSaida] = useState('');
-  const [motivoSaida, setMotivoSaida] = useState('saida regular');
+  const [motivoSaida, setMotivoSaida] = useState('Saida Regular');
   const [justificativa, setJustificativa] = useState('');
   const [palavraTravaPerda, setPalavraTravaPerda] = useState('');
   const [processandoBaixa, setProcessandoBaixa] = useState(false);
 
-  // Variável booleana da trava de segurança (exigida e exibida estritamente para "perda de produto")
-  const exigeTravaSeguranca = motivoSaida === 'perda de produto';
+  // Variável booleana da trava de segurança (exigida e exibida estritamente para "Perda de produtos")
+  const exigeTravaSeguranca = motivoSaida.toLowerCase().includes('perda');
 
   // Converte data para timestamp para a rigorosa ordenação FEFO
   const converterDataParaMs = (dataStr: string) => {
@@ -280,7 +280,7 @@ export default function StockRemoveScreen() {
   const abrirFormularioSaida = (lote: LoteItem) => {
     setLoteSelecionado(lote);
     setQuantidadeSaida('');
-    setMotivoSaida('saida regular');
+    setMotivoSaida('Saida Regular');
     setJustificativa('');
     setPalavraTravaPerda('');
     setModalLotesVisivel(false);

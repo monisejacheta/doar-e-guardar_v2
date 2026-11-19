@@ -158,15 +158,8 @@ export default function StockAddScreen() {
   const [idProduto, setIdProduto] = useState('');
   const [nomeProduto, setNomeProduto] = useState('');
   const [marcaProduto, setMarcaProduto] = useState('');
-  const [categoria, setCategoria] = useState('Grãos e Cereais');
-  const [categoriasItens, setCategoriasItens] = useState<CategoriaAlimentoItem[]>(() =>
-    CATEGORIAS_PADRAO_SISTEMA.map((nome, indice) => ({
-      id: `init-${indice}`,
-      nome,
-      oculta: false,
-      origem: 'local',
-    }))
-  );
+  const [categoria, setCategoria] = useState('');
+  const [categoriasItens, setCategoriasItens] = useState<CategoriaAlimentoItem[]>([]);
   const [carregandoCategorias, setCarregandoCategorias] = useState(true);
   const [dropdownCategoriasAberto, setDropdownCategoriasAberto] = useState(false);
   const [mostrarCategoriasOcultas, setMostrarCategoriasOcultas] = useState(false);
@@ -185,8 +178,8 @@ export default function StockAddScreen() {
   const [numeroLote, setNumeroLote] = useState('');
   const [quantidadePacotes, setQuantidadePacotes] = useState('');
   const [dataValidade, setDataValidade] = useState('');
-  const [locaisDisponiveis, setLocaisDisponiveis] = useState<string[]>(LOCAIS_PADRAO_HOMOLOGADOS);
-  const [localArmazenamento, setLocalArmazenamento] = useState(LOCAIS_PADRAO_HOMOLOGADOS[0]);
+  const [locaisDisponiveis, setLocaisDisponiveis] = useState<string[]>([]);
+  const [localArmazenamento, setLocalArmazenamento] = useState('');
 
   // Filtros e Organização dos Locais de Armazenamento
   const [filtroTipoLocal, setFiltroTipoLocal] = useState<'TODOS' | 'armário' | 'geladeira'>('TODOS');
@@ -215,19 +208,17 @@ export default function StockAddScreen() {
     }
   };
 
-  // Carrega compartimentos reais já utilizados/configurados no banco de dados da AWS
+  // Carrega compartimentos reais da tabela tb_locaisArmazenamento na AWS
   const carregarLocaisDoBackend = useCallback(async () => {
     try {
       const reconciliacao = await carregarPrateleirasAws();
-      if (reconciliacao.locais.length > 0) {
-        const descricoes = reconciliacao.locais.map((l) => l.local_descricao);
-        setLocaisDisponiveis(descricoes);
-        setLocalArmazenamento((atual) =>
-          descricoes.includes(atual) ? atual : descricoes[0]
-        );
-      }
+      const descricoes = reconciliacao.locais.map((l) => l.local_descricao);
+      setLocaisDisponiveis(descricoes);
+      setLocalArmazenamento((atual) =>
+        descricoes.includes(atual) ? atual : (descricoes[0] || '')
+      );
     } catch {
-      // Mantém a lista homologada padrão caso o estoque esteja vazio
+      setLocaisDisponiveis([]);
     }
   }, []);
 

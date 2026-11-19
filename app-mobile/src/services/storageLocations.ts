@@ -87,8 +87,8 @@ export const LOCAIS_HOMOLOGADOS_PADRAO: LocalArmazenamento[] = [
   },
 ];
 
-// Cache em memória da sessão para manter novas prateleiras cadastradas sincronizadas entre telas
-let cacheLocaisSessao: LocalArmazenamento[] = [...LOCAIS_HOMOLOGADOS_PADRAO];
+// Cache em memória da sessão (populado apenas com dados reais da AWS)
+let cacheLocaisSessao: LocalArmazenamento[] = [];
 let rotaConfiguracoesSuportada: boolean | null = null;
 
 /**
@@ -238,10 +238,27 @@ export async function carregarPrateleirasAws(lotesPreCarregados?: any[]): Promis
     });
   };
 
-  // 1. Registra locais da sessão e padrão
-  cacheLocaisSessao.forEach((loc) => registrarNoMapa(loc, loc.origem_sincronizacao || 'homologado'));
+  // 1. Consulta endpoint oficial da tabela tb_locaisArmazenamento (/api/configuracoes -> listar_locais)
+  let carregouDaTabelaLocais = false;
+  try {
+    const respConf: any = await requisicaoApi('/api/configuracoes', {
+      metodo: 'POST',
+      dados: { modulo: 'configuracoes', acao: 'listar_locais' },
+    });
+    if (respConf?.sucesso && Array.isArray(respConf.locais)) {
+      rotaConfiguracoesSuportada = true;
+      carregouDaTabelaLocais = true;
+      respConf.locais.forEach((l: any) => registrarNoMapa(l, 'aws_configuracoes'));
+    }
+  } catch {
+    // Fallback offline abaixo
+  }
 
-  // 2. Consulta lotes ativos na AWS (se não foram pré-carregados)
+  if (!carregouDaTabelaLocais) {
+    cacheLocaisSessao.forEach((loc) => registrarNoMapa(loc, loc.origem_sincronizacao || 'aws_configuracoes'));
+  }
+
+  // 2. Consulta lotes ativos na AWS apenas para contabilizar ocupação das prateleiras
   let lotesBrutos = Array.isArray(lotesPreCarregados) ? lotesPreCarregados : [];
   if (!lotesPreCarregados) {
     try {
@@ -252,29 +269,12 @@ export async function carregarPrateleirasAws(lotesPreCarregados?: any[]): Promis
       if (respEst?.sucesso && Array.isArray(respEst.lotes)) {
         lotesBrutos = respEst.lotes;
       }
-      if (Array.isArray(respEst?.locais)) {
-        respEst.locais.forEach((l: any) => registrarNoMapa(l, 'aws_configuracoes'));
-      }
     } catch {
-      // Fallback silencioso para cache da sessão
+      // Silencioso
     }
   }
 
-  // 3. Consulta endpoint de configurações da AWS (/api/configuracoes)
-  try {
-    const respConf: any = await requisicaoApi('/api/configuracoes', {
-      metodo: 'POST',
-      dados: { modulo: 'configuracoes', acao: 'listar_locais' },
-    });
-    if (respConf?.sucesso && Array.isArray(respConf.locais)) {
-      rotaConfiguracoesSuportada = true;
-      respConf.locais.forEach((l: any) => registrarNoMapa(l, 'aws_configuracoes'));
-    }
-  } catch {
-    // Mantém conciliação com locais encontrados nos lotes da AWS
-  }
-
-  // 4. Reconcilia todas as prateleiras encontradas nos lotes da AWS e contabiliza ocupação
+  // 3. Contabiliza ocupação dos lotes apenas nas prateleiras cadastradas em tb_locaisArmazenamento
   const contagemLotes = new Map<string, number>();
   const contagemPacotes = new Map<string, number>();
 
@@ -284,22 +284,19 @@ export async function carregarPrateleirasAws(lotesPreCarregados?: any[]): Promis
     const decomp = decomporDescricaoPrateleira(descOriginal || idOriginal || 'Armário A - Prateleira 1');
     const chave = removerAcentos(decomp.local_descricao.toLowerCase());
 
-    if (!mapaLocais.has(chave)) {
-      registrarNoMapa(decomp, 'aws_estoque');
-    }
-
-    const localHomologado = mapaLocais.get(chave)!;
+    const localHomologado = mapaLocais.get(chave) || decomp;
     const qtd = Number(lote?.quantidade_atual_pacote) || 0;
 
-    if (qtd > 0) {
+    if (qtd > 0 && mapaLocais.has(chave)) {
       contagemLotes.set(chave, (contagemLotes.get(chave) || 0) + 1);
       contagemPacotes.set(chave, (contagemPacotes.get(chave) || 0) + qtd);
     }
 
     if (
-      descOriginal !== localHomologado.local_descricao ||
-      !idOriginal ||
-      ['loc_arm', 'loc_gel', 'loc_des', '0'].includes(idOriginal)
+      mapaLocais.has(chave) &&
+      (descOriginal !== localHomologado.local_descricao ||
+        !idOriginal ||
+        ['loc_arm', 'loc_gel', 'loc_des', '0'].includes(idOriginal))
     ) {
       discrepanciasCorrigidas += 1;
     }
