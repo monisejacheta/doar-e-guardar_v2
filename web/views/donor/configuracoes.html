@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Configurações da Conta | Casa da Criança</title>
+  <title>Meu Perfil &amp; Preferências | Casa da Criança</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -31,134 +31,117 @@
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa -->
-  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
-    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
-      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
-        <i class="ph ph-package text-3xl"></i>
-      </div>
-      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
-      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
-    </div>
-
-    <!-- Navegação do Doador -->
-    <nav class="flex-1 px-4 py-5 space-y-2.5 overflow-y-auto">
-      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
-      <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-house text-lg"></i> Início
-      </a>
-      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-book-open text-lg"></i> Nossa História
-      </a>
-      <a href="../../index.html#como-doar" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
-      </a>
-
-      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
-      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-squares-four text-lg"></i> Dashboard Doador
-      </a>
-      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-package text-lg"></i> Estoque Transparente
-      </a>
-      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-megaphone text-lg"></i> Propor Campanha
-      </a>
-      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-folder-star text-lg"></i> Minhas Campanhas
-      </a>
-      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
-        <i class="ph ph-user-gear text-lg"></i> Meu Perfil & LGPD
-      </a>
-    </nav>
-
-    <!-- Área Inferior da Navbar -->
-    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
-      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
-        <i class="ph ph-moon text-xl"></i> Contraste
-      </button>
-
-      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
-        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
-      </button>
-    </div>
-  </aside>
+  <div id="sidebar-doador-container"></div>
 
   <!-- Área Principal -->
-  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
-    <div>
-      <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
-        <i class="ph ph-user-gear text-3xl"></i> Conta e Privacidade
-      </h1>
-      <p class="text-sm text-slate-600 mt-2 max-w-2xl">
-        Atualize seus dados vinculados ao Google e gerencie suas permissões de privacidade conforme a LGPD.
-      </p>
-    </div>
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-3 lg:p-5 space-y-3.5">
 
-    <div class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-8">
+    <!-- Cabeçalho Compacto -->
+    <header class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+      <div class="min-w-0 flex-1">
+        <span class="inline-flex items-center gap-1.5 bg-pastelBlue text-brandBlue px-2 py-0.5 rounded-full font-bold text-[10px] mb-0.5">
+          <i class="ph-fill ph-shield-check"></i>
+          <span>Conta, WhatsApp e Acessibilidade</span>
+        </span>
+        <h1 class="text-lg lg:text-xl font-extrabold text-brandBlue flex items-center gap-2">
+          <i class="ph ph-user-gear text-xl shrink-0"></i>
+          <span class="truncate">Meu Perfil e Preferências</span>
+        </h1>
+      </div>
+    </header>
 
-      <!-- Dados Extraídos do Google (Somente Leitura neste MVP) -->
-      <div class="space-y-4">
-        <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2 border-b border-slate-100 pb-3">
-          <i class="ph-fill ph-identification-card text-xl text-blue-400"></i> Perfil Firebase
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Nome Autenticado</label>
-            <input type="text" id="perfil-nome" readonly disabled class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed">
-          </div>
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">E-mail Vinculado</label>
-            <input type="email" id="perfil-email" readonly disabled class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed">
-          </div>
+    <div id="feedback-config-doador" class="hidden p-3 rounded-xl border font-semibold text-xs flex items-center justify-between gap-3"></div>
+
+    <!-- Formulário Perfil + WhatsApp -->
+    <form onsubmit="salvarConfiguracoesDoador(event)" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <h2 class="text-sm font-bold text-brandBlue flex items-center gap-1.5 border-b border-slate-100 pb-2">
+        <i class="ph-fill ph-identification-card text-base text-blue-500"></i> Meus Dados e Contato
+      </h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+        <div>
+          <label for="perfil-nome" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Nome</label>
+          <input type="text" id="perfil-nome" readonly disabled class="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 cursor-not-allowed">
+        </div>
+        <div>
+          <label for="perfil-email" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">E-mail da Conta</label>
+          <input type="email" id="perfil-email" readonly disabled class="w-full px-3.5 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 cursor-not-allowed">
+        </div>
+        <div>
+          <label for="perfil-whatsapp" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">WhatsApp (com DDD)</label>
+          <input type="text" id="perfil-whatsapp" placeholder="Ex: 5519987654321" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
         </div>
       </div>
 
-      <!-- Gerenciamento LGPD -->
-      <div class="space-y-4">
-        <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2 border-b border-slate-100 pb-3">
-          <i class="ph-fill ph-shield-check text-xl text-blue-400"></i> Consentimentos (LGPD)
-        </h2>
-        <p class="text-sm font-medium text-slate-600 mb-2">
-          Você tem total controle sobre os canais da ONG. Marque as opções que autoriza:
-        </p>
-
-        <div class="space-y-3">
-          <label class="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-brandBlue transition group">
-            <div class="pt-0.5">
-              <input type="checkbox" id="optin-email" checked class="w-5 h-5 text-brandBlue rounded focus:ring-brandBlue">
-            </div>
-            <div>
-              <span class="font-bold text-sm text-brandBlue block mb-0.5 group-hover:text-blue-900 transition">Autorizo comunicados por E-mail</span>
-              <span class="text-xs text-slate-500 font-medium">Receba informativos de itens críticos abaixo do estoque mínimo e balanços das campanhas.</span>
-            </div>
-          </label>
-
-          <label class="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-brandBlue transition group">
-            <div class="pt-0.5">
-              <input type="checkbox" id="optin-whatsapp" checked class="w-5 h-5 text-brandBlue rounded focus:ring-brandBlue">
-            </div>
-            <div>
-              <span class="font-bold text-sm text-brandBlue block mb-0.5 group-hover:text-blue-900 transition">Autorizo alertas urgentes via WhatsApp</span>
-              <span class="text-xs text-slate-500 font-medium">Receba atualizações de status da sua campanha e notificações prioritárias da Casa da Criança.</span>
-            </div>
-          </label>
+      <label class="flex items-start gap-3 p-3.5 bg-pastelGreen/40 rounded-xl border border-pastelGreen cursor-pointer hover:border-emerald-400 transition">
+        <input type="checkbox" id="optin-whatsapp" checked class="w-4 h-4 mt-0.5 accent-emerald-700 shrink-0">
+        <div class="min-w-0 flex-1">
+          <span class="font-bold text-xs text-emerald-900 block">Autorizo receber avisos pelo WhatsApp</span>
+          <span class="text-[11px] text-slate-600">Avisos sobre itens urgentes que a instituição precisa e atualizações das suas campanhas. Você pode desativar quando quiser.</span>
         </div>
+      </label>
 
-        <div class="mt-4 p-4 bg-pastelYellow/40 border border-pastelYellow rounded-xl text-xs font-semibold text-yellow-800 flex items-center gap-2">
-          <i class="ph-fill ph-clock text-lg"></i>
-          Registro atualizado em: <span id="timestamp-consentimento">--/--/----</span>
-        </div>
-      </div>
-
-      <div class="pt-4 border-t border-slate-100 flex justify-end">
-        <button onclick="salvarConfiguracoes()" class="bg-brandBlue text-white font-bold px-8 py-3 rounded-xl hover:bg-blue-900 transition shadow-sm flex items-center justify-center gap-2">
-          <i class="ph-bold ph-floppy-disk"></i> Gravar Preferências
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100">
+        <span class="text-[11px] text-slate-500">Última atualização: <strong id="timestamp-consentimento">--/--/----</strong></span>
+        <button id="btn-salvar-config-doador" type="submit" class="bg-brandBlue hover:bg-blue-900 text-white font-bold px-5 py-2 rounded-xl transition shadow-sm inline-flex items-center gap-1.5 text-xs">
+          <i class="ph-bold ph-floppy-disk text-sm"></i>
+          <span>Salvar Preferências</span>
         </button>
       </div>
-    </div>
+    </form>
+
+    <!-- Seção de Acessibilidade -->
+    <section class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+        <h2 class="text-sm font-bold text-brandBlue flex items-center gap-1.5">
+          <i class="ph-fill ph-sliders text-base text-blue-500"></i> Acessibilidade Visual
+        </h2>
+        <button type="button" onclick="restaurarAcessibilidadePadrao()" class="text-[11px] font-bold text-slate-600 hover:text-brandBlue underline">
+          Restaurar padrão
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Modo Noturno / Dark Mode -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between gap-3">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs font-bold text-brandBlue">Modo Noturno (Dark Mode)</h3>
+              <p class="text-[11px] text-slate-500 mt-0.5">Escurece o fundo para reduzir o cansaço visual.</p>
+            </div>
+            <span id="status-alto-contraste" class="px-2.5 py-0.5 rounded-lg text-[11px] font-bold bg-slate-200 text-slate-700 shrink-0">Desativado</span>
+          </div>
+          <button type="button" onclick="alternarAltoContrastePagina()" class="w-full py-2 px-3 rounded-xl bg-white border border-slate-200 hover:border-brandBlue text-brandBlue font-bold text-xs inline-flex items-center justify-center gap-1.5 transition">
+            <i class="ph-bold ph-moon text-sm"></i>
+            <span>Alternar Modo Noturno</span>
+          </button>
+        </div>
+
+        <!-- Tamanho da Fonte -->
+        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between gap-3">
+          <div>
+            <h3 class="text-xs font-bold text-brandBlue">Tamanho do Texto</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Escolha o tamanho de fonte mais confortável para você.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="btn-fonte-normal" onclick="definirTamanhoFontePagina('normal')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition">
+              Normal
+            </button>
+            <button type="button" id="btn-fonte-large" onclick="definirTamanhoFontePagina('large')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition">
+              Grande
+            </button>
+            <button type="button" id="btn-fonte-extra" onclick="definirTamanhoFontePagina('extra')" class="flex-1 py-2 px-3 rounded-xl text-xs font-bold border transition">
+              Extra
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
+  <script src="../../public/js/sidebar-doador.js?v=1"></script>
+  <script src="../../public/js/donor-configuracoes.js?v=1"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -175,17 +158,13 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    renderizarSidebarDoador('configuracoes');
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Preenche os inputs com os dados provindos da conta Google do usuário logado
-        document.getElementById('perfil-nome').value = user.displayName || 'Sem nome cadastrado';
-        document.getElementById('perfil-email').value = user.email || 'Sem e-mail cadastrado';
-        
-        const hoje = new Date();
-        document.getElementById('timestamp-consentimento').innerText = hoje.toLocaleString('pt-BR') + ' (Autenticado via Google)';
+        atualizarUsuarioSidebarDoador(user);
+        carregarDadosPerfilDoador(user);
       } else {
-        // Se a pessoa deslogar ou não tiver sessão, manda pra tela de login
         window.location.href = '../../index.html';
       }
     });
@@ -195,26 +174,9 @@
         await signOut(auth);
         window.location.href = '../../index.html';
       } catch (erro) {
-        console.error("Erro no deslogar: ", erro);
+        console.error('Erro ao deslogar:', erro);
       }
     };
-
-    window.salvarConfiguracoes = () => {
-      const emailStatus = document.getElementById('optin-email').checked;
-      const zapStatus = document.getElementById('optin-whatsapp').checked;
-      const agora = new Date().toLocaleString('pt-BR');
-
-      document.getElementById('timestamp-consentimento').innerText = `${agora} (Registro Atualizado Manualmente)`;
-
-      alert(
-        `Suas preferências de privacidade (LGPD) foram salvas com sucesso!
-
-` +
-        `• Informativos por E-mail: ${emailStatus ? 'Ativo' : 'Revogado'}
-` +
-        `• Alertas por WhatsApp: ${zapStatus ? 'Ativo' : 'Revogado'}`
-      );
-    }
   </script>
 </body>
 </html>

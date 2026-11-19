@@ -168,6 +168,30 @@ function aplicarFiltrosLotes(resetarPagina = false) {
     return matchTermo && matchPrateleira && matchCategoria && matchStatus;
   });
 
+  const ordem = document.getElementById('select-ordem-lotes')?.value || 'alfabetica_az';
+  const compararTexto = (a, b) => String(a || '').localeCompare(String(b || ''), 'pt-BR', { sensitivity: 'base' });
+  filtrados.sort((a, b) => {
+    switch (ordem) {
+      case 'alfabetica_za':
+        return compararTexto(b.nomeProduto, a.nomeProduto);
+      case 'vencimento_asc':
+        return (a.diasRestantes - b.diasRestantes) || compararTexto(a.nomeProduto, b.nomeProduto);
+      case 'vencimento_desc':
+        return (b.diasRestantes - a.diasRestantes) || compararTexto(a.nomeProduto, b.nomeProduto);
+      case 'quantidade_desc':
+        return (Number(b.quantidadeAtual) - Number(a.quantidadeAtual)) || compararTexto(a.nomeProduto, b.nomeProduto);
+      case 'quantidade_asc':
+        return (Number(a.quantidadeAtual) - Number(b.quantidadeAtual)) || compararTexto(a.nomeProduto, b.nomeProduto);
+      case 'categoria_az':
+        return compararTexto(a.categoria, b.categoria) || compararTexto(a.nomeProduto, b.nomeProduto);
+      case 'local_az':
+        return compararTexto(a.localArmazenamento, b.localArmazenamento) || compararTexto(a.nomeProduto, b.nomeProduto);
+      case 'alfabetica_az':
+      default:
+        return compararTexto(a.nomeProduto, b.nomeProduto) || (a.diasRestantes - b.diasRestantes);
+    }
+  });
+
   totalPaginasLotes = Math.max(1, Math.ceil(filtrados.length / itensPorPaginaLotes));
   if (paginaAtualLotes > totalPaginasLotes) paginaAtualLotes = totalPaginasLotes;
 
@@ -251,7 +275,9 @@ function limparFiltrosLotes() {
   document.getElementById('filtro-prateleira').value = 'TODAS';
   document.getElementById('filtro-categoria').value = 'TODAS';
   document.getElementById('filtro-status-fefo').value = 'TODOS';
-  aplicarFiltrosLotes();
+  const selectOrdem = document.getElementById('select-ordem-lotes');
+  if (selectOrdem) selectOrdem.value = 'alfabetica_az';
+  aplicarFiltrosLotes(true);
 }
 
 function atualizarPreviewFotoEntrada(urlFoto) {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Criar Campanha | Casa da Criança</title>
+  <title>Propor Campanha | Casa da Criança</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -31,140 +31,144 @@
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa -->
-  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
-    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
-      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
-        <i class="ph ph-package text-3xl"></i>
+  <div id="sidebar-doador-container"></div>
+
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-3 lg:p-5 space-y-3.5">
+
+    <!-- Cabeçalho Compacto -->
+    <header class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+      <div class="min-w-0 flex-1">
+        <span class="inline-flex items-center gap-1.5 bg-pastelGreen text-emerald-900 px-2 py-0.5 rounded-full font-bold text-[10px] mb-0.5">
+          <i class="ph-fill ph-heart"></i>
+          <span>Iniciativa Comunitária</span>
+        </span>
+        <h1 class="text-lg lg:text-xl font-extrabold text-brandBlue flex items-center gap-2">
+          <i class="ph ph-megaphone text-xl shrink-0"></i>
+          <span class="truncate">Propor Campanha de Arrecadação</span>
+        </h1>
       </div>
-      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
-      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
-    </div>
 
-    <!-- Navegação do Doador -->
-    <nav class="flex-1 px-4 py-5 space-y-2.5 overflow-y-auto">
-      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
-      <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-house text-lg"></i> Início
+      <a href="./minhas-campanhas.html" class="w-36 inline-flex items-center justify-center gap-1.5 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-3 py-1.5 rounded-xl transition border border-blue-200 text-xs shrink-0">
+        <i class="ph-bold ph-folder-star text-sm"></i>
+        <span>Minhas Campanhas</span>
       </a>
-      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-book-open text-lg"></i> Nossa História
-      </a>
-      <a href="../../index.html#como-doar" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
-      </a>
+    </header>
 
-      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
-      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-squares-four text-lg"></i> Dashboard Doador
-      </a>
-      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-package text-lg"></i> Estoque Transparente
-      </a>
-      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
-        <i class="ph ph-megaphone text-lg"></i> Propor Campanha
-      </a>
-      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-folder-star text-lg"></i> Minhas Campanhas
-      </a>
-      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-user-gear text-lg"></i> Meu Perfil & LGPD
-      </a>
-    </nav>
+    <div id="alerta-campanha-doador" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold"></div>
 
-    <!-- Área Inferior da Navbar -->
-    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
-      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
-        <i class="ph ph-moon text-xl"></i> Contraste
-      </button>
-
-      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
-        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
-      </button>
-    </div>
-  </aside>
-
-  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
-    <div>
-      <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
-        <i class="ph ph-megaphone text-3xl"></i> Propor Campanha
-      </h1>
-      <p class="text-sm text-slate-600 mt-2 max-w-2xl">
-        A Casa da Criança avalia e orienta as iniciativas propostas por doadores da comunidade. Preencha os dados para moderação.
-      </p>
-    </div>
-
-    <form id="form-campanha" onsubmit="submeterCampanha(event)" class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm space-y-8">
+    <form id="form-campanha" onsubmit="submeterCampanha(event)" class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-5">
 
       <!-- Dados Básicos -->
-      <div class="space-y-5">
-        <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2 border-b border-slate-100 pb-3">
-          <i class="ph-fill ph-info text-xl text-blue-400"></i> 1. Informações Gerais
+      <div class="space-y-3.5">
+        <h2 class="text-sm font-bold text-brandBlue flex items-center gap-1.5 border-b border-slate-100 pb-2">
+          <i class="ph-fill ph-info text-base text-blue-500"></i> 1. Informações Gerais
         </h2>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nome da Campanha *</label>
-          <input type="text" id="nome-campanha" required placeholder="Ex: Arrecadação de Leite do Grêmio Estudantil" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+          <label for="nome-campanha" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Nome da Campanha *</label>
+          <input type="text" id="nome-campanha" required placeholder="Ex: Arrecadação de Leite da Escola" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-1.5">Objetivo e Ponto de Coleta *</label>
-          <textarea id="objetivo-campanha" rows="3" required placeholder="Descreva onde os alimentos serão arrecadados e o propósito da ação..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition"></textarea>
+          <label for="objetivo-campanha" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Objetivo da Campanha *</label>
+          <textarea id="objetivo-campanha" rows="2" required placeholder="Conte qual é o objetivo da campanha e quem ela vai ajudar..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue"></textarea>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <div>
+          <div class="flex items-center justify-between gap-2 mb-1.5">
+            <label class="block text-[11px] font-bold text-brandBlue uppercase">Pontos de Coleta (Endereços) *</label>
+            <button type="button" onclick="adicionarPontoColeta()" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+              <i class="ph-bold ph-plus"></i> Adicionar outro ponto de coleta
+            </button>
+          </div>
+          <div id="lista-pontos-coleta" class="space-y-2">
+            <div class="ponto-coleta-item flex items-center gap-2">
+              <div class="relative flex-1">
+                <i class="ph-fill ph-map-pin text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2 text-sm pointer-events-none"></i>
+                <input type="text" name="ponto-coleta[]" required placeholder="Ex: Rua das Flores, 120 - Centro (Recepção)" class="input-ponto-coleta w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">Informe pelo menos 1 endereço completo onde as doações poderão ser entregues.</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Data de Início *</label>
-            <input type="date" id="data-inicio" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+            <label for="data-inicio" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Data de Início *</label>
+            <input type="date" id="data-inicio" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
           </div>
           <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Data Prevista de Término *</label>
-            <input type="date" id="data-fim" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue transition">
+            <label for="data-fim" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Data de Término *</label>
+            <input type="date" id="data-fim" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
           </div>
         </div>
       </div>
 
       <!-- Construtor de Metas -->
-      <div class="space-y-5">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-          <h2 class="text-lg font-bold text-brandBlue flex items-center gap-2">
-             <i class="ph-fill ph-target text-xl text-blue-400"></i> 2. Metas de Alimentos
+      <div class="space-y-3.5">
+        <div class="flex flex-wrap justify-between items-center gap-2 border-b border-slate-100 pb-2">
+          <h2 class="text-sm font-bold text-brandBlue flex items-center gap-1.5">
+            <i class="ph-fill ph-target text-base text-blue-500"></i> 2. Alimentos e Metas
           </h2>
-          <span class="text-xs font-medium text-slate-500 bg-slate-100 px-3 py-1 rounded-full">Adicione os insumos um a um</span>
+          <span class="text-[11px] font-medium text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">Adicione um ou mais itens</span>
         </div>
 
-        <!-- Área de Inserção -->
-        <div class="p-5 bg-pastelBlue/30 rounded-2xl border border-pastelBlue grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="sm:col-span-2">
-            <label class="block text-xs font-bold text-brandBlue mb-1.5 uppercase tracking-wide">Item Solicitado</label>
-            <input type="text" id="item-input" placeholder="Ex: Leite Integral 1L, Arroz 5kg..." class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
+        <!-- Opção A: Puxar do Estoque (priorizando itens abaixo do mínimo) -->
+        <div class="p-3.5 bg-pastelBlue/30 rounded-xl border border-pastelBlue space-y-2.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[11px] font-bold text-brandBlue uppercase">Puxar do Estoque da Instituição (itens em falta no topo)</span>
           </div>
-          <div>
-            <label class="block text-xs font-bold text-brandBlue mb-1.5 uppercase tracking-wide">Meta (Qtd)</label>
-            <input type="number" id="qtd-input" min="1" placeholder="Ex: 50" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
+          <div id="atalhos-itens-urgentes-campanha" class="flex flex-wrap gap-1.5"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+            <div class="sm:col-span-6">
+              <label for="select-item-estoque-aws" class="block text-[10px] font-bold text-brandBlue mb-1 uppercase">Alimento do Estoque</label>
+              <select id="select-item-estoque-aws" onchange="aoSelecionarItemEstoqueAws()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+                <option value="">Carregando itens do estoque...</option>
+              </select>
+            </div>
+            <div class="sm:col-span-3">
+              <label for="qtd-estoque-input" class="block text-[10px] font-bold text-brandBlue mb-1 uppercase">Meta (Qtd)</label>
+              <input type="number" id="qtd-estoque-input" min="1" placeholder="Ex: 20" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+            </div>
+            <div class="sm:col-span-3">
+              <button type="button" onclick="adicionarItemDoEstoqueAws()" class="w-full bg-brandBlue hover:bg-blue-900 text-white font-bold text-xs px-3 py-2 rounded-xl transition inline-flex items-center justify-center gap-1">
+                <i class="ph-bold ph-plus"></i> Do Estoque
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opção B: Adicionar Item Genérico / Personalizado -->
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end">
+          <div class="sm:col-span-6">
+            <label for="item-input" class="block text-[10px] font-bold text-slate-600 mb-1 uppercase">Ou adicione um item genérico</label>
+            <input type="text" id="item-input" placeholder="Ex: Cesta Básica, Leite em Pó..." class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
           </div>
           <div class="sm:col-span-3">
-            <button type="button" onclick="adicionarProximoItem()" class="w-full sm:w-auto bg-white border-2 border-brandBlue text-brandBlue hover:bg-blue-50 font-bold text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center gap-2">
-              <i class="ph-bold ph-plus"></i> Adicionar à Meta
+            <label for="qtd-input" class="block text-[10px] font-bold text-slate-600 mb-1 uppercase">Meta (Qtd)</label>
+            <input type="number" id="qtd-input" min="1" placeholder="Ex: 50" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+          <div class="sm:col-span-3">
+            <button type="button" onclick="adicionarProximoItem()" class="w-full bg-white border border-brandBlue text-brandBlue hover:bg-blue-50 font-bold text-xs px-3 py-2 rounded-xl transition inline-flex items-center justify-center gap-1">
+              <i class="ph-bold ph-plus"></i> Genérico
             </button>
           </div>
         </div>
 
-        <!-- Tabela Metas -->
-        <div class="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-          <table class="w-full text-left text-sm" id="tabela-metas">
-            <thead class="bg-slate-100 text-xs font-bold text-slate-600 uppercase">
+        <div class="border border-slate-200 rounded-xl overflow-hidden">
+          <table class="w-full text-left text-xs border-collapse" id="tabela-metas">
+            <thead class="bg-slate-50 text-[10px] font-bold text-brandBlue uppercase border-b border-slate-200">
               <tr>
-                <th class="p-4">Alimento / Item</th>
-                <th class="p-4">Qtd. Pretendida</th>
-                <th class="p-4 text-center">Ação</th>
+                <th class="px-3.5 py-2.5">Alimento / Item</th>
+                <th class="px-3.5 py-2.5">Meta</th>
+                <th class="px-3.5 py-2.5 text-center w-20">Remover</th>
               </tr>
             </thead>
             <tbody id="lista-metas" class="divide-y divide-slate-100 bg-white">
               <tr id="linha-vazia">
-                <td colspan="3" class="p-8 text-center text-sm text-slate-400 font-medium">
-                  <i class="ph ph-shopping-cart text-3xl mb-2 text-slate-300"></i><br>
-                  Nenhum item adicionado. É obrigatório incluir pelo menos um insumo.
+                <td colspan="3" class="p-6 text-center text-xs text-slate-400 font-medium">
+                  <i class="ph ph-shopping-cart text-2xl mb-1 text-slate-300 inline-block"></i><br>
+                  Nenhum alimento adicionado ainda. Adicione pelo menos um item acima.
                 </td>
               </tr>
             </tbody>
@@ -172,19 +176,21 @@
         </div>
       </div>
 
-      <!-- Botão Submeter -->
-      <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
-        <p class="text-xs font-medium text-slate-500 bg-slate-100 px-4 py-2 rounded-lg">
-          Status inicial: <strong class="text-brandBlue">Pendente de Análise</strong>
+      <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <p class="text-[11px] font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg">
+          Sua proposta passará por análise da equipe antes de ir ao ar.
         </p>
         
-        <button id="btn-submit" type="submit" class="w-full sm:w-auto bg-pastelGreen text-emerald-900 font-bold px-10 py-3.5 rounded-xl hover:bg-[#b5ead5] border border-emerald-200 transition shadow-sm flex items-center justify-center gap-2">
-          <i class="ph-bold ph-paper-plane-right"></i> Enviar Proposta
+        <button id="btn-submit" type="submit" class="w-full sm:w-auto bg-pastelGreen text-emerald-900 font-bold px-6 py-2.5 rounded-xl hover:bg-[#b5ead5] border border-emerald-200 transition shadow-sm inline-flex items-center justify-center gap-2 text-xs">
+          <i class="ph-bold ph-paper-plane-right text-base"></i>
+          <span>Enviar Proposta</span>
         </button>
       </div>
     </form>
   </main>
 
+  <script src="../../public/js/sidebar-doador.js?v=1"></script>
+  <script src="../../public/js/donor-campanhas.js?v=3"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -201,11 +207,14 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    let usuarioLogadoId = null;
+    let usuarioLogadoObj = null;
+    renderizarSidebarDoador('campanhas');
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        usuarioLogadoId = user.uid;
+        usuarioLogadoObj = user;
+        atualizarUsuarioSidebarDoador(user);
+        inicializarFormularioCampanhaDoador();
       } else {
         window.location.href = '../../index.html';
       }
@@ -216,121 +225,7 @@
       window.location.href = '../../index.html';
     };
 
-    window.usuarioLogadoIdGlobal = () => usuarioLogadoId;
-  </script>
-
-  <script>
-    const itensAdicionados = [];
-
-    function adicionarProximoItem() {
-      const nomeInput = document.getElementById('item-input');
-      const qtdInput = document.getElementById('qtd-input');
-      const nome = nomeInput.value.trim();
-      const qtd = parseInt(qtdInput.value, 10);
-
-      if (!nome || !qtd || qtd <= 0) {
-        alert('Informe o nome do item e uma quantidade meta válida.');
-        return;
-      }
-
-      itensAdicionados.push({ nome, qtd, unidade_medida_item: 'pacotes/unidades' });
-      nomeInput.value = '';
-      qtdInput.value = '';
-      renderizarTabela();
-    }
-
-    function removerItem(index) {
-      itensAdicionados.splice(index, 1);
-      renderizarTabela();
-    }
-
-    function renderizarTabela() {
-      const tbody = document.getElementById('lista-metas');
-      tbody.innerHTML = '';
-
-      if (itensAdicionados.length === 0) {
-        tbody.innerHTML = `
-          <tr id="linha-vazia">
-            <td colspan="3" class="p-8 text-center text-sm text-slate-400 font-medium">
-              <i class="ph ph-shopping-cart text-3xl mb-2 text-slate-300"></i><br>
-              Nenhum item adicionado. É obrigatório incluir pelo menos um insumo.
-            </td>
-          </tr>`;
-        return;
-      }
-
-      itensAdicionados.forEach((item, index) => {
-        const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition';
-        tr.innerHTML = `
-          <td class="p-4 font-bold text-brandBlue">${item.nome}</td>
-          <td class="p-4 text-slate-600 font-medium">${item.qtd} un.</td>
-          <td class="p-4 text-center">
-            <button type="button" onclick="removerItem(${index})" class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-lg font-bold transition">
-              <i class="ph-bold ph-trash"></i>
-            </button>
-          </td>`;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function submeterCampanha(event) {
-      event.preventDefault();
-
-      const dInicio = document.getElementById('data-inicio').value;
-      const dFim = document.getElementById('data-fim').value;
-
-      if (new Date(dFim) < new Date(dInicio)) {
-        alert('A data de término não pode ser anterior à data de início.');
-        return;
-      }
-
-      if (itensAdicionados.length === 0) {
-        alert('É obrigatório adicionar pelo menos um alimento à meta.');
-        return;
-      }
-
-      const uid = window.usuarioLogadoIdGlobal ? window.usuarioLogadoIdGlobal() : 'user_dev';
-      const btnSubmit = document.getElementById('btn-submit');
-      
-      try {
-        btnSubmit.disabled = true;
-        btnSubmit.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> Enviando...';
-
-        const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
-        
-        const payload = {
-          acao: "criar_campanha",
-          dados: {
-            id_doador_responsavel: uid,
-            nome_campanha: document.getElementById('nome-campanha').value,
-            objetivo_descricao_campanha: document.getElementById('objetivo-campanha').value,
-            data_inicio_campanha: dInicio,
-            data_termino_campanha: dFim,
-            itens_metas: itensAdicionados
-          }
-        };
-
-        const resp = await fetch(API_AWS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await resp.json();
-        
-        if (data.sucesso) {
-          alert('Proposta submetida com sucesso! Acompanhe a moderação no seu painel.');
-          window.location.href = './minhas-campanhas.html';
-        } else {
-           throw new Error(data.erro || 'Falha ao salvar no banco');
-        }
-      } catch (err) {
-        alert('Erro ao processar na nuvem: ' + err.message);
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = '<i class="ph-bold ph-paper-plane-right"></i> Enviar Proposta';
-      }
-    }
+    window.usuarioDoadorLogado = () => usuarioLogadoObj;
   </script>
 </body>
 </html>

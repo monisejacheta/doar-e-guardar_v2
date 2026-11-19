@@ -2,45 +2,141 @@
 
 /* Personalização da barra de rolagem */
 ::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
 /* 
   =========================================
-  OVERRIDE DE ALTO CONTRASTE (ACESSIBILIDADE)
+  MODO NOTURNO / DARK MODE (ACESSIBILIDADE)
   =========================================
 */
 html.high-contrast body,
-html.high-contrast main,
-html.high-contrast aside,
+html.high-contrast main {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+
+html.high-contrast aside {
+  background-color: #111c33 !important;
+  border-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+
+html.high-contrast header,
 html.high-contrast section,
-html.high-contrast div {
-  background-color: #000000 !important;
-  border-color: #FFFF00 !important;
-  color: #FFFFFF !important;
+html.high-contrast article,
+html.high-contrast form,
+html.high-contrast details,
+html.high-contrast table,
+html.high-contrast thead,
+html.high-contrast tbody,
+html.high-contrast tr {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
 }
 
-html.high-contrast h1, 
-html.high-contrast h2, 
-html.high-contrast h3, 
-html.high-contrast h4, 
-html.high-contrast p, 
-html.high-contrast span, 
-html.high-contrast i {
-  color: #FFFFFF !important;
+html.high-contrast thead tr,
+html.high-contrast summary:hover,
+html.high-contrast tbody tr:hover {
+  background-color: #273549 !important;
 }
 
-html.high-contrast a, 
+html.high-contrast div[class*="bg-white"],
+html.high-contrast div[class*="bg-slate-50"],
+html.high-contrast div[class*="bg-slate-100"],
+html.high-contrast label[class*="bg-slate-50"] {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+html.high-contrast div[class*="bg-pastelBlue"],
+html.high-contrast div[class*="bg-pastelGreen"],
+html.high-contrast div[class*="bg-pastelYellow"],
+html.high-contrast div[class*="bg-red-50"] {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+html.high-contrast h1,
+html.high-contrast h2,
+html.high-contrast h3,
+html.high-contrast h4,
+html.high-contrast strong {
+  color: #f8fafc !important;
+}
+
+html.high-contrast p,
+html.high-contrast span,
+html.high-contrast label,
+html.high-contrast td,
+html.high-contrast th {
+  color: #cbd5e1 !important;
+}
+
+html.high-contrast input,
+html.high-contrast select,
+html.high-contrast textarea {
+  background-color: #0f172a !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
+
+html.high-contrast input::placeholder,
+html.high-contrast textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.high-contrast a,
 html.high-contrast button {
-  background-color: #000000 !important;
-  color: #FFFF00 !important;
-  border: 2px solid #FFFF00 !important;
-  box-shadow: none !important;
+  border-color: #334155 !important;
 }
 
-html.high-contrast a:hover, 
-html.high-contrast button:hover {
-  background-color: #FFFF00 !important;
-  color: #000000 !important;
+html.high-contrast aside nav a {
+  color: #cbd5e1 !important;
 }
+
+html.high-contrast aside nav a:hover,
+html.high-contrast aside nav a[class*="bg-white"] {
+  background-color: #1e293b !important;
+  color: #93c5fd !important;
+}
+
+html.high-contrast button[class*="bg-white"],
+html.high-contrast a[class*="bg-white"],
+html.high-contrast button[class*="bg-slate-100"],
+html.high-contrast a[class*="bg-slate-100"] {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+html.high-contrast button[class*="bg-brandBlue"],
+html.high-contrast a[class*="bg-brandBlue"] {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+html.high-contrast button[class*="bg-pastelBlue"],
+html.high-contrast a[class*="bg-pastelBlue"] {
+  background-color: #1d4ed8 !important;
+  color: #eff6ff !important;
+}
+
+html.high-contrast button[class*="bg-pastelGreen"],
+html.high-contrast a[class*="bg-pastelGreen"] {
+  background-color: #065f46 !important;
+  color: #ecfdf5 !important;
+}
+
+html.high-contrast button[class*="bg-red-"],
+html.high-contrast a[class*="bg-red-"] {
+  background-color: #7f1d1d !important;
+  color: #fee2e2 !important;
+}
+
+html.high-contrast ::-webkit-scrollbar-track { background: #0f172a; }
+html.high-contrast ::-webkit-scrollbar-thumb { background: #334155; }
+html.high-contrast ::-webkit-scrollbar-thumb:hover { background: #475569; }

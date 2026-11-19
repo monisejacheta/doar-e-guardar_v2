@@ -31,87 +31,82 @@
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa -->
-  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
-    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
-      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
-        <i class="ph ph-package text-3xl"></i>
-      </div>
-      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
-      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
-    </div>
-
-    <!-- Navegação do Doador -->
-    <nav class="flex-1 px-4 py-5 space-y-2.5 overflow-y-auto">
-      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
-      <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-house text-lg"></i> Início
-      </a>
-      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-book-open text-lg"></i> Nossa História
-      </a>
-      <a href="../../index.html#como-doar" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
-      </a>
-
-      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
-      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-squares-four text-lg"></i> Dashboard Doador
-      </a>
-      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-package text-lg"></i> Estoque Transparente
-      </a>
-      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-megaphone text-lg"></i> Propor Campanha
-      </a>
-      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
-        <i class="ph ph-folder-star text-lg"></i> Minhas Campanhas
-      </a>
-      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-user-gear text-lg"></i> Meu Perfil & LGPD
-      </a>
-    </nav>
-
-    <!-- Área Inferior da Navbar -->
-    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
-      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
-        <i class="ph ph-moon text-xl"></i> Contraste
-      </button>
-
-      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
-        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
-      </button>
-    </div>
-  </aside>
+  <div id="sidebar-doador-container"></div>
 
   <!-- Área Principal -->
-  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-8">
-    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-      <div>
-        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
-          <i class="ph ph-folder-star text-3xl"></i> Minhas Campanhas
-        </h1>
-        <p class="text-sm text-slate-600 mt-2 max-w-2xl">
-          Acompanhe o status, o parecer técnico e gerencie o balanço das suas arrecadações.
-        </p>
-      </div>
-      <a href="./campanhas.html" class="inline-flex items-center justify-center gap-2 bg-pastelGreen text-emerald-900 font-bold px-6 py-3 rounded-xl hover:bg-[#b5ead5] transition shadow-sm border border-emerald-200 text-sm">
-        <i class="ph-fill ph-plus-circle text-lg"></i> Nova Proposta
-      </a>
-    </div>
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-3 lg:p-5 space-y-3.5">
 
-    <!-- Container Dinâmico -->
-    <div id="container-campanhas" class="space-y-6">
-      <div id="loading" class="flex flex-col items-center justify-center py-12 text-brandBlue">
-        <i class="ph ph-spinner-gap text-4xl animate-spin mb-4"></i>
-        <p class="font-semibold">Buscando suas campanhas na nuvem AWS...</p>
+    <!-- Cabeçalho -->
+    <header class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+      <div class="min-w-0 flex-1">
+        <span class="inline-flex items-center gap-1.5 bg-pastelBlue text-brandBlue px-2 py-0.5 rounded-full font-bold text-[10px] mb-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <span>Campanhas atualizadas em tempo real</span>
+        </span>
+        <h1 class="text-lg lg:text-xl font-extrabold text-brandBlue flex items-center gap-2">
+          <i class="ph ph-folder-star text-xl shrink-0"></i>
+          <span class="truncate">Minhas Campanhas</span>
+        </h1>
       </div>
-      <div id="lista-campanhas" class="hidden space-y-4">
-        <!-- Renderizado via JS -->
+
+      <div class="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+        <button type="button" onclick="buscarMinhasCampanhasAws()" class="flex-1 sm:flex-initial w-32 inline-flex items-center justify-center gap-1.5 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-3 py-1.5 rounded-xl transition border border-blue-200 text-xs">
+          <i id="icone-sync-minhas" class="ph-bold ph-arrows-clockwise text-sm shrink-0"></i>
+          <span>Atualizar</span>
+        </button>
+        <a href="./campanhas.html" class="flex-1 sm:flex-initial w-32 inline-flex items-center justify-center gap-1.5 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-3 py-1.5 rounded-xl transition shadow-sm border border-emerald-200 text-xs">
+          <i class="ph-fill ph-plus-circle text-sm text-emerald-700 shrink-0"></i>
+          <span>Nova Proposta</span>
+        </a>
       </div>
-    </div>
+    </header>
+
+    <!-- Seletor de Escopo + Abas de Status -->
+    <section class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <span class="text-xs font-bold text-brandBlue">Visualizar:</span>
+        <div class="flex items-center gap-1.5">
+          <button type="button" id="btn-escopo-minhas" onclick="alternarEscopoCampanhas(true)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-brandBlue text-white transition">Apenas Minhas</button>
+          <button type="button" id="btn-escopo-todas" onclick="alternarEscopoCampanhas(false)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition">Todas da Comunidade</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 items-stretch">
+        <button type="button" onclick="filtrarMinhasPorStatus('TODAS')" id="tab-minhas-TODAS" class="h-full px-3 py-2 rounded-xl bg-pastelBlue/60 border border-pastelBlue text-left transition">
+          <span class="text-[10px] font-bold uppercase text-brandBlue block truncate">Todas</span>
+          <span id="count-minhas-todas" class="text-lg font-extrabold text-brandBlue block">0</span>
+        </button>
+        <button type="button" onclick="filtrarMinhasPorStatus('pendente')" id="tab-minhas-pendente" class="h-full px-3 py-2 rounded-xl bg-pastelYellow/70 border border-pastelYellow text-left transition">
+          <span class="text-[10px] font-bold uppercase text-yellow-900 block truncate">Em Análise</span>
+          <span id="count-minhas-pendente" class="text-lg font-extrabold text-yellow-900 block">0</span>
+        </button>
+        <button type="button" onclick="filtrarMinhasPorStatus('aprovada')" id="tab-minhas-aprovada" class="h-full px-3 py-2 rounded-xl bg-pastelGreen/60 border border-pastelGreen text-left transition">
+          <span class="text-[10px] font-bold uppercase text-emerald-900 block truncate">Ativas</span>
+          <span id="count-minhas-aprovada" class="text-lg font-extrabold text-emerald-900 block">0</span>
+        </button>
+        <button type="button" onclick="filtrarMinhasPorStatus('encerrada')" id="tab-minhas-encerrada" class="h-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-left transition">
+          <span class="text-[10px] font-bold uppercase text-slate-600 block truncate">Finalizadas</span>
+          <span id="count-minhas-encerrada" class="text-lg font-extrabold text-slate-800 block">0</span>
+        </button>
+        <button type="button" onclick="filtrarMinhasPorStatus('reprovada')" id="tab-minhas-reprovada" class="h-full px-3 py-2 rounded-xl bg-red-50/80 border border-red-200 text-left transition">
+          <span class="text-[10px] font-bold uppercase text-red-800 block truncate">Recusadas</span>
+          <span id="count-minhas-reprovada" class="text-lg font-extrabold text-red-700 block">0</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Lista de Campanhas -->
+    <section id="container-campanhas">
+      <div id="loading" class="flex flex-col items-center justify-center py-10 text-brandBlue text-xs bg-white rounded-2xl border border-slate-200">
+        <i class="ph ph-spinner-gap text-3xl animate-spin mb-2"></i>
+        <p class="font-semibold">Carregando suas campanhas...</p>
+      </div>
+      <div id="lista-campanhas" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-3.5 items-start"></div>
+    </section>
   </main>
 
+  <script src="../../public/js/sidebar-doador.js?v=1"></script>
+  <script src="../../public/js/donor-minhas-campanhas.js?v=1"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -128,12 +123,12 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    let usuarioLogadoId = null;
+    renderizarSidebarDoador('minhas-campanhas');
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        usuarioLogadoId = user.uid;
-        buscarCampanhas();
+        atualizarUsuarioSidebarDoador(user);
+        buscarMinhasCampanhasAws(user);
       } else {
         window.location.href = '../../index.html';
       }
@@ -143,182 +138,6 @@
       await signOut(auth);
       window.location.href = '../../index.html';
     };
-
-    async function buscarCampanhas() {
-      const containerLoading = document.getElementById('loading');
-      const listaContainer = document.getElementById('lista-campanhas');
-      
-      const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
-
-      try {
-        const resposta = await fetch(API_AWS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ acao: 'consultar_campanhas' }) 
-        });
-
-        const dados = await resposta.json();
-        
-        let todasCampanhas = [];
-        if (dados.sucesso && Array.isArray(dados.campanhas)) {
-            todasCampanhas = dados.campanhas;
-        } else if (Array.isArray(dados)) {
-             todasCampanhas = dados;
-        }
-
-        // Filtra apenas as campanhas do doador logado
-        const minhasCampanhas = todasCampanhas.filter(c => c.id_doador_responsavel === usuarioLogadoId);
-        renderizarCampanhas(minhasCampanhas);
-
-      } catch (erro) {
-        console.error("Erro na AWS", erro);
-        listaContainer.innerHTML = `
-          <div class="p-6 bg-red-50 border border-red-200 rounded-2xl text-center text-red-800">
-            <i class="ph ph-warning-circle text-3xl mb-2"></i>
-            <p class="font-bold">Não foi possível carregar as campanhas no momento.</p>
-          </div>
-        `;
-      } finally {
-        containerLoading.classList.add('hidden');
-        listaContainer.classList.remove('hidden');
-      }
-    }
-
-    function renderizarCampanhas(campanhas) {
-      const listaContainer = document.getElementById('lista-campanhas');
-      listaContainer.innerHTML = '';
-
-      if (!campanhas || campanhas.length === 0) {
-        listaContainer.innerHTML = `
-          <div class="p-8 bg-white border border-slate-200 rounded-3xl text-center text-slate-500 shadow-sm">
-            <i class="ph ph-folder-open text-4xl mb-3 text-slate-400"></i>
-            <p class="font-bold text-lg text-brandBlue mb-1">Você ainda não possui campanhas.</p>
-            <p class="text-sm">Clique em "Nova Proposta" para iniciar uma arrecadação comunitária.</p>
-          </div>
-        `;
-        return;
-      }
-
-      campanhas.forEach(camp => {
-        const hoje = new Date();
-        const fim = new Date(camp.data_termino_campanha);
-        const diasRestantes = Math.ceil((fim - hoje) / (1000 * 60 * 60 * 24));
-        
-        let badgeStatus = '';
-        let badgeDias = '';
-        let acaoFooter = '';
-        let borderColor = 'border-slate-200';
-
-        if (camp.status_campanha === 'Pendente de Análise') {
-          badgeStatus = `<span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="ph-fill ph-hourglass-medium"></i> Pendente de Análise</span>`;
-          acaoFooter = `<p class="text-xs text-slate-500">A proposta está na fila de moderação. Você será notificado após a análise.</p>`;
-        } 
-        else if (camp.status_campanha === 'Reprovada') {
-          borderColor = 'border-red-200';
-          badgeStatus = `<span class="bg-red-100 text-red-700 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="ph-fill ph-x-circle"></i> Reprovada</span>`;
-          acaoFooter = `
-            <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-xl text-sm text-red-800">
-              <strong>Parecer Técnico:</strong> ${camp.justificativa_parecer_tecnico || 'Nenhuma justificativa fornecida.'}
-            </div>
-          `;
-        }
-        else if (camp.status_campanha === 'Aprovada') {
-          badgeStatus = `<span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="ph-fill ph-check-circle"></i> Aprovada e Ativa</span>`;
-          if (diasRestantes > 0) {
-             badgeDias = `<span class="bg-blue-100 text-brandBlue text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="ph-fill ph-clock"></i> Faltam ${diasRestantes} dias</span>`;
-             acaoFooter = `
-              <div class="flex items-center justify-between mt-2 pt-4 border-t border-slate-100">
-                <span class="text-xs text-slate-500">* O balanço final será liberado em ${new Date(camp.data_termino_campanha).toLocaleDateString('pt-BR')}.</span>
-                <button disabled class="bg-slate-100 text-slate-400 font-bold px-4 py-2 rounded-xl text-xs cursor-not-allowed border border-slate-200">
-                  Balanço Bloqueado (Em Vigência)
-                </button>
-              </div>
-             `;
-          } else {
-             badgeDias = `<span class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="ph-fill ph-flag-checkered"></i> Prazo Encerrado</span>`;
-             acaoFooter = `
-              <div class="bg-pastelBlue/30 border border-pastelBlue p-4 rounded-2xl mt-3">
-                <p class="text-sm font-bold text-brandBlue mb-3">Preencha o Balanço Final de Arrecadação:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="itens-balanco-${camp.id_campanha_doacao}">
-                  <span class="text-xs text-slate-500">Carregando metas...</span>
-                </div>
-                <div class="mt-4 text-right">
-                  <button onclick="salvarBalanco('${camp.id_campanha_doacao}')" class="bg-brandBlue text-white font-bold px-6 py-2.5 rounded-xl text-sm hover:bg-blue-900 transition shadow-sm">
-                    Salvar Balanço Final
-                  </button>
-                </div>
-              </div>
-             `;
-             // Dispara a busca dos itens dessa campanha para popular o balanço
-             buscarItensCampanha(camp.id_campanha_doacao);
-          }
-        }
-        else if (camp.status_campanha === 'Encerrada') {
-          badgeStatus = `<span class="bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-1"><i class="ph-fill ph-archive-box"></i> Finalizada</span>`;
-          acaoFooter = `<p class="text-xs text-slate-500 font-medium">Campanha encerrada e balanço contabilizado. Agradecemos o apoio!</p>`;
-        }
-
-        const div = document.createElement('div');
-        div.className = `bg-white p-6 rounded-3xl border ${borderColor} shadow-sm transition hover:shadow-md`;
-        div.innerHTML = `
-          <div class="flex flex-col md:flex-row justify-between md:items-start gap-4 mb-4">
-            <div>
-              <h2 class="text-xl font-bold text-brandBlue leading-tight">${camp.nome_campanha}</h2>
-              <p class="text-sm text-slate-500 font-medium mt-1">Vigência: ${new Date(camp.data_inicio_campanha).toLocaleDateString('pt-BR')} até ${new Date(camp.data_termino_campanha).toLocaleDateString('pt-BR')}</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-              ${badgeStatus}
-              ${badgeDias}
-            </div>
-          </div>
-          <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-sm text-slate-700 mb-2">
-            <strong>Objetivo:</strong> ${camp.objetivo_descricao_campanha}
-          </div>
-          ${acaoFooter}
-        `;
-        listaContainer.appendChild(div);
-      });
-    }
-
-    async function buscarItensCampanha(idCampanha) {
-      const containerItens = document.getElementById(`itens-balanco-${idCampanha}`);
-      if (!containerItens) return;
-
-      const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
-      try {
-        const resposta = await fetch(API_AWS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ acao: 'consultar_itens_campanha' })
-        });
-        const dados = await resposta.json();
-        
-        if (dados.sucesso && Array.isArray(dados.itens)) {
-           const itensDestaCampanha = dados.itens.filter(i => i.id_campanha_doacao === idCampanha);
-           
-           if(itensDestaCampanha.length === 0) {
-              containerItens.innerHTML = '<span class="text-xs text-slate-500">Sem metas cadastradas.</span>';
-              return;
-           }
-
-           containerItens.innerHTML = itensDestaCampanha.map(item => `
-             <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-1 line-clamp-1" title="${item.nome_item_solicitado}">
-                  ${item.nome_item_solicitado} (Meta: ${item.quantidade_meta_pretendida} ${item.unidade_medida_item})
-                </label>
-                <input type="number" id="input-item-${item.id_item_campanha}" min="0" placeholder="Qtd. Arrecadada" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
-             </div>
-           `).join('');
-        }
-      } catch(e) {
-        containerItens.innerHTML = '<span class="text-xs text-red-500">Erro ao carregar itens.</span>';
-      }
-    }
-
-    window.salvarBalanco = (idCampanha) => {
-      alert('Balanço salvo com sucesso! Os donativos já podem ser entregues na instituição.');
-      buscarCampanhas(); 
-    }
   </script>
 </body>
 </html>

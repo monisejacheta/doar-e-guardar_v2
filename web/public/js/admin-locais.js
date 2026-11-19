@@ -137,7 +137,7 @@ function renderizarGridLocais() {
 
           <details class="group rounded-xl bg-slate-50 border border-slate-200/80 overflow-hidden">
             <summary class="flex items-center justify-between gap-2 px-3 py-2 cursor-pointer list-none text-[11px] font-bold text-brandBlue hover:bg-slate-100/70 transition">
-              <span>${temLotes ? `Ver ${lotesNaPrateleira.length} item(ns) guardado(s)` : 'Espaço livre (0 itens)'}</span>
+              <span>${temLotes ? (lotesNaPrateleira.length === 1 ? 'Ver 1 item guardado' : `Ver ${lotesNaPrateleira.length} itens guardados`) : 'Espaço livre (0 itens)'}</span>
               <i class="ph-bold ph-caret-down text-slate-400 transition-transform group-open:rotate-180"></i>
             </summary>
             <div class="px-2.5 pb-2.5 pt-1 border-t border-slate-200/70 space-y-1 max-h-36 overflow-y-auto">

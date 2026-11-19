@@ -160,7 +160,19 @@
               <option value="200">200</option>
             </select>
           </label>
-          <span class="hidden sm:inline text-brandBlue">Ordem: <strong>vencimento mais próximo</strong></span>
+          <label class="inline-flex items-center gap-1.5 text-[11px] text-slate-600">
+            <span>Ordem:</span>
+            <select id="select-ordem-lotes" onchange="aplicarFiltrosLotes(true)" class="px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-bold text-brandBlue focus:outline-none focus:border-brandBlue">
+              <option value="alfabetica_az" selected>Ordem alfabética (A–Z)</option>
+              <option value="alfabetica_za">Ordem alfabética (Z–A)</option>
+              <option value="vencimento_asc">Vencimento mais próximo</option>
+              <option value="vencimento_desc">Vencimento mais distante</option>
+              <option value="quantidade_desc">Maior quantidade</option>
+              <option value="quantidade_asc">Menor quantidade</option>
+              <option value="categoria_az">Categoria (A–Z)</option>
+              <option value="local_az">Local de armazenamento (A–Z)</option>
+            </select>
+          </label>
         </div>
       </div>
     </section>
@@ -424,7 +436,7 @@
   </div>
 
   <script src="../../public/js/admin.js?v=8"></script>
-  <script src="../../public/js/admin-consulta-avancada.js?v=8"></script>
+  <script src="../../public/js/admin-consulta-avancada.js?v=9"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       renderizarSidebarAdmin('consulta-avancada');

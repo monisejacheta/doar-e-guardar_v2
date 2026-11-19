@@ -614,6 +614,7 @@ async function salvarOuModerarCampanhaAdmin(campanha, ehNova = false) {
   const payload = {
     acao: ehNova ? 'cadastrar_campanha' : 'atualizar_campanha',
     id_campanha: normalizada.id_campanha,
+    id_campanha_doacao: normalizada.id_campanha_doacao,
     titulo: normalizada.titulo,
     meta: String(normalizada.metaUnidades),
     descricao: normalizada.descricao,
@@ -630,7 +631,8 @@ async function salvarOuModerarCampanhaAdmin(campanha, ehNova = false) {
 async function excluirCampanhaAdmin(idCampanha) {
   await executarAcaoEstoqueAws({
     acao: 'excluir_campanha',
-    id_campanha: idCampanha
+    id_campanha: idCampanha,
+    id_campanha_doacao: idCampanha
   });
   return await carregarCampanhasReconciliadas();
 }

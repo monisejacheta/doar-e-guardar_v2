@@ -31,124 +31,157 @@
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa -->
-  <aside class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
-    <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
-      <div class="w-16 h-16 bg-white text-brandBlue rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-white">
-        <i class="ph ph-package text-3xl"></i>
-      </div>
-      <h2 class="text-xl font-bold text-brandBlue">Doar&Guardar</h2>
-      <p class="text-xs text-blue-800 font-medium mt-1">Painel do Doador</p>
-    </div>
-
-    <!-- Navegação do Doador -->
-    <nav class="flex-1 px-4 py-5 space-y-2.5 overflow-y-auto">
-      <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Institucional</p>
-      <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-house text-lg"></i> Início
-      </a>
-      <a href="../../index.html#nossa-historia" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-book-open text-lg"></i> Nossa História
-      </a>
-      <a href="../../index.html#como-doar" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
-      </a>
-
-      <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Área do Doador</p>
-      <a href="./dashboardDoador.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-squares-four text-lg"></i> Dashboard Doador
-      </a>
-      <a href="./estoque.html" class="flex items-center gap-3 px-4 py-2.5 bg-white rounded-xl text-brandBlue shadow-sm font-semibold transition hover:bg-blue-50 text-sm">
-        <i class="ph ph-package text-lg"></i> Estoque Transparente
-      </a>
-      <a href="./campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-megaphone text-lg"></i> Propor Campanha
-      </a>
-      <a href="./minhas-campanhas.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-folder-star text-lg"></i> Minhas Campanhas
-      </a>
-      <a href="./configuracoes.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
-        <i class="ph ph-user-gear text-lg"></i> Meu Perfil & LGPD
-      </a>
-    </nav>
-
-    <!-- Área Inferior da Navbar -->
-    <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
-      <button onclick="alternarAltoContraste()" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm">
-        <i class="ph ph-moon text-xl"></i> Contraste
-      </button>
-
-      <button onclick="realizarLogout()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm">
-        <i class="ph ph-sign-out text-xl"></i> Sair da Conta
-      </button>
-    </div>
-  </aside>
+  <div id="sidebar-doador-container"></div>
 
   <!-- Área Principal -->
-  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-8">
-    <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
-      <div>
-        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
-          <i class="ph ph-magnifying-glass text-3xl"></i> Consulta de Estoque
-        </h1>
-        <p class="text-sm text-slate-600 mt-2 max-w-2xl">
-          Transparência comunitária sobre os mantimentos disponíveis, extraída em tempo real da nossa base de dados.
-        </p>
-      </div>
-      <a href="./campanhas.html" class="inline-flex items-center justify-center gap-2 bg-pastelGreen text-emerald-900 font-bold px-6 py-3 rounded-xl hover:bg-[#b5ead5] transition shadow-sm border border-emerald-200 text-sm">
-        <i class="ph-fill ph-megaphone text-lg"></i> Propor Campanha
-      </a>
-    </div>
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-3 lg:p-5 space-y-3.5">
 
-    <!-- Barra de Filtros -->
-    <div class="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col lg:flex-row gap-4">
-      <div class="flex-grow">
-        <label class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Buscar por Alimento</label>
-        <div class="relative">
-          <i class="ph ph-magnifying-glass absolute left-3 top-3 text-slate-400 text-lg"></i>
-          <input type="text" id="busca-alimento" placeholder="Digite para filtrar a tabela abaixo..." class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue">
+    <!-- Cabeçalho -->
+    <header class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5">
+      <div class="min-w-0 flex-1">
+        <span class="inline-flex items-center gap-1.5 bg-pastelBlue text-brandBlue px-2 py-0.5 rounded-full font-bold text-[10px] mb-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <span>Transparência em tempo real</span>
+        </span>
+        <h1 class="text-lg lg:text-xl font-extrabold text-brandBlue flex items-center gap-2">
+          <i class="ph ph-magnifying-glass text-xl shrink-0"></i>
+          <span class="truncate">Estoque Transparente</span>
+        </h1>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto">
+        <button type="button" onclick="buscarEstoqueDoadorAws()" class="flex-1 sm:flex-initial w-32 inline-flex items-center justify-center gap-1.5 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-3 py-1.5 rounded-xl transition border border-blue-200 text-xs">
+          <i id="icone-sync-estoque-doador" class="ph-bold ph-arrows-clockwise text-sm shrink-0"></i>
+          <span>Atualizar</span>
+        </button>
+        <a href="./campanhas.html" class="flex-1 sm:flex-initial w-32 inline-flex items-center justify-center gap-1.5 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-3 py-1.5 rounded-xl transition shadow-sm border border-emerald-200 text-xs">
+          <i class="ph-fill ph-megaphone text-sm text-emerald-700 shrink-0"></i>
+          <span>Propor Campanha</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Resumo Rápido -->
+    <section class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-stretch">
+      <div class="h-full bg-pastelBlue/60 border border-pastelBlue px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] font-bold uppercase text-brandBlue block truncate">Alimentos Cadastrados</span>
+          <h3 id="resumo-doador-total" class="text-lg font-extrabold text-brandBlue leading-tight truncate">--</h3>
+        </div>
+        <div class="w-8 h-8 bg-white text-brandBlue rounded-lg flex items-center justify-center text-base shadow-sm shrink-0">
+          <i class="ph-fill ph-package"></i>
         </div>
       </div>
-      <div class="w-full lg:w-64">
-        <label class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Situação</label>
-        <select id="filtro-situacao" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue focus:ring-1 focus:ring-brandBlue appearance-none">
-          <option value="">Todos os Níveis</option>
-          <option value="critico">Estoque Crítico (Abaixo da Meta)</option>
-        </select>
-      </div>
-    </div>
 
-    <!-- Tabela Dinâmica AWS -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-      <div id="loading" class="flex flex-col items-center justify-center py-12 text-brandBlue">
-        <i class="ph ph-spinner-gap text-4xl animate-spin mb-4"></i>
-        <p class="font-semibold">Sincronizando com a base de dados AWS...</p>
+      <div class="h-full bg-red-50/80 border border-red-200 px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] font-bold uppercase text-red-800 block truncate">Precisando de Doação</span>
+          <h3 id="resumo-doador-critico" class="text-lg font-extrabold text-red-700 leading-tight truncate">--</h3>
+        </div>
+        <div class="w-8 h-8 bg-white text-red-600 rounded-lg flex items-center justify-center text-base shadow-sm shrink-0">
+          <i class="ph-fill ph-warning-circle"></i>
+        </div>
+      </div>
+
+      <div class="h-full bg-pastelGreen/60 border border-pastelGreen px-3.5 py-2.5 rounded-xl shadow-sm flex items-center justify-between gap-2">
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] font-bold uppercase text-emerald-900 block truncate">Abastecidos</span>
+          <h3 id="resumo-doador-ok" class="text-lg font-extrabold text-emerald-900 leading-tight truncate">--</h3>
+        </div>
+        <div class="w-8 h-8 bg-white text-emerald-700 rounded-lg flex items-center justify-center text-base shadow-sm shrink-0">
+          <i class="ph-fill ph-check-circle"></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- Barra de Filtros Compacta -->
+    <section class="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
+        <div class="md:col-span-5">
+          <label for="busca-alimento" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Buscar alimento ou marca</label>
+          <div class="relative">
+            <i class="ph ph-magnifying-glass absolute left-2.5 top-2 text-slate-400 text-sm"></i>
+            <input type="text" id="busca-alimento" oninput="aplicarFiltrosEstoqueDoador(true)" placeholder="Ex: Arroz, Leite..." class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+
+        <div class="md:col-span-3">
+          <label for="filtro-categoria-doador" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Categoria</label>
+          <select id="filtro-categoria-doador" onchange="aplicarFiltrosEstoqueDoador(true)" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+            <option value="TODAS">Todas</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-3">
+          <label for="filtro-situacao" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Situação</label>
+          <select id="filtro-situacao" onchange="aplicarFiltrosEstoqueDoador(true)" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+            <option value="">Todos os itens</option>
+            <option value="critico">Precisando de doação</option>
+            <option value="ok">Abastecidos</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-1">
+          <button type="button" onclick="limparFiltrosEstoqueDoador()" class="w-full py-1.5 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition">
+            Limpar
+          </button>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-100 text-[11px] font-semibold text-slate-600">
+        <span id="contador-doador-estoque">Carregando...</span>
+        <label class="inline-flex items-center gap-1.5">
+          <span>Itens por página:</span>
+          <select id="select-itens-doador" onchange="alterarItensPorPaginaDoador()" class="px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-bold text-brandBlue focus:outline-none">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50" selected>50</option>
+            <option value="100">100</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <!-- Tabela Transparente -->
+    <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+      <div id="loading" class="flex flex-col items-center justify-center py-10 text-brandBlue text-xs">
+        <i class="ph ph-spinner-gap text-3xl animate-spin mb-2"></i>
+        <p class="font-semibold">Carregando alimentos disponíveis...</p>
       </div>
       
-      <div class="overflow-x-auto hidden" id="tabela-container">
-        <table class="w-full text-left text-sm whitespace-nowrap">
-          <thead class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-brandBlue uppercase">
+      <div class="w-full overflow-x-hidden hidden" id="tabela-container">
+        <table class="w-full table-fixed text-left text-xs border-collapse">
+          <thead class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold text-brandBlue uppercase">
             <tr>
-              <th class="p-5">Produto</th>
-              <th class="p-5">Categoria</th>
-              <th class="p-5 text-center">Unidade</th>
-              <th class="p-5 text-center">Saldo Restante</th>
-              <th class="p-5 text-center">Situação (IA)</th>
+              <th class="w-[34%] px-3 py-2.5 align-middle">Alimento</th>
+              <th class="w-[20%] px-3 py-2.5 align-middle">Categoria</th>
+              <th class="w-[14%] px-3 py-2.5 align-middle text-center">Medida</th>
+              <th class="w-[12%] px-3 py-2.5 align-middle text-center">Quantidade</th>
+              <th class="w-[20%] px-3 py-2.5 align-middle text-center">Situação</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100" id="lista-estoque">
-            <!-- Dados AWS -->
-          </tbody>
+          <tbody class="divide-y divide-slate-100" id="lista-estoque"></tbody>
         </table>
       </div>
-      
-      <div class="p-5 bg-pastelBlue/20 border-t border-slate-100 text-[11px] font-medium text-slate-500 flex items-start gap-2">
-        <i class="ph-fill ph-info text-brandBlue text-lg"></i>
-        <p>Por diretrizes de segurança física, a organização dos compartimentos internos (armários e geladeiras) e os códigos exatos de lote são visíveis estritamente para a equipe operacional da instituição.</p>
+
+      <div class="px-4 py-2.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+        <span id="info-pag-doador" class="text-[11px] font-semibold text-slate-600">Página 1 de 1</span>
+        <div class="flex items-center gap-1.5">
+          <button type="button" id="btn-ant-doador" onclick="mudarPaginaEstoqueDoador(-1)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-brandBlue font-bold text-[11px] hover:bg-pastelBlue disabled:opacity-40 transition">&larr; Anterior</button>
+          <span id="ind-pag-doador" class="px-2.5 py-1 rounded-lg bg-pastelBlue text-brandBlue font-bold text-[11px]">1 / 1</span>
+          <button type="button" id="btn-prox-doador" onclick="mudarPaginaEstoqueDoador(1)" class="px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-brandBlue font-bold text-[11px] hover:bg-pastelBlue disabled:opacity-40 transition">Próxima &rarr;</button>
+        </div>
       </div>
-    </div>
+
+      <div class="px-4 py-2.5 bg-pastelBlue/20 border-t border-slate-100 text-[11px] font-medium text-slate-500 flex items-center gap-2">
+        <i class="ph-fill ph-info text-brandBlue text-base shrink-0"></i>
+        <span>Clique em qualquer alimento da lista para propor uma campanha de doação para ele.</span>
+      </div>
+    </section>
   </main>
 
+  <script src="../../public/js/sidebar-doador.js?v=1"></script>
+  <script src="../../public/js/donor-estoque.js?v=1"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
@@ -165,12 +198,12 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
-    let todosOsProdutos = []; // Cache dos dados agrupados
-    let dadosBrutos = []; // Cache dos dados originais
+    renderizarSidebarDoador('estoque');
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        buscarEstoqueAWS();
+        atualizarUsuarioSidebarDoador(user);
+        buscarEstoqueDoadorAws();
       } else {
         window.location.href = '../../index.html';
       }
@@ -180,108 +213,6 @@
       await signOut(auth);
       window.location.href = '../../index.html';
     };
-
-    async function buscarEstoqueAWS() {
-      const containerLoading = document.getElementById('loading');
-      const tabelaContainer = document.getElementById('tabela-container');
-      
-      const API_AWS_URL = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
-
-      try {
-        const resposta = await fetch(API_AWS_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ acao: 'consultar_estoque' })
-        });
-        const dados = await resposta.json();
-        
-        if (dados.sucesso && Array.isArray(dados.lotes)) {
-           dadosBrutos = dados.lotes;
-           agruparERenderizar();
-        }
-      } catch (err) {
-         document.getElementById('lista-estoque').innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-600 font-bold">Erro ao buscar dados na nuvem AWS.</td></tr>`;
-      } finally {
-         containerLoading.classList.add('hidden');
-         tabelaContainer.classList.remove('hidden');
-      }
-    }
-
-    function agruparERenderizar() {
-        const estoqueAgrupado = {};
-        
-        dadosBrutos.forEach(lote => {
-            const nome = lote.nome_produto;
-            if(!estoqueAgrupado[nome]) {
-                estoqueAgrupado[nome] = {
-                nome: nome,
-                marca: lote.marca_produto || '-',
-                categoria: lote.categoria || '-',
-                qtd: 0,
-                minimo: parseInt(lote.estoque_minimo_pacote || 5, 10),
-                ean: lote.codigo_barra_produto
-                };
-            }
-            estoqueAgrupado[nome].qtd += parseInt(lote.quantidade_atual_pacote, 10);
-        });
-
-        todosOsProdutos = Object.values(estoqueAgrupado);
-        renderizarTabela(todosOsProdutos);
-    }
-
-    function renderizarTabela(produtosParaExibir) {
-        const tbody = document.getElementById('lista-estoque');
-        
-        if (produtosParaExibir.length === 0) {
-             tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-slate-500 font-medium">Nenhum produto corresponde aos filtros aplicados.</td></tr>`;
-             return;
-        }
-
-        tbody.innerHTML = produtosParaExibir.map(prod => {
-            const critico = prod.qtd < prod.minimo;
-            const statusBadge = critico 
-            ? '<span class="bg-red-100 text-red-700 font-bold text-xs px-3 py-1.5 rounded-lg flex items-center justify-center gap-1"><i class="ph-fill ph-warning-circle"></i> Estoque Crítico</span>'
-            : '<span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1.5 rounded-lg flex items-center justify-center gap-1"><i class="ph-fill ph-check-circle"></i> Abastecido</span>';
-            
-            const qtdClass = critico ? 'text-red-600 font-bold' : 'text-slate-800 font-medium';
-
-            return `
-            <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="window.location.href='./campanhas.html?item=' + encodeURIComponent(prod.nome)">
-                <td class="p-5">
-                <p class="font-bold text-brandBlue text-sm hover:underline">${prod.nome}</p>
-                <p class="text-xs text-slate-500">Marca: ${prod.marca}</p>
-                </td>
-                <td class="p-5 text-xs text-slate-600 font-medium">${prod.categoria}</td>
-                <td class="p-5 text-xs text-center text-slate-500">Pacotes / Unidades</td>
-                <td class="p-5 text-center text-lg ${qtdClass}">${prod.qtd}</td>
-                <td class="p-5 text-center">${statusBadge}</td>
-            </tr>
-            `;
-        }).join('');
-    }
-
-    // Configurando os listeners para os filtros
-    document.getElementById('busca-alimento').addEventListener('input', filtrarTabela);
-    document.getElementById('filtro-situacao').addEventListener('change', filtrarTabela);
-
-    function filtrarTabela() {
-        const termo = document.getElementById('busca-alimento').value.toLowerCase();
-        const situacao = document.getElementById('filtro-situacao').value;
-
-        const produtosFiltrados = todosOsProdutos.filter(prod => {
-            const matchNome = prod.nome.toLowerCase().includes(termo) || prod.marca.toLowerCase().includes(termo);
-            const critico = prod.qtd < prod.minimo;
-            
-            let matchSituacao = true;
-            if (situacao === 'critico') {
-                matchSituacao = critico;
-            }
-            
-            return matchNome && matchSituacao;
-        });
-
-        renderizarTabela(produtosFiltrados);
-    }
   </script>
 </body>
 </html>
