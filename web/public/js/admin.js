@@ -1,13 +1,11 @@
 /**
- * Módulo Unificado de Administração e Padronização Visual (Portal Web - Doar & Guardar)
- * Segue estritamente o padrão visual do index.html e conecta todas as telas às 13 tabelas
- * reais do AWS DynamoDB via AWS Lambda.
+ * Módulo Unificado de Administração e Integração AWS (Portal Web - Doar & Guardar)
+ * Conecta todas as telas administrativas às tabelas reais do AWS DynamoDB via AWS Lambda.
  */
 
-const URL_API_ESTOQUE_AWS = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws/api/estoque';
+const URL_API_BASE_AWS = 'https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws';
+const URL_API_ESTOQUE_AWS = `${URL_API_BASE_AWS}/api/estoque`;
 const CHAVE_SESSAO_ADMIN = 'dg_sessao_admin';
-const CHAVE_LOCAIS_ADMIN = 'dg_locais_admin';
-const CHAVE_CAMPANHAS_ADMIN = 'dg_campanhas_admin';
 const CHAVE_HISTORICO_MENSAGERIA = 'dg_historico_mensageria_admin';
 
 const MAPA_SINONIMOS_PRATELEIRAS = {
@@ -34,56 +32,11 @@ const MAPA_SINONIMOS_PRATELEIRAS = {
   'despensa prateleira 1': 'Armário Despensa - Prateleira 1'
 };
 
-const LOCAIS_PADRAO_INSTITUICAO = [
-  {
-    id_local_armazenamento: 'loc_armario_a_prateleira_1',
-    nome_local: 'Armário A',
-    sublocal_compartimento: 'Prateleira 1',
-    local_descricao: 'Armário A - Prateleira 1',
-    tipo_local: 'armário',
-    localizacao_ambiente: 'Despensa Principal'
-  },
-  {
-    id_local_armazenamento: 'loc_armario_a_prateleira_2',
-    nome_local: 'Armário A',
-    sublocal_compartimento: 'Prateleira 2',
-    local_descricao: 'Armário A - Prateleira 2',
-    tipo_local: 'armário',
-    localizacao_ambiente: 'Despensa Principal'
-  },
-  {
-    id_local_armazenamento: 'loc_armario_b_prateleira_1',
-    nome_local: 'Armário B',
-    sublocal_compartimento: 'Prateleira 1',
-    local_descricao: 'Armário B - Prateleira 1',
-    tipo_local: 'armário',
-    localizacao_ambiente: 'Despensa Seca'
-  },
-  {
-    id_local_armazenamento: 'loc_armario_b_prateleira_3',
-    nome_local: 'Armário B',
-    sublocal_compartimento: 'Prateleira 3',
-    local_descricao: 'Armário B - Prateleira 3',
-    tipo_local: 'armário',
-    localizacao_ambiente: 'Despensa Seca'
-  },
-  {
-    id_local_armazenamento: 'loc_geladeira_1_prateleira_central',
-    nome_local: 'Geladeira 1',
-    sublocal_compartimento: 'Prateleira Central',
-    local_descricao: 'Geladeira 1 - Prateleira Central',
-    tipo_local: 'geladeira',
-    localizacao_ambiente: 'Cozinha Institucional'
-  },
-  {
-    id_local_armazenamento: 'loc_geladeira_1_gaveta_superior',
-    nome_local: 'Geladeira 1',
-    sublocal_compartimento: 'Gaveta Superior',
-    local_descricao: 'Geladeira 1 - Gaveta Superior',
-    tipo_local: 'geladeira',
-    localizacao_ambiente: 'Cozinha Institucional'
-  }
-];
+function escaparHtml(texto) {
+  const div = document.createElement('div');
+  div.textContent = texto ?? '';
+  return div.innerHTML;
+}
 
 function normalizarNomePrateleira(nomeBruto) {
   if (!nomeBruto || typeof nomeBruto !== 'string') {
@@ -101,7 +54,7 @@ function normalizarNomePrateleira(nomeBruto) {
 }
 
 /**
- * Valida a sessão ativa do Administrador (casadacrianca@adm / casadacriancaadm)
+ * Valida a sessão ativa do Administrador (casadacrianca@adm)
  */
 function verificarAutenticacaoAdmin() {
   try {
@@ -204,8 +157,8 @@ function renderizarSidebarAdmin(paginaAtiva) {
 
   garantirModalAcessibilidadePadraoIndex();
 
-  const nomeExibicao = sessao.nome || sessao.nome_usuario || 'Admin Casa da Criança';
-  const emailExibicao = sessao.email || sessao.email_usuario || 'casadacrianca@adm';
+  const nomeExibicao = escaparHtml(sessao.nome || sessao.nome_usuario || 'Admin Casa da Criança');
+  const emailExibicao = escaparHtml(sessao.email || sessao.email_usuario || 'casadacrianca@adm');
 
   const itensMenuAdmin = [
     { id: 'dashboard', href: './dashboard.html', icone: 'ph-chart-pie-slice', rotulo: 'Dashboard Admin' },
@@ -213,7 +166,7 @@ function renderizarSidebarAdmin(paginaAtiva) {
     { id: 'moderacao-campanhas', href: './moderacao-campanhas.html', icone: 'ph-seal-check', rotulo: 'Moderar Campanhas' },
     { id: 'locais-armazenamento', href: './locais-armazenamento.html', icone: 'ph-archive-box', rotulo: 'Armários e Geladeiras' },
     { id: 'relatorios', href: './relatorios.html', icone: 'ph-file-pdf', rotulo: 'Central de Relatórios' },
-    { id: 'mensageria', href: './mensageria.html', icone: 'ph-paper-plane-tilt', rotulo: 'Mensageria & LGPD' }
+    { id: 'mensageria', href: './mensageria.html', icone: 'ph-whatsapp-logo', rotulo: 'Mensageria WhatsApp' }
   ];
 
   const linksAdminHtml = itensMenuAdmin.map((item) => {
@@ -230,23 +183,23 @@ function renderizarSidebarAdmin(paginaAtiva) {
 
   containerSidebar.outerHTML = `
     <aside id="sidebar-admin-container" class="w-64 lg:w-72 bg-pastelBlue flex flex-col shadow-lg h-full flex-shrink-0 relative z-20">
-      <div class="p-6 text-center border-b border-white/60 bg-white/30 relative">
-        <button type="button" onclick="realizarLogoutAdmin()" class="absolute top-4 right-4 text-slate-500 hover:text-red-500 transition" aria-label="Sair da conta" title="Sair da conta">
-          <i class="ph ph-sign-out text-2xl"></i>
+      <div class="p-5 text-center border-b border-white/60 bg-white/30 relative">
+        <button type="button" onclick="realizarLogoutAdmin()" class="absolute top-3.5 right-3.5 text-slate-500 hover:text-red-500 transition" aria-label="Sair da conta" title="Sair da conta">
+          <i class="ph ph-sign-out text-xl"></i>
         </button>
 
-        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm overflow-hidden border-2 border-white">
+        <div class="w-14 h-14 bg-white rounded-full flex items-center justify-center mx-auto mb-2.5 shadow-sm overflow-hidden border-2 border-white">
           <img src="../../public/assets/avatarPublico01.png" alt="Avatar do Administrador" class="w-full h-full object-cover">
         </div>
-        <h2 class="text-lg font-bold text-brandBlue leading-tight">${nomeExibicao}</h2>
-        <div class="inline-flex items-center gap-1 mt-1 px-3 py-1 bg-indigo-100 text-indigo-900 rounded-full text-xs font-bold border border-indigo-200">
+        <h2 class="text-base font-bold text-brandBlue leading-tight">${nomeExibicao}</h2>
+        <div class="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 bg-indigo-100 text-indigo-900 rounded-full text-[11px] font-bold border border-indigo-200">
           <i class="ph-fill ph-shield-star"></i>
           <span>Administrador</span>
         </div>
         <p class="text-[11px] font-medium text-blue-900/75 mt-1 truncate" title="${emailExibicao}">${emailExibicao}</p>
       </div>
 
-      <nav class="flex-1 px-4 py-5 space-y-2 overflow-y-auto" aria-label="Navegação Administrativa">
+      <nav class="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto" aria-label="Navegação Administrativa">
         <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-blue-800/70">Páginas Públicas</p>
         <a href="../../index.html#inicio" class="flex items-center gap-3 px-4 py-2 rounded-xl text-blue-900 hover:bg-white/60 transition font-medium text-sm">
           <i class="ph ph-house text-lg"></i> Início
@@ -258,17 +211,17 @@ function renderizarSidebarAdmin(paginaAtiva) {
           <i class="ph ph-map-pin text-lg"></i> Como e Onde Doar
         </a>
 
-        <p class="px-3 pt-3 text-[11px] font-bold uppercase tracking-wider text-indigo-900/80">Painel Administrativo</p>
+        <p class="px-3 pt-2.5 text-[11px] font-bold uppercase tracking-wider text-indigo-900/80">Painel Administrativo</p>
         ${linksAdminHtml}
       </nav>
 
-      <div class="p-4 border-t border-white/60 space-y-3 bg-white/30">
-        <button type="button" onclick="abrirModal('modal-configuracoes')" class="flex items-center justify-center gap-2 w-full py-3 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm text-sm">
-          <i class="ph ph-gear text-xl"></i> Acessibilidade
+      <div class="p-3.5 border-t border-white/60 space-y-2 bg-white/30">
+        <button type="button" onclick="abrirModal('modal-configuracoes')" class="flex items-center justify-center gap-2 w-full py-2.5 bg-white rounded-xl text-blue-900 font-medium hover:bg-blue-50 transition shadow-sm text-sm">
+          <i class="ph ph-gear text-lg"></i> Acessibilidade
         </button>
 
-        <button type="button" onclick="realizarLogoutAdmin()" class="flex items-center justify-center gap-2 w-full py-3 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm text-sm">
-          <i class="ph ph-sign-out text-xl"></i> Sair da Conta
+        <button type="button" onclick="realizarLogoutAdmin()" class="flex items-center justify-center gap-2 w-full py-2.5 bg-red-100 rounded-xl text-red-700 font-semibold hover:bg-red-200 transition shadow-sm text-sm">
+          <i class="ph ph-sign-out text-lg"></i> Sair da Conta
         </button>
       </div>
     </aside>
@@ -326,8 +279,9 @@ function formatarDataBr(dataStr) {
 /**
  * Executa requisição POST para o backend serverless na AWS Lambda
  */
-async function executarAcaoEstoqueAws(payload) {
-  const resposta = await fetch(URL_API_ESTOQUE_AWS, {
+async function executarAcaoEstoqueAws(payload, rota = '/api/estoque') {
+  const url = `${URL_API_BASE_AWS}${rota}`;
+  const resposta = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
@@ -340,31 +294,23 @@ async function executarAcaoEstoqueAws(payload) {
 }
 
 /**
- * Reconcilia os locais de armazenamento (tb_locaisArmazenamento) com os lotes reais da AWS (tb_lotesProdutos)
+ * Reconcilia os locais de armazenamento reais de tb_locaisArmazenamento com os lotes de tb_lotesProdutos
  */
 function obterLocaisArmazenamentoReconciliados(lotesNormalizados = [], locaisAwsBrutos = []) {
-  let locaisSalvos = [];
-  try {
-    const raw = localStorage.getItem(CHAVE_LOCAIS_ADMIN);
-    if (raw) locaisSalvos = JSON.parse(raw);
-  } catch {
-    locaisSalvos = [];
-  }
-
-  const mapaPorNome = new Map();
+  const mapaPorChave = new Map();
 
   const registrarNoMapa = (loc, idx) => {
-    const descBruta = loc.local_descricao || loc.nome || `${loc.nome_local || 'Armário A'} - ${loc.sublocal_compartimento || 'Prateleira 1'}`;
+    const descBruta = loc.local_descricao || loc.nome || `${loc.nome_local || 'Armário'} - ${loc.sublocal_compartimento || 'Prateleira 1'}`;
     const nomeCanonico = normalizarNomePrateleira(descBruta);
     const chave = nomeCanonico.toLowerCase();
     const partes = nomeCanonico.split(' - ');
-    const nomeLocal = loc.nome_local || partes[0] || 'Armário A';
+    const nomeLocal = loc.nome_local || partes[0] || 'Armário';
     const sublocal = loc.sublocal_compartimento || partes[1] || 'Prateleira 1';
     const tipoRaw = String(loc.tipo_local || loc.tipo || (chave.includes('geladeira') ? 'geladeira' : 'armário')).toLowerCase();
     const tipoCanon = tipoRaw.includes('geladeira') ? 'geladeira' : 'armário';
 
-    if (!mapaPorNome.has(chave)) {
-      mapaPorNome.set(chave, {
+    if (!mapaPorChave.has(chave)) {
+      mapaPorChave.set(chave, {
         id: loc.id_local_armazenamento || loc.id || `loc_${idx + 1}`,
         id_local_armazenamento: loc.id_local_armazenamento || loc.id || `loc_${idx + 1}`,
         nome: nomeCanonico,
@@ -374,8 +320,8 @@ function obterLocaisArmazenamentoReconciliados(lotesNormalizados = [], locaisAws
         tipo: tipoCanon === 'geladeira' ? 'geladeira' : 'armario',
         tipo_local: tipoCanon,
         ambiente: loc.localizacao_ambiente || (tipoCanon === 'geladeira' ? 'Cozinha Institucional' : 'Despensa Principal'),
-        capacidade: loc.capacidade || (tipoCanon === 'geladeira' ? '120 L' : '150 pacotes'),
-        descricao: loc.descricao || `${loc.localizacao_ambiente || 'Despensa Institucional'} • Compartimento ${sublocal}`,
+        possui_lotes_ativos: Boolean(loc.possui_lotes_ativos),
+        origemAws: Boolean(loc.id_local_armazenamento),
         lotesAtivos: 0,
         unidadesTotais: 0,
         itensCriticosFefo: 0
@@ -383,18 +329,18 @@ function obterLocaisArmazenamentoReconciliados(lotesNormalizados = [], locaisAws
     }
   };
 
-  LOCAIS_PADRAO_INSTITUICAO.forEach(registrarNoMapa);
-  if (Array.isArray(locaisAwsBrutos)) locaisAwsBrutos.forEach(registrarNoMapa);
-  if (Array.isArray(locaisSalvos)) locaisSalvos.forEach(registrarNoMapa);
+  if (Array.isArray(locaisAwsBrutos)) {
+    locaisAwsBrutos.forEach(registrarNoMapa);
+  }
 
   lotesNormalizados.forEach((lote) => {
     if (lote.quantidadeAtual <= 0) return;
     const nomePrateleira = normalizarNomePrateleira(lote.localArmazenamento);
     const chave = nomePrateleira.toLowerCase();
-    if (!mapaPorNome.has(chave)) {
-      registrarNoMapa({ local_descricao: nomePrateleira }, mapaPorNome.size);
+    if (!mapaPorChave.has(chave)) {
+      registrarNoMapa({ local_descricao: nomePrateleira }, mapaPorChave.size);
     }
-    const reg = mapaPorNome.get(chave);
+    const reg = mapaPorChave.get(chave);
     reg.lotesAtivos += 1;
     reg.unidadesTotais += Number(lote.quantidadeAtual || 0);
     if (lote.diasRestantes <= 30) {
@@ -402,36 +348,23 @@ function obterLocaisArmazenamentoReconciliados(lotesNormalizados = [], locaisAws
     }
   });
 
-  const listaFinal = Array.from(mapaPorNome.values()).sort((a, b) => a.nome.localeCompare(b.nome));
-  try {
-    localStorage.setItem(CHAVE_LOCAIS_ADMIN, JSON.stringify(listaFinal));
-  } catch {
-    // Ignora erro de quota
-  }
-  return listaFinal;
+  return Array.from(mapaPorChave.values()).sort((a, b) => a.nome.localeCompare(b.nome));
 }
 
 /**
  * Consulta todos os lotes (tb_lotesProdutos), locais (tb_locaisArmazenamento) e movimentações (tb_movimentacoes) na AWS
  */
 async function carregarDadosEstoqueAws() {
-  const dadosEstoque = await executarAcaoEstoqueAws({ acao: 'consultar_estoque' });
+  const [dadosEstoque, respMov, respLocais] = await Promise.all([
+    executarAcaoEstoqueAws({ acao: 'consultar_estoque' }),
+    executarAcaoEstoqueAws({ acao: 'consultar_movimentacoes' }).catch(() => ({ movimentacoes: [] })),
+    executarAcaoEstoqueAws({ acao: 'listar_locais' }).catch(() => ({ locais: [] }))
+  ]);
+
   const lotesBrutos = Array.isArray(dadosEstoque.lotes) ? dadosEstoque.lotes : [];
-  const locaisAwsBrutos = Array.isArray(dadosEstoque.locais) ? dadosEstoque.locais : [];
+  const movsBrutas = Array.isArray(respMov.movimentacoes) ? respMov.movimentacoes : [];
+  const locaisAwsBrutos = Array.isArray(respLocais.locais) ? respLocais.locais : [];
 
-  let movsBrutas = Array.isArray(dadosEstoque.movimentacoes) ? dadosEstoque.movimentacoes : [];
-  if (movsBrutas.length === 0) {
-    try {
-      const respMov = await executarAcaoEstoqueAws({ acao: 'consultar_movimentacoes' });
-      if (Array.isArray(respMov.movimentacoes)) {
-        movsBrutas = respMov.movimentacoes;
-      }
-    } catch (e) {
-      console.warn('Aviso ao consultar movimentações complementares na AWS:', e);
-    }
-  }
-
-  // Mapeia os campos reais snake_case do DynamoDB tb_lotesProdutos + aliases camelCase
   const lotes = lotesBrutos
     .map((item) => {
       const idLote = String(item.id_lote_produto || item.id || item.idLote || '');
@@ -452,7 +385,6 @@ async function carregarDadosEstoqueAws() {
       );
 
       return {
-        // Chaves originais DynamoDB (snake_case)
         ...item,
         id_lote_produto: idLote,
         numero_codigo_lote: codigoLote,
@@ -465,7 +397,6 @@ async function carregarDadosEstoqueAws() {
         unidade_medida_pacote: unidade,
         data_validade_lote: dataValidade,
         local_descricao: localCanonico,
-        // Chaves normalizadas para as telas Web (camelCase)
         id: idLote,
         codigoLote,
         codigoBarras: ean,
@@ -485,7 +416,6 @@ async function carregarDadosEstoqueAws() {
     .filter((lote) => lote.quantidadeAtual > 0)
     .sort((a, b) => a.diasRestantes - b.diasRestantes);
 
-  // Agrupamento por produto para apurar saldo total vs. estoque mínimo
   const mapaProdutos = new Map();
   lotes.forEach((lote) => {
     const chave = lote.nomeProduto.toLowerCase();
@@ -518,7 +448,6 @@ async function carregarDadosEstoqueAws() {
 
   const locaisReconciliados = obterLocaisArmazenamentoReconciliados(lotes, locaisAwsBrutos);
 
-  // Normaliza movimentações vindas de tb_movimentacoes e tb_movimentacoesEstoques
   const movimentacoes = movsBrutas.map((m) => {
     const idMov = String(m.id_movimentacao_estoque || m.id_movimentacao || m.id || `mov_${Math.random().toString(36).substring(2, 7)}`);
     const operacaoRaw = String(m.operacao || m.tipo_operacao || m.tipo || 'ENTRADA').toUpperCase();
@@ -563,12 +492,43 @@ async function carregarDadosEstoqueAws() {
 }
 
 /**
- * Normaliza o status de uma campanha entre o padrão DynamoDB ('Pendente de Análise', 'Aprovada', 'Reprovada', 'Encerrada')
- * e o código interno ('pendente', 'aprovada', 'reprovada', 'encerrada')
+ * Serializa e desserializa metadados de campanha nos campos oficiais do _crud_campanhas da AWS:
+ * (titulo, meta, descricao, itens_necessarios, responsavel, status_aprovacao, data_fim)
  */
+function extrairMetaRecebidoParecer(textoBruto) {
+  const texto = String(textoBruto || '');
+  const matchRecebido = texto.match(/\[RECEBIDO:(\d+)\]/);
+  const matchParecer = texto.match(/\[PARECER:(.*?)\]/);
+  const matchInicio = texto.match(/\[INICIO:(.*?)\]/);
+  const textoLimpo = texto
+    .replace(/\[RECEBIDO:\d+\]/g, '')
+    .replace(/\[PARECER:.*?\]/g, '')
+    .replace(/\[INICIO:.*?\]/g, '')
+    .trim();
+
+  return {
+    textoLimpo,
+    recebido: matchRecebido ? Number(matchRecebido[1]) : null,
+    parecer: matchParecer ? matchParecer[1].trim() : '',
+    inicio: matchInicio ? matchInicio[1].trim() : ''
+  };
+}
+
+function montarItensComMetadados(itemFoco, arrecadadoUnidades, parecerTecnico = '', dataInicio = '') {
+  let base = String(itemFoco || 'Alimentos Não Perecíveis')
+    .replace(/\[RECEBIDO:\d+\]/g, '')
+    .replace(/\[PARECER:.*?\]/g, '')
+    .replace(/\[INICIO:.*?\]/g, '')
+    .trim();
+  const partes = [base, `[RECEBIDO:${Math.max(0, Number(arrecadadoUnidades || 0))}]`];
+  if (dataInicio) partes.push(`[INICIO:${dataInicio}]`);
+  if (parecerTecnico) partes.push(`[PARECER:${String(parecerTecnico).replace(/[\[\]]/g, '')}]`);
+  return partes.join(' ');
+}
+
 function normalizarObjetoCampanha(c) {
-  const id = String(c.id_campanha_doacao || c.idCampanha || c.id || `camp_${Math.random().toString(36).substring(2, 7)}`);
-  const statusBruto = String(c.status_campanha || c.status || 'Pendente de Análise').toLowerCase();
+  const id = String(c.id_campanha || c.id_campanha_doacao || c.idCampanha || c.id || `camp_${Date.now()}`);
+  const statusBruto = String(c.status_aprovacao || c.status_campanha || c.status || 'Pendente de Análise').toLowerCase();
   let statusCodigo = 'pendente';
   let statusRotuloDb = 'Pendente de Análise';
 
@@ -583,166 +543,104 @@ function normalizarObjetoCampanha(c) {
     statusRotuloDb = 'Encerrada';
   }
 
-  const metas = Array.isArray(c.itens_metas) ? c.itens_metas : [];
-  const primeiroItem = metas[0] || {};
-  const itemFoco = c.itemFoco || primeiroItem.nome || primeiroItem.nome_item_solicitado || 'Alimentos Não Perecíveis';
-  const metaUnidades = Number(
-    c.metaUnidades ||
-    metas.reduce((acc, m) => acc + Number(m.qtd || m.quantidade_meta_pretendida || 0), 0) ||
-    50
-  );
-  const arrecadadoUnidades = Number(c.arrecadadoUnidades || c.quantidade_arrecadada || 0);
-  const titulo = c.nome_campanha || c.titulo || 'Campanha Solidária';
-  const descricao = c.objetivo_descricao_campanha || c.descricao || '';
-  const dataInicio = c.data_inicio_campanha || c.criadoEm || new Date().toISOString().split('T')[0];
-  const dataLimite = c.data_termino_campanha || c.dataLimite || '2026-12-31';
-  const criadorNome = c.nome_proponente || c.criadorNome || 'Doador Comunitário';
-  const criadorEmail = c.id_doador_responsavel || c.criadorEmail || 'doador@comunidade.org';
-  const parecer = c.justificativa_parecer_tecnico || c.parecerTecnico || '';
+  const parsedItens = extrairMetaRecebidoParecer(c.itens_necessarios || c.itemFoco || '');
+  const itemFoco = parsedItens.textoLimpo || c.itemFoco || 'Alimentos Não Perecíveis';
+  const metaNumero = parseInt(String(c.meta ?? c.metaUnidades ?? 50).replace(/[^\d]/g, ''), 10) || 50;
+  const arrecadadoUnidades = parsedItens.recebido !== null
+    ? parsedItens.recebido
+    : Number(c.arrecadadoUnidades ?? c.quantidade_arrecadada ?? 0);
+
+  const titulo = c.titulo || c.nome_campanha || 'Campanha Solidária';
+  const descricao = c.descricao || c.objetivo_descricao_campanha || '';
+  const dataInicio = parsedItens.inicio || c.data_inicio_campanha || c.criadoEm || new Date().toISOString().split('T')[0];
+  const dataLimite = c.data_fim || c.data_termino_campanha || c.dataLimite || '2026-12-31';
+  const criadorNome = c.responsavel || c.nome_proponente || c.criadorNome || 'Doador Comunitário';
+  const parecer = parsedItens.parecer || c.justificativa_parecer_tecnico || c.parecerTecnico || '';
+
+  const diferencaMeta = arrecadadoUnidades - metaNumero;
+  const percentualAtingido = metaNumero > 0 ? Math.round((arrecadadoUnidades / metaNumero) * 100) : 0;
 
   return {
     ...c,
-    // Chaves DynamoDB tb_campanhasDoacoes
+    id_campanha: id,
     id_campanha_doacao: id,
-    nome_campanha: titulo,
-    objetivo_descricao_campanha: descricao,
-    data_inicio_campanha: dataInicio,
-    data_termino_campanha: dataLimite,
-    status_campanha: statusRotuloDb,
-    justificativa_parecer_tecnico: parecer,
-    nome_proponente: criadorNome,
-    id_doador_responsavel: criadorEmail,
-    // Chaves normalizadas Web
     idCampanha: id,
     titulo,
+    nome_campanha: titulo,
     descricao,
+    objetivo_descricao_campanha: descricao,
     itemFoco,
-    metaUnidades,
+    metaUnidades: metaNumero,
     arrecadadoUnidades,
+    diferencaMeta,
+    percentualAtingido,
     dataInicio,
     dataLimite,
+    data_fim: dataLimite,
     criadorNome,
-    criadorEmail,
+    responsavel: criadorNome,
     status: statusCodigo,
+    status_aprovacao: statusRotuloDb,
+    status_campanha: statusRotuloDb,
     parecerTecnico: parecer,
-    criadoEm: c.criada_em || c.criadoEm || dataInicio
+    criadoEm: c.atualizado_em || c.criada_em || dataInicio
   };
 }
 
 /**
- * Carrega todas as campanhas reais de tb_campanhasDoacoes na AWS + reconcilia com o cache local
+ * Carrega todas as campanhas reais de tb_campanhasDoacoes na AWS
  */
 async function carregarCampanhasReconciliadas() {
-  let campanhasAws = [];
-  let itensAws = [];
-  try {
-    const [respCamp, respItens] = await Promise.all([
-      executarAcaoEstoqueAws({ acao: 'consultar_campanhas' }),
-      executarAcaoEstoqueAws({ acao: 'consultar_itens_campanha' }).catch(() => ({ itens: [] }))
-    ]);
-    if (Array.isArray(respCamp.campanhas)) campanhasAws = respCamp.campanhas;
-    if (Array.isArray(respItens.itens)) itensAws = respItens.itens;
-  } catch (e) {
-    console.warn('Aviso ao consultar tb_campanhasDoacoes na AWS:', e);
-  }
+  const respCamp = await executarAcaoEstoqueAws({ acao: 'listar_campanhas' });
+  const campanhasAws = Array.isArray(respCamp.campanhas) ? respCamp.campanhas : [];
 
-  let campanhasLocais = [];
-  try {
-    const raw = localStorage.getItem(CHAVE_CAMPANHAS_ADMIN);
-    if (raw) campanhasLocais = JSON.parse(raw);
-  } catch {
-    campanhasLocais = [];
-  }
-
-  const mapa = new Map();
-
-  // Associa os itens de tb_itensCampanhas às campanhas da AWS
-  campanhasAws.forEach((c) => {
-    const idCamp = String(c.id_campanha_doacao || c.idCampanha || '');
-    if (!idCamp) return;
-    const metasRelacionadas = itensAws.filter((it) => String(it.id_campanha_doacao) === idCamp);
-    const campEnriquecida = {
-      ...c,
-      itens_metas: Array.isArray(c.itens_metas) && c.itens_metas.length > 0 ? c.itens_metas : metasRelacionadas
-    };
-    mapa.set(idCamp, normalizarObjetoCampanha(campEnriquecida));
-  });
-
-  campanhasLocais.forEach((c) => {
-    const idCamp = String(c.id_campanha_doacao || c.idCampanha || '');
-    if (!idCamp) return;
-    const existente = mapa.get(idCamp) || {};
-    mapa.set(idCamp, normalizarObjetoCampanha({ ...existente, ...c }));
-  });
-
-  const lista = Array.from(mapa.values()).sort((a, b) => String(b.criadoEm).localeCompare(String(a.criadoEm)));
-  try {
-    localStorage.setItem(CHAVE_CAMPANHAS_ADMIN, JSON.stringify(lista));
-  } catch {
-    // Ignora erro de quota
-  }
-  return lista;
+  return campanhasAws
+    .map((c) => normalizarObjetoCampanha(c))
+    .sort((a, b) => String(b.criadoEm).localeCompare(String(a.criadoEm)));
 }
 
 /**
- * Cria ou modera uma campanha persistindo no AWS DynamoDB (tb_campanhasDoacoes e tb_itensCampanhas)
+ * Cria ou atualiza uma campanha diretamente no AWS DynamoDB (tb_campanhasDoacoes)
  */
 async function salvarOuModerarCampanhaAdmin(campanha, ehNova = false) {
   const normalizada = normalizarObjetoCampanha(campanha);
-  const lista = await carregarCampanhasReconciliadas();
-  const idx = lista.findIndex((c) => c.idCampanha === normalizada.idCampanha);
-  if (idx >= 0) {
-    lista[idx] = normalizada;
-  } else {
-    lista.unshift(normalizada);
-  }
-  localStorage.setItem(CHAVE_CAMPANHAS_ADMIN, JSON.stringify(lista));
+  const itensCodificados = montarItensComMetadados(
+    normalizada.itemFoco,
+    normalizada.arrecadadoUnidades,
+    normalizada.parecerTecnico,
+    normalizada.dataInicio
+  );
 
-  try {
-    if (ehNova) {
-      await executarAcaoEstoqueAws({
-        acao: 'criar_campanha',
-        dados: {
-          id_campanha_doacao: normalizada.id_campanha_doacao,
-          id_doador_responsavel: normalizada.id_doador_responsavel,
-          nome_proponente: normalizada.nome_proponente,
-          nome_campanha: normalizada.nome_campanha,
-          objetivo_descricao_campanha: normalizada.objetivo_descricao_campanha,
-          data_inicio_campanha: normalizada.data_inicio_campanha,
-          data_termino_campanha: normalizada.data_termino_campanha,
-          status_campanha: normalizada.status_campanha,
-          justificativa_parecer_tecnico: normalizada.justificativa_parecer_tecnico,
-          itens_metas: [
-            {
-              nome: normalizada.itemFoco,
-              qtd: normalizada.metaUnidades,
-              unidade_medida_item: 'pacotes/unidades'
-            }
-          ]
-        }
-      });
-    } else {
-      await executarAcaoEstoqueAws({
-        acao: 'moderar_campanha',
-        id_campanha_doacao: normalizada.id_campanha_doacao,
-        status_campanha: normalizada.status_campanha,
-        justificativa_parecer_tecnico: normalizada.justificativa_parecer_tecnico,
-        responsavel: 'casadacrianca@adm'
-      });
-    }
-  } catch (e) {
-    console.warn('Sincronização com AWS tb_campanhasDoacoes:', e);
-  }
+  const payload = {
+    acao: ehNova ? 'cadastrar_campanha' : 'atualizar_campanha',
+    id_campanha: normalizada.id_campanha,
+    titulo: normalizada.titulo,
+    meta: String(normalizada.metaUnidades),
+    descricao: normalizada.descricao,
+    itens_necessarios: itensCodificados,
+    responsavel: normalizada.responsavel,
+    status_aprovacao: normalizada.status_aprovacao,
+    data_fim: normalizada.data_fim
+  };
 
-  return lista;
+  await executarAcaoEstoqueAws(payload);
+  return await carregarCampanhasReconciliadas();
+}
+
+async function excluirCampanhaAdmin(idCampanha) {
+  await executarAcaoEstoqueAws({
+    acao: 'excluir_campanha',
+    id_campanha: idCampanha
+  });
+  return await carregarCampanhasReconciliadas();
 }
 
 // Exporta funções globalmente
+window.URL_API_BASE_AWS = URL_API_BASE_AWS;
 window.URL_API_ESTOQUE_AWS = URL_API_ESTOQUE_AWS;
 window.CHAVE_SESSAO_ADMIN = CHAVE_SESSAO_ADMIN;
-window.CHAVE_LOCAIS_ADMIN = CHAVE_LOCAIS_ADMIN;
-window.CHAVE_CAMPANHAS_ADMIN = CHAVE_CAMPANHAS_ADMIN;
 window.CHAVE_HISTORICO_MENSAGERIA = CHAVE_HISTORICO_MENSAGERIA;
+window.escaparHtml = escaparHtml;
 window.normalizarNomePrateleira = normalizarNomePrateleira;
 window.verificarAutenticacaoAdmin = verificarAutenticacaoAdmin;
 window.realizarLogoutAdmin = realizarLogoutAdmin;
@@ -755,3 +653,4 @@ window.obterLocaisArmazenamentoReconciliados = obterLocaisArmazenamentoReconcili
 window.carregarDadosEstoqueAws = carregarDadosEstoqueAws;
 window.carregarCampanhasReconciliadas = carregarCampanhasReconciliadas;
 window.salvarOuModerarCampanhaAdmin = salvarOuModerarCampanhaAdmin;
+window.excluirCampanhaAdmin = excluirCampanhaAdmin;

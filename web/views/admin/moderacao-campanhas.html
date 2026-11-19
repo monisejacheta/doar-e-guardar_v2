@@ -32,97 +32,152 @@
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa (Padrão Index) -->
   <div id="sidebar-admin-container"></div>
 
-  <!-- Área Principal -->
-  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-4 lg:p-6 space-y-5">
 
-    <!-- Cabeçalho Principal (Padrão Index) -->
-    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <!-- Cabeçalho -->
+    <header class="bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
       <div>
-        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
+        <span class="inline-flex items-center gap-1.5 bg-pastelBlue text-brandBlue px-2.5 py-0.5 rounded-full font-bold text-[11px] mb-1">
           <i class="ph-fill ph-seal-check"></i>
-          Tabelas AWS: <code>tb_campanhasDoacoes</code> • <code>tb_itensCampanhas</code>
-        </div>
-        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
-          <i class="ph ph-megaphone text-3xl"></i>
-          Moderação de Campanhas Solidárias
+          AWS DynamoDB: <code>tb_campanhasDoacoes</code>
+        </span>
+        <h1 class="text-xl lg:text-2xl font-extrabold text-brandBlue flex items-center gap-2">
+          <i class="ph ph-megaphone text-2xl"></i>
+          Moderação e Baixa de Campanhas
         </h1>
-        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
-          Analise propostas enviadas por doadores parceiros, aprove arrecadações alinhadas ao estoque ou emita parecer técnico justificativo.
-        </p>
       </div>
       
-      <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-        <button type="button" onclick="carregarTelaModeracao()" class="inline-flex items-center justify-center gap-2 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-5 py-3 rounded-xl transition border border-blue-200 text-sm">
-          <i class="ph-bold ph-arrows-clockwise text-lg"></i> Atualizar Fila AWS
+      <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+        <button type="button" onclick="carregarTelaModeracao()" class="inline-flex items-center justify-center gap-1.5 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-4 py-2 rounded-xl transition border border-blue-200 text-xs">
+          <i id="icone-sync-campanhas" class="ph-bold ph-arrows-clockwise text-base"></i> Sincronizar AWS
         </button>
-        <button type="button" onclick="abrirModal('modal-nova-campanha-admin')" class="inline-flex items-center justify-center gap-2 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-6 py-3 rounded-xl transition shadow-sm border border-emerald-200 text-sm">
-          <i class="ph-bold ph-plus-circle text-lg text-emerald-700"></i> Criar Campanha Institucional
+        <button type="button" onclick="abrirModalNovaCampanha()" class="inline-flex items-center justify-center gap-1.5 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-4 py-2 rounded-xl transition shadow-sm border border-emerald-200 text-xs">
+          <i class="ph-bold ph-plus-circle text-base text-emerald-700"></i> Nova Campanha
         </button>
       </div>
-    </div>
+    </header>
 
-    <!-- Resumo de Contadores por Status (Padrão Index Pastel) -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-5">
-      <button type="button" onclick="filtrarStatusCampanha('pendente')" id="tab-status-pendente" class="p-6 rounded-3xl bg-pastelYellow/60 border border-pastelYellow shadow-sm text-left transition hover:shadow-md">
-        <span class="text-xs font-bold uppercase text-yellow-900 block">Aguardando Análise</span>
-        <span id="count-pendente" class="text-3xl font-extrabold text-yellow-900 mt-1 block">0</span>
+    <!-- Abas de Status -->
+    <section class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      <button type="button" onclick="filtrarStatusCampanha('TODAS')" id="tab-status-TODAS" class="p-3.5 rounded-2xl bg-pastelBlue/60 border border-pastelBlue shadow-sm text-left transition hover:shadow">
+        <span class="text-[11px] font-bold uppercase text-brandBlue block">Todas</span>
+        <span id="count-todas" class="text-2xl font-extrabold text-brandBlue mt-0.5 block">0</span>
       </button>
 
-      <button type="button" onclick="filtrarStatusCampanha('aprovada')" id="tab-status-aprovada" class="p-6 rounded-3xl bg-pastelGreen/60 border border-pastelGreen shadow-sm text-left transition hover:shadow-md">
-        <span class="text-xs font-bold uppercase text-emerald-900 block">Ativas / Aprovadas</span>
-        <span id="count-aprovada" class="text-3xl font-extrabold text-emerald-900 mt-1 block">0</span>
+      <button type="button" onclick="filtrarStatusCampanha('pendente')" id="tab-status-pendente" class="p-3.5 rounded-2xl bg-pastelYellow/60 border border-pastelYellow shadow-sm text-left transition hover:shadow">
+        <span class="text-[11px] font-bold uppercase text-yellow-900 block">Pendentes</span>
+        <span id="count-pendente" class="text-2xl font-extrabold text-yellow-900 mt-0.5 block">0</span>
       </button>
 
-      <button type="button" onclick="filtrarStatusCampanha('reprovada')" id="tab-status-reprovada" class="p-6 rounded-3xl bg-red-50 border border-red-200 shadow-sm text-left transition hover:shadow-md">
-        <span class="text-xs font-bold uppercase text-red-800 block">Reprovadas (Com Parecer)</span>
-        <span id="count-reprovada" class="text-3xl font-extrabold text-red-700 mt-1 block">0</span>
+      <button type="button" onclick="filtrarStatusCampanha('aprovada')" id="tab-status-aprovada" class="p-3.5 rounded-2xl bg-pastelGreen/60 border border-pastelGreen shadow-sm text-left transition hover:shadow">
+        <span class="text-[11px] font-bold uppercase text-emerald-900 block">Ativas / Aprovadas</span>
+        <span id="count-aprovada" class="text-2xl font-extrabold text-emerald-900 mt-0.5 block">0</span>
       </button>
 
-      <button type="button" onclick="filtrarStatusCampanha('TODAS')" id="tab-status-TODAS" class="p-6 rounded-3xl bg-pastelBlue/60 border-2 border-brandBlue shadow-sm text-left transition hover:shadow-md">
-        <span class="text-xs font-bold uppercase text-brandBlue block">Todas as Campanhas</span>
-        <span id="count-todas" class="text-3xl font-extrabold text-brandBlue mt-1 block">0</span>
+      <button type="button" onclick="filtrarStatusCampanha('encerrada')" id="tab-status-encerrada" class="p-3.5 rounded-2xl bg-slate-100 border border-slate-200 shadow-sm text-left transition hover:shadow">
+        <span class="text-[11px] font-bold uppercase text-slate-700 block">Finalizadas (Baixa)</span>
+        <span id="count-encerrada" class="text-2xl font-extrabold text-slate-800 mt-0.5 block">0</span>
+      </button>
+
+      <button type="button" onclick="filtrarStatusCampanha('reprovada')" id="tab-status-reprovada" class="p-3.5 rounded-2xl bg-red-50 border border-red-200 shadow-sm text-left transition hover:shadow">
+        <span class="text-[11px] font-bold uppercase text-red-800 block">Reprovadas</span>
+        <span id="count-reprovada" class="text-2xl font-extrabold text-red-700 mt-0.5 block">0</span>
       </button>
     </section>
 
-    <!-- Feedback -->
-    <div id="feedback-moderacao" class="hidden p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between"></div>
+    <div id="feedback-moderacao" class="hidden p-3.5 rounded-2xl border font-semibold text-xs flex items-center justify-between"></div>
 
     <!-- Lista de Cards de Campanhas -->
-    <section id="lista-campanhas-moderacao" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="lg:col-span-2 bg-white p-10 rounded-3xl border border-slate-200 text-center text-brandBlue font-semibold">
-        <i class="ph ph-spinner-gap text-3xl animate-spin inline-block mb-2"></i><br>
+    <section id="lista-campanhas-moderacao" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div class="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-200 text-center text-brandBlue font-semibold text-xs">
+        <i class="ph ph-spinner-gap text-2xl animate-spin inline-block mb-1"></i><br>
         Consultando campanhas reais em <code>tb_campanhasDoacoes</code> na AWS...
       </div>
     </section>
 
   </main>
 
-  <!-- MODAL DE REPROVAÇÃO COM PARECER TÉCNICO OBRIGATÓRIO (US05) -->
-  <div id="modal-reprovar-campanha" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-8 relative transform scale-95 transition-transform duration-300">
-      <button type="button" onclick="fecharModal('modal-reprovar-campanha')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
-        <i class="ph ph-x text-xl"></i>
+  <!-- MODAL 1: DAR BAIXA / ENCERRAR CAMPANHA COM CONFIRMAÇÃO DE RECEBIDO REAL -->
+  <div id="modal-baixa-campanha" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-baixa-campanha')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-lg"></i>
       </button>
 
-      <div class="mb-6">
-        <h3 class="text-2xl font-bold text-red-700">Reprovar Campanha Solidária</h3>
-        <p id="subtitulo-reprovar-campanha" class="text-slate-600 text-xs font-semibold mt-1"></p>
+      <div class="mb-4">
+        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-pastelBlue text-brandBlue text-[11px] font-bold mb-1">
+          <i class="ph-fill ph-check-square-offset"></i> Fechamento e Baixa de Campanha
+        </span>
+        <h3 class="text-xl font-bold text-brandBlue">Confirmar Recebimento Real</h3>
+        <p id="subtitulo-baixa-campanha" class="text-slate-600 text-xs font-semibold mt-0.5"></p>
       </div>
 
-      <form onsubmit="confirmarReprovacaoCampanha(event)" class="space-y-4">
-        <input type="hidden" id="reprovar-id-campanha">
-        <div>
-          <label for="reprovar-parecer" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Parecer Técnico Justificativo Obrigatório (US05) *</label>
-          <textarea id="reprovar-parecer" required minlength="10" rows="4" placeholder="Explique respeitosamente ao doador o motivo da recusa (ex: alimento fora do cardápio nutricional infantil ou item já suprido)..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-red-500"></textarea>
-          <p class="text-[11px] font-medium text-slate-500 mt-1">Este parecer será gravado em <code>tb_campanhasDoacoes</code> e exibido ao doador proponente.</p>
+      <form onsubmit="confirmarBaixaCampanha(event)" class="space-y-4">
+        <input type="hidden" id="baixa-camp-id">
+        <input type="hidden" id="baixa-camp-meta">
+
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+          <div>
+            <span class="text-slate-500 block font-medium">Item Foco</span>
+            <strong id="baixa-camp-item" class="text-brandBlue">--</strong>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-500 block font-medium">Meta Prevista</span>
+            <strong id="baixa-camp-meta-label" class="text-brandBlue text-sm">0 un</strong>
+          </div>
         </div>
 
-        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button type="button" onclick="fecharModal('modal-reprovar-campanha')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
-          <button type="submit" class="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-sm shadow-sm transition">
+        <div>
+          <label for="baixa-camp-recebido" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">
+            Quantos produtos reais foram recebidos? *
+          </label>
+          <input type="number" id="baixa-camp-recebido" required min="0" step="1" oninput="atualizarPreviewResultadoMeta()" class="w-full px-4 py-2.5 bg-white border-2 border-brandBlue/30 rounded-xl text-base font-extrabold text-brandBlue focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <!-- Resultado Calculado Acima / Abaixo da Meta -->
+        <div id="preview-resultado-meta" class="p-3.5 rounded-2xl border text-xs font-bold flex items-center justify-between">
+          <span>Informe a quantidade recebida para calcular o desempenho.</span>
+        </div>
+
+        <div>
+          <label for="baixa-camp-obs" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Observação do Fechamento</label>
+          <textarea id="baixa-camp-obs" rows="2" placeholder="Ex: Recebido integralmente na portaria da Casa da Criança." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-baixa-campanha')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs">Cancelar</button>
+          <button type="submit" id="btn-confirmar-baixa-camp" class="px-5 py-2 rounded-xl bg-brandBlue hover:bg-blue-900 text-white font-bold text-xs shadow-sm transition">
+            Confirmar Baixa e Encerrar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: REPROVAÇÃO COM PARECER TÉCNICO -->
+  <div id="modal-reprovar-campanha" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-reprovar-campanha')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+
+      <div class="mb-4">
+        <h3 class="text-xl font-bold text-red-700">Reprovar Campanha</h3>
+        <p id="subtitulo-reprovar-campanha" class="text-slate-600 text-xs font-semibold mt-0.5"></p>
+      </div>
+
+      <form onsubmit="confirmarReprovacaoCampanha(event)" class="space-y-3.5">
+        <input type="hidden" id="reprovar-id-campanha">
+        <div>
+          <label for="reprovar-parecer" class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Parecer Técnico Justificativo *</label>
+          <textarea id="reprovar-parecer" required minlength="10" rows="4" placeholder="Explique o motivo da recusa ao doador..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-red-500"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-reprovar-campanha')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-sm transition">
             Confirmar Reprovação
           </button>
         </div>
@@ -130,48 +185,54 @@
     </div>
   </div>
 
-  <!-- MODAL DE NOVA CAMPANHA INSTITUCIONAL -->
+  <!-- MODAL 3: NOVA CAMPANHA INSTITUCIONAL -->
   <div id="modal-nova-campanha-admin" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-8 relative transform scale-95 transition-transform duration-300">
-      <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
-        <i class="ph ph-x text-xl"></i>
+    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-6 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-lg"></i>
       </button>
 
-      <div class="mb-6">
-        <h3 class="text-2xl font-bold text-brandBlue">Lançar Campanha Institucional</h3>
-        <p class="text-slate-500 text-xs mt-1">Publica uma campanha oficial da Casa da Criança em <code>tb_campanhasDoacoes</code>.</p>
+      <div class="mb-4">
+        <h3 class="text-xl font-bold text-brandBlue">Lançar Campanha Institucional</h3>
+        <p class="text-slate-500 text-xs mt-0.5">Publica diretamente em <code>tb_campanhasDoacoes</code> na AWS.</p>
       </div>
 
-      <form onsubmit="salvarNovaCampanhaInstitucional(event)" class="space-y-4">
+      <form onsubmit="salvarNovaCampanhaInstitucional(event)" class="space-y-3.5">
         <div>
-          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Nome da Campanha *</label>
-          <input type="text" id="nova-camp-titulo" required placeholder="Ex: Campanha Emergencial de Leite Integral e Aveia" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Nome da Campanha *</label>
+          <input type="text" id="nova-camp-titulo" required placeholder="Ex: Campanha Emergencial de Leite Integral" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Alimento / Item Principal *</label>
-            <input type="text" id="nova-camp-item" required placeholder="Ex: Leite UHT Integral 1L" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Alimento / Item Principal *</label>
+            <input type="text" id="nova-camp-item" required placeholder="Ex: Leite UHT Integral 1L" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
           </div>
           <div>
-            <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Meta de Arrecadação *</label>
-            <input type="number" id="nova-camp-meta" required min="5" value="100" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Meta de Arrecadação (un) *</label>
+            <input type="number" id="nova-camp-meta" required min="1" value="100" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Responsável *</label>
+            <input type="text" id="nova-camp-resp" required value="Administração Casa da Criança" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Data Prevista de Término *</label>
+            <input type="date" id="nova-camp-data" required class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Data Prevista de Término *</label>
-          <input type="date" id="nova-camp-data" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Objetivo e Ponto de Coleta *</label>
+          <textarea id="nova-camp-desc" required rows="3" placeholder="Descreva como essa arrecadação apoiará as refeições das crianças..." class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue"></textarea>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-brandBlue uppercase mb-1">Objetivo e Ponto de Coleta *</label>
-          <textarea id="nova-camp-desc" required rows="3" placeholder="Descreva como essa arrecadação apoiará as refeições das crianças..." class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue"></textarea>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-          <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="px-5 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-semibold text-sm">Cancelar</button>
-          <button type="submit" class="px-6 py-2.5 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-200 hover:bg-[#b5ead5] font-bold text-sm shadow-sm transition">
+        <div class="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-nova-campanha-admin')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs">Cancelar</button>
+          <button type="submit" id="btn-publicar-camp" class="px-5 py-2 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-200 hover:bg-[#b5ead5] font-bold text-xs shadow-sm transition">
             Publicar na AWS
           </button>
         </div>
@@ -179,52 +240,56 @@
     </div>
   </div>
 
-  <script src="../../public/js/admin.js"></script>
+  <script src="../../public/js/admin.js?v=2"></script>
   <script>
     let campanhasCache = [];
     let filtroStatusAtual = 'TODAS';
 
     document.addEventListener('DOMContentLoaded', () => {
       renderizarSidebarAdmin('moderacao-campanhas');
-      const dt = new Date();
-      dt.setDate(dt.getDate() + 45);
-      document.getElementById('nova-camp-data').value = dt.toISOString().split('T')[0];
       carregarTelaModeracao();
     });
 
     function mostrarFeedbackModeracao(msg, sucesso = true) {
       const el = document.getElementById('feedback-moderacao');
-      el.className = `p-4 rounded-2xl border font-semibold text-sm flex items-center justify-between ${
+      el.className = `p-3.5 rounded-2xl border font-semibold text-xs flex items-center justify-between ${
         sucesso ? 'bg-pastelGreen/70 border-emerald-300 text-emerald-900' : 'bg-red-50 border-red-200 text-red-800'
       }`;
-      el.innerHTML = `<span>${msg}</span><button type="button" onclick="this.parentElement.classList.add('hidden')" class="font-bold underline text-xs">Fechar</button>`;
+      el.innerHTML = `<span>${escaparHtml(msg)}</span><button type="button" onclick="this.parentElement.classList.add('hidden')" class="font-bold underline text-xs">Fechar</button>`;
       el.classList.remove('hidden');
     }
 
     async function carregarTelaModeracao() {
-      campanhasCache = await carregarCampanhasReconciliadas();
-      atualizarContadoresStatus();
-      renderizarCardsCampanhas();
+      const icone = document.getElementById('icone-sync-campanhas');
+      if (icone) icone.classList.add('animate-spin');
+      try {
+        campanhasCache = await carregarCampanhasReconciliadas();
+        atualizarContadoresStatus();
+        renderizarCardsCampanhas();
+      } catch (erro) {
+        mostrarFeedbackModeracao(`Erro ao consultar tb_campanhasDoacoes na AWS: ${erro.message}`, false);
+      } finally {
+        if (icone) icone.classList.remove('animate-spin');
+      }
     }
 
     function atualizarContadoresStatus() {
       const pendentes = campanhasCache.filter((c) => c.status === 'pendente').length;
       const aprovadas = campanhasCache.filter((c) => c.status === 'aprovada').length;
+      const encerradas = campanhasCache.filter((c) => c.status === 'encerrada').length;
       const reprovadas = campanhasCache.filter((c) => c.status === 'reprovada').length;
 
       document.getElementById('count-pendente').textContent = pendentes;
       document.getElementById('count-aprovada').textContent = aprovadas;
+      document.getElementById('count-encerrada').textContent = encerradas;
       document.getElementById('count-reprovada').textContent = reprovadas;
       document.getElementById('count-todas').textContent = campanhasCache.length;
 
-      ['pendente', 'aprovada', 'reprovada', 'TODAS'].forEach((st) => {
+      ['TODAS', 'pendente', 'aprovada', 'encerrada', 'reprovada'].forEach((st) => {
         const btn = document.getElementById(`tab-status-${st}`);
         if (!btn) return;
-        if (st === filtroStatusAtual) {
-          btn.classList.add('ring-2', 'ring-brandBlue');
-        } else {
-          btn.classList.remove('ring-2', 'ring-brandBlue');
-        }
+        btn.classList.toggle('ring-2', st === filtroStatusAtual);
+        btn.classList.toggle('ring-brandBlue', st === filtroStatusAtual);
       });
     }
 
@@ -232,6 +297,30 @@
       filtroStatusAtual = novoStatus;
       atualizarContadoresStatus();
       renderizarCardsCampanhas();
+    }
+
+    function formatarResumoDesempenhoMeta(camp) {
+      const diff = camp.arrecadadoUnidades - camp.metaUnidades;
+      const pct = camp.percentualAtingido;
+      if (diff > 0) {
+        return {
+          classe: 'bg-pastelGreen text-emerald-900 border-emerald-300',
+          icone: 'ph-trend-up',
+          texto: `+${diff} un acima da meta (${pct}%)`
+        };
+      }
+      if (diff === 0) {
+        return {
+          classe: 'bg-pastelGreen text-emerald-900 border-emerald-300',
+          icone: 'ph-check-circle',
+          texto: `Meta exata atingida (100%)`
+        };
+      }
+      return {
+        classe: 'bg-amber-100 text-amber-900 border-amber-300',
+        icone: 'ph-trend-down',
+        texto: `${diff} un abaixo da meta (${pct}%)`
+      };
     }
 
     function renderizarCardsCampanhas() {
@@ -242,107 +331,130 @@
 
       if (lista.length === 0) {
         container.innerHTML = `
-          <div class="lg:col-span-2 bg-white p-10 rounded-3xl border border-slate-200 text-center space-y-2 shadow-sm">
-            <i class="ph ph-folder-open text-4xl text-slate-400"></i>
-            <p class="text-lg font-bold text-brandBlue">Nenhuma campanha encontrada neste filtro.</p>
-            <p class="text-xs text-slate-500">Selecione "Todas as Campanhas" ou crie uma nova campanha institucional.</p>
+          <div class="lg:col-span-2 bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-1.5 shadow-sm">
+            <i class="ph ph-folder-open text-3xl text-slate-400"></i>
+            <p class="text-base font-bold text-brandBlue">Nenhuma campanha encontrada neste filtro.</p>
+            <p class="text-xs text-slate-500">Crie uma nova campanha ou altere o filtro de status acima.</p>
           </div>
         `;
         return;
       }
 
       container.innerHTML = lista.map((camp) => {
-        const progresso = Math.min(100, Math.round(((camp.arrecadadoUnidades || 0) / Math.max(1, camp.metaUnidades)) * 100));
+        const progressoBarra = Math.min(100, camp.percentualAtingido);
         let badgeStatus = '';
         if (camp.status === 'pendente') {
-          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-pastelYellow text-yellow-900 border border-yellow-300 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-hourglass-medium"></i> Pendente de Análise</span>`;
+          badgeStatus = `<span class="px-2.5 py-1 rounded-lg bg-pastelYellow text-yellow-900 border border-yellow-300 font-bold text-[11px] inline-flex items-center gap-1"><i class="ph-fill ph-hourglass-medium"></i> Pendente</span>`;
         } else if (camp.status === 'aprovada') {
-          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-300 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-check-circle"></i> Aprovada e Ativa</span>`;
+          badgeStatus = `<span class="px-2.5 py-1 rounded-lg bg-pastelGreen text-emerald-900 border border-emerald-300 font-bold text-[11px] inline-flex items-center gap-1"><i class="ph-fill ph-check-circle"></i> Ativa</span>`;
         } else if (camp.status === 'reprovada') {
-          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-red-100 text-red-700 border border-red-200 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-x-circle"></i> Reprovada</span>`;
+          badgeStatus = `<span class="px-2.5 py-1 rounded-lg bg-red-100 text-red-700 border border-red-200 font-bold text-[11px] inline-flex items-center gap-1"><i class="ph-fill ph-x-circle"></i> Reprovada</span>`;
         } else {
-          badgeStatus = `<span class="px-3 py-1 rounded-xl bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1"><i class="ph-fill ph-archive-box"></i> Encerrada</span>`;
+          badgeStatus = `<span class="px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800 font-bold text-[11px] inline-flex items-center gap-1"><i class="ph-fill ph-flag-checkered"></i> Finalizada</span>`;
         }
 
+        const resumoMeta = formatarResumoDesempenhoMeta(camp);
+        const blocoDesempenhoFinal = camp.status === 'encerrada' ? `
+          <div class="p-3 rounded-xl border ${resumoMeta.classe} flex items-center justify-between text-xs font-bold">
+            <span class="inline-flex items-center gap-1.5"><i class="ph-bold ${resumoMeta.icone} text-base"></i> Resultado da Baixa:</span>
+            <span>${resumoMeta.texto}</span>
+          </div>
+        ` : '';
+
         const blocoParecer = camp.parecerTecnico ? `
-          <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
-            <span class="font-bold text-brandBlue block mb-0.5">Parecer Técnico da Administração:</span>
-            <p class="text-slate-600 font-medium">${camp.parecerTecnico}</p>
+          <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs">
+            <span class="font-bold text-brandBlue block mb-0.5">Parecer / Observação:</span>
+            <p class="text-slate-600">${escaparHtml(camp.parecerTecnico)}</p>
           </div>
         ` : '';
 
         let botoesAcao = '';
         if (camp.status === 'pendente') {
           botoesAcao = `
-            <button type="button" onclick="aprovarCampanhaDireto('${camp.idCampanha}')" class="flex-1 py-2.5 px-4 rounded-xl bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 border border-emerald-200 font-bold text-xs inline-flex items-center justify-center gap-1.5 shadow-sm transition">
-              <i class="ph-bold ph-check-circle"></i> Aprovar e Publicar
+            <button type="button" onclick="aprovarCampanhaDireto('${escaparHtml(camp.idCampanha)}')" class="flex-1 py-2 px-3 rounded-xl bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 border border-emerald-200 font-bold text-xs inline-flex items-center justify-center gap-1 transition">
+              <i class="ph-bold ph-check-circle"></i> Aprovar
             </button>
-            <button type="button" onclick="abrirModalReprovacao('${camp.idCampanha}')" class="flex-1 py-2.5 px-4 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs inline-flex items-center justify-center gap-1.5 shadow-sm transition">
-              <i class="ph-bold ph-x-circle"></i> Reprovar com Parecer
+            <button type="button" onclick="abrirModalReprovacao('${escaparHtml(camp.idCampanha)}')" class="flex-1 py-2 px-3 rounded-xl bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs inline-flex items-center justify-center gap-1 transition">
+              <i class="ph-bold ph-x-circle"></i> Reprovar
             </button>
           `;
         } else if (camp.status === 'aprovada') {
           botoesAcao = `
-            <button type="button" onclick="registrarDoacaoRecebidaCampanha('${camp.idCampanha}')" class="flex-1 py-2 px-3 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs transition">
-              + Registrar Entrega (+10 un)
-            </button>
-            <button type="button" onclick="encerrarCampanhaAtiva('${camp.idCampanha}')" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition">
-              Encerrar Campanha
+            <button type="button" onclick="abrirModalBaixaCampanha('${escaparHtml(camp.idCampanha)}')" class="flex-1 py-2 px-3 rounded-xl bg-brandBlue hover:bg-blue-900 text-white font-bold text-xs inline-flex items-center justify-center gap-1.5 transition">
+              <i class="ph-bold ph-check-square-offset"></i> Dar Baixa / Confirmar Recebimento
             </button>
           `;
         } else {
           botoesAcao = `
-            <button type="button" onclick="aprovarCampanhaDireto('${camp.idCampanha}')" class="py-2 px-4 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs transition">
-              Reabrir / Aprovar Campanha
+            <button type="button" onclick="aprovarCampanhaDireto('${escaparHtml(camp.idCampanha)}')" class="py-2 px-3 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs transition">
+              Reabrir Campanha
             </button>
           `;
         }
 
         return `
-          <article class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4">
-            <div class="space-y-3">
+          <article class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-3">
+            <div class="space-y-2.5">
               <div class="flex items-start justify-between gap-2">
-                <div>
-                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">${camp.idCampanha} • Término: ${formatarDataBr(camp.dataLimite)}</span>
-                  <h3 class="text-lg font-bold text-brandBlue mt-0.5 leading-snug">${camp.titulo}</h3>
+                <div class="min-w-0">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Término: ${formatarDataBr(camp.dataLimite)}</span>
+                  <h3 class="text-base font-bold text-brandBlue leading-snug">${escaparHtml(camp.titulo)}</h3>
                 </div>
                 ${badgeStatus}
               </div>
 
-              <p class="text-xs text-slate-600 font-medium leading-relaxed">${camp.descricao || 'Campanha comunitária de arrecadação de alimentos.'}</p>
+              <p class="text-xs text-slate-600 leading-relaxed">${escaparHtml(camp.descricao || 'Campanha de arrecadação de alimentos.')}</p>
 
-              <div class="p-4 rounded-2xl bg-pastelBlue/30 border border-pastelBlue space-y-2">
+              <div class="p-3.5 rounded-xl bg-pastelBlue/30 border border-pastelBlue space-y-1.5">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="font-semibold text-slate-700">Item Foco: <strong class="text-brandBlue">${camp.itemFoco}</strong></span>
-                  <span class="font-bold text-brandBlue">${camp.arrecadadoUnidades || 0} / ${camp.metaUnidades} un (${progresso}%)</span>
+                  <span class="font-semibold text-slate-700">Item: <strong class="text-brandBlue">${escaparHtml(camp.itemFoco)}</strong></span>
+                  <span class="font-bold text-brandBlue">${camp.arrecadadoUnidades} / ${camp.metaUnidades} un (${camp.percentualAtingido}%)</span>
                 </div>
                 <div class="w-full h-2 bg-white rounded-full overflow-hidden border border-blue-100">
-                  <div class="h-full bg-brandBlue rounded-full" style="width: ${progresso}%"></div>
+                  <div class="h-full ${camp.arrecadadoUnidades >= camp.metaUnidades ? 'bg-emerald-600' : 'bg-brandBlue'} rounded-full" style="width: ${progressoBarra}%"></div>
                 </div>
-                <p class="text-[11px] font-medium text-slate-500">Proponente: <strong class="text-slate-700">${camp.criadorNome}</strong> (${camp.criadorEmail})</p>
+                <p class="text-[11px] font-medium text-slate-500">Responsável: <strong class="text-slate-700">${escaparHtml(camp.criadorNome)}</strong></p>
               </div>
 
+              ${blocoDesempenhoFinal}
               ${blocoParecer}
             </div>
 
-            <div class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
+            <div class="flex flex-wrap items-center gap-2 pt-2.5 border-t border-slate-100">
               ${botoesAcao}
+              <button type="button" onclick="confirmarExclusaoCampanha('${escaparHtml(camp.idCampanha)}', '${escaparHtml(camp.titulo)}')" class="py-2 px-3 rounded-xl bg-slate-100 hover:bg-red-100 text-slate-500 hover:text-red-700 font-bold text-xs transition" title="Excluir Campanha da AWS">
+                <i class="ph-bold ph-trash"></i>
+              </button>
             </div>
           </article>
         `;
       }).join('');
     }
 
+    function abrirModalNovaCampanha() {
+      const dt = new Date();
+      dt.setDate(dt.getDate() + 30);
+      document.getElementById('nova-camp-data').value = dt.toISOString().split('T')[0];
+      document.getElementById('nova-camp-titulo').value = '';
+      document.getElementById('nova-camp-item').value = '';
+      document.getElementById('nova-camp-meta').value = 100;
+      document.getElementById('nova-camp-desc').value = '';
+      abrirModal('modal-nova-campanha-admin');
+    }
+
     async function aprovarCampanhaDireto(idCampanha) {
       const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
       if (!camp) return;
-      camp.status = 'aprovada';
-      camp.status_campanha = 'Aprovada';
-      camp.parecerTecnico = 'Aprovada pela Administração da Casa da Criança (casadacrianca@adm) por estar alinhada às necessidades nutricionais do estoque.';
-      camp.justificativa_parecer_tecnico = camp.parecerTecnico;
-      await salvarOuModerarCampanhaAdmin(camp, false);
-      mostrarFeedbackModeracao(`Campanha "${camp.titulo}" aprovada e sincronizada com tb_campanhasDoacoes na AWS!`, true);
-      await carregarTelaModeracao();
+      try {
+        camp.status = 'aprovada';
+        camp.status_aprovacao = 'Aprovada';
+        camp.parecerTecnico = 'Aprovada pela Administração da Casa da Criança.';
+        await salvarOuModerarCampanhaAdmin(camp, false);
+        mostrarFeedbackModeracao(`Campanha "${camp.titulo}" aprovada e salva em tb_campanhasDoacoes na AWS!`, true);
+        await carregarTelaModeracao();
+      } catch (erro) {
+        mostrarFeedbackModeracao(`Erro ao aprovar campanha: ${erro.message}`, false);
+      }
     }
 
     function abrirModalReprovacao(idCampanha) {
@@ -358,71 +470,133 @@
       event.preventDefault();
       const idCampanha = document.getElementById('reprovar-id-campanha').value;
       const parecer = document.getElementById('reprovar-parecer').value.trim();
-      if (parecer.length < 10) {
-        alert('Informe um parecer técnico detalhado com pelo menos 10 caracteres.');
-        return;
-      }
       const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
       if (!camp) return;
 
-      camp.status = 'reprovada';
-      camp.status_campanha = 'Reprovada';
-      camp.parecerTecnico = parecer;
-      camp.justificativa_parecer_tecnico = parecer;
-      await salvarOuModerarCampanhaAdmin(camp, false);
-      fecharModal('modal-reprovar-campanha');
-      mostrarFeedbackModeracao(`Campanha "${camp.titulo}" reprovada com parecer técnico gravado na AWS.`, true);
-      await carregarTelaModeracao();
+      try {
+        camp.status = 'reprovada';
+        camp.status_aprovacao = 'Reprovada';
+        camp.parecerTecnico = parecer;
+        await salvarOuModerarCampanhaAdmin(camp, false);
+        fecharModal('modal-reprovar-campanha');
+        mostrarFeedbackModeracao(`Campanha "${camp.titulo}" reprovada com parecer técnico gravado na AWS.`, true);
+        await carregarTelaModeracao();
+      } catch (erro) {
+        mostrarFeedbackModeracao(`Erro ao reprovar campanha: ${erro.message}`, false);
+      }
     }
 
-    async function registrarDoacaoRecebidaCampanha(idCampanha) {
+    function abrirModalBaixaCampanha(idCampanha) {
       const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
       if (!camp) return;
-      camp.arrecadadoUnidades = Math.min(camp.metaUnidades, Number(camp.arrecadadoUnidades || 0) + 10);
-      if (camp.arrecadadoUnidades >= camp.metaUnidades) {
+      document.getElementById('baixa-camp-id').value = camp.idCampanha;
+      document.getElementById('baixa-camp-meta').value = camp.metaUnidades;
+      document.getElementById('subtitulo-baixa-campanha').textContent = camp.titulo;
+      document.getElementById('baixa-camp-item').textContent = camp.itemFoco;
+      document.getElementById('baixa-camp-meta-label').textContent = `${camp.metaUnidades} un`;
+      document.getElementById('baixa-camp-recebido').value = camp.arrecadadoUnidades || camp.metaUnidades;
+      document.getElementById('baixa-camp-obs').value = '';
+      atualizarPreviewResultadoMeta();
+      abrirModal('modal-baixa-campanha');
+    }
+
+    function atualizarPreviewResultadoMeta() {
+      const meta = Number(document.getElementById('baixa-camp-meta').value || 0);
+      const recebido = Number(document.getElementById('baixa-camp-recebido').value || 0);
+      const box = document.getElementById('preview-resultado-meta');
+      const diff = recebido - meta;
+      const pct = meta > 0 ? Math.round((recebido / meta) * 100) : 0;
+
+      if (diff > 0) {
+        box.className = 'p-3.5 rounded-2xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between';
+        box.innerHTML = `<span><i class="ph-bold ph-trend-up mr-1"></i> Acima da meta!</span><span>+${diff} un (${pct}% atingido)</span>`;
+      } else if (diff === 0) {
+        box.className = 'p-3.5 rounded-2xl border bg-pastelGreen/70 border-emerald-300 text-emerald-900 text-xs font-bold flex items-center justify-between';
+        box.innerHTML = `<span><i class="ph-bold ph-check-circle mr-1"></i> Meta exata atingida!</span><span>0 diferença (100%)</span>`;
+      } else {
+        box.className = 'p-3.5 rounded-2xl border bg-amber-50 border-amber-300 text-amber-900 text-xs font-bold flex items-center justify-between';
+        box.innerHTML = `<span><i class="ph-bold ph-trend-down mr-1"></i> Abaixo da meta</span><span>${diff} un (${pct}% atingido)</span>`;
+      }
+    }
+
+    async function confirmarBaixaCampanha(event) {
+      event.preventDefault();
+      const idCampanha = document.getElementById('baixa-camp-id').value;
+      const recebidoReal = Math.max(0, Number(document.getElementById('baixa-camp-recebido').value));
+      const obs = document.getElementById('baixa-camp-obs').value.trim();
+      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
+      if (!camp) return;
+
+      const btn = document.getElementById('btn-confirmar-baixa-camp');
+      btn.disabled = true;
+      btn.textContent = 'Salvando baixa...';
+
+      try {
+        const diff = recebidoReal - camp.metaUnidades;
+        const pct = camp.metaUnidades > 0 ? Math.round((recebidoReal / camp.metaUnidades) * 100) : 0;
+        const resumoTexto = diff >= 0
+          ? `Meta superada/atingida: ${recebidoReal}/${camp.metaUnidades} un (+${diff} un | ${pct}%).`
+          : `Abaixo da meta: ${recebidoReal}/${camp.metaUnidades} un (${diff} un | ${pct}%).`;
+
         camp.status = 'encerrada';
-        camp.status_campanha = 'Encerrada';
-        camp.parecerTecnico = 'Meta de arrecadação 100% atingida! Muito obrigado a todos os doadores.';
-        camp.justificativa_parecer_tecnico = camp.parecerTecnico;
-      }
-      await salvarOuModerarCampanhaAdmin(camp, false);
-      mostrarFeedbackModeracao(`Entrega registrada na campanha "${camp.titulo}"!`, true);
-      await carregarTelaModeracao();
-    }
+        camp.status_aprovacao = 'Encerrada';
+        camp.arrecadadoUnidades = recebidoReal;
+        camp.parecerTecnico = obs ? `${resumoTexto} ${obs}` : resumoTexto;
 
-    async function encerrarCampanhaAtiva(idCampanha) {
-      const camp = campanhasCache.find((c) => c.idCampanha === idCampanha);
-      if (!camp) return;
-      camp.status = 'encerrada';
-      camp.status_campanha = 'Encerrada';
-      camp.parecerTecnico = 'Campanha encerrada pela administração após fechamento do ciclo de arrecadação.';
-      camp.justificativa_parecer_tecnico = camp.parecerTecnico;
-      await salvarOuModerarCampanhaAdmin(camp, false);
-      mostrarFeedbackModeracao(`Campanha "${camp.titulo}" encerrada com sucesso.`, true);
-      await carregarTelaModeracao();
+        await salvarOuModerarCampanhaAdmin(camp, false);
+        fecharModal('modal-baixa-campanha');
+        mostrarFeedbackModeracao(`Baixa confirmada em "${camp.titulo}"! Recebido real: ${recebidoReal} un (${diff >= 0 ? `+${diff} acima` : `${diff} abaixo`} da meta).`, true);
+        await carregarTelaModeracao();
+      } catch (erro) {
+        mostrarFeedbackModeracao(`Erro ao confirmar baixa: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Baixa e Encerrar';
+      }
     }
 
     async function salvarNovaCampanhaInstitucional(event) {
       event.preventDefault();
-      const nova = {
-        id_campanha_doacao: `camp_adm_${Math.floor(1000 + Math.random() * 9000)}`,
-        nome_campanha: document.getElementById('nova-camp-titulo').value.trim(),
-        itemFoco: document.getElementById('nova-camp-item').value.trim(),
-        metaUnidades: Number(document.getElementById('nova-camp-meta').value),
-        arrecadadoUnidades: 0,
-        data_inicio_campanha: new Date().toISOString().split('T')[0],
-        data_termino_campanha: document.getElementById('nova-camp-data').value,
-        objetivo_descricao_campanha: document.getElementById('nova-camp-desc').value.trim(),
-        nome_proponente: 'Administração Casa da Criança',
-        id_doador_responsavel: 'casadacrianca@adm',
-        status_campanha: 'Aprovada',
-        justificativa_parecer_tecnico: 'Campanha institucional oficial criada e homologada pela Administração.'
-      };
+      const btn = document.getElementById('btn-publicar-camp');
+      btn.disabled = true;
+      btn.textContent = 'Publicando...';
 
-      await salvarOuModerarCampanhaAdmin(nova, true);
-      fecharModal('modal-nova-campanha-admin');
-      mostrarFeedbackModeracao(`Campanha institucional "${nova.nome_campanha}" publicada em tb_campanhasDoacoes na AWS!`, true);
-      await carregarTelaModeracao();
+      try {
+        const nova = {
+          id_campanha: `camp_${Date.now()}`,
+          titulo: document.getElementById('nova-camp-titulo').value.trim(),
+          itemFoco: document.getElementById('nova-camp-item').value.trim(),
+          metaUnidades: Number(document.getElementById('nova-camp-meta').value),
+          arrecadadoUnidades: 0,
+          dataInicio: new Date().toISOString().split('T')[0],
+          data_fim: document.getElementById('nova-camp-data').value,
+          descricao: document.getElementById('nova-camp-desc').value.trim(),
+          responsavel: document.getElementById('nova-camp-resp').value.trim() || 'Administração Casa da Criança',
+          status_aprovacao: 'Aprovada',
+          parecerTecnico: 'Campanha institucional oficial publicada pela Administração.'
+        };
+
+        await salvarOuModerarCampanhaAdmin(nova, true);
+        fecharModal('modal-nova-campanha-admin');
+        mostrarFeedbackModeracao(`Campanha "${nova.titulo}" gravada em tb_campanhasDoacoes na AWS!`, true);
+        await carregarTelaModeracao();
+      } catch (erro) {
+        mostrarFeedbackModeracao(`Erro ao criar campanha: ${erro.message}`, false);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Publicar na AWS';
+      }
+    }
+
+    async function confirmarExclusaoCampanha(idCampanha, titulo) {
+      if (!confirm(`Deseja excluir permanentemente a campanha "${titulo}" do AWS DynamoDB?`)) return;
+      try {
+        await excluirCampanhaAdmin(idCampanha);
+        mostrarFeedbackModeracao(`Campanha "${titulo}" removida da AWS.`, true);
+        await carregarTelaModeracao();
+      } catch (erro) {
+        mostrarFeedbackModeracao(`Erro ao excluir campanha: ${erro.message}`, false);
+      }
     }
   </script>
 </body>

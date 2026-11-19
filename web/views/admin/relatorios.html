@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Central de Relatórios (AWS) | Casa da Criança</title>
+  <title>Central de Relatórios e Métricas | Casa da Criança</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   
   <script>
     tailwind.config = {
@@ -31,7 +33,7 @@
   <script src="../../public/js/accessibility.js" defer></script>
   <style>
     @media print {
-      #sidebar-admin-container, #barra-controles-relatorio { display: none !important; }
+      #sidebar-admin-container, #barra-controles-relatorio, #filtros-relatorio-card { display: none !important; }
       body { background: #ffffff !important; height: auto !important; overflow: visible !important; }
       main { padding: 0 !important; overflow: visible !important; }
     }
@@ -39,295 +41,337 @@
 </head>
 <body class="bg-slate-50 text-textDark flex h-screen overflow-hidden font-sans relative">
 
-  <!-- Navbar Lateral Fixa (Padrão Index) -->
   <div id="sidebar-admin-container"></div>
 
-  <!-- Área Principal -->
-  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-6 lg:p-10 space-y-6">
+  <main class="flex-1 overflow-y-auto bg-slate-50 relative scroll-smooth p-3 lg:p-5 space-y-3.5">
 
-    <!-- Cabeçalho Principal (Padrão Index) -->
-    <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div>
-        <div class="inline-flex items-center gap-2 bg-pastelBlue text-brandBlue px-3 py-1 rounded-full font-bold text-xs mb-2">
-          <i class="ph-fill ph-file-pdf"></i>
-          Tabelas AWS: <code>tb_lotesProdutos</code> • <code>tb_movimentacoes</code> • <code>tb_logsAuditorias</code>
-        </div>
-        <h1 class="text-3xl font-extrabold text-brandBlue flex items-center gap-3">
-          <i class="ph ph-chart-line-up text-3xl"></i>
-          Central de Relatórios e Prestação de Contas
+    <!-- Cabeçalho -->
+    <header class="bg-white px-5 py-3 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-2.5">
+      <div class="min-w-0 flex-1">
+        <span class="inline-flex items-center gap-1.5 bg-pastelBlue text-brandBlue px-2 py-0.5 rounded-full font-bold text-[10px] mb-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+          <span>Relatórios gerados em tempo real • Download local</span>
+        </span>
+        <h1 class="text-lg lg:text-xl font-extrabold text-brandBlue flex items-center gap-2">
+          <i class="ph ph-chart-line-up text-xl shrink-0"></i>
+          <span class="truncate">Central de Relatórios, Gráficos e Métricas</span>
         </h1>
-        <p class="text-sm text-slate-600 mt-1 max-w-2xl font-medium">
-          Extraia relatórios auditáveis em CSV (Excel) ou PDF a partir dos registros reais da nuvem AWS.
-        </p>
       </div>
       
-      <div id="barra-controles-relatorio" class="flex flex-wrap items-center gap-3 w-full md:w-auto">
-        <button type="button" onclick="exportarRelatorioCsv()" class="inline-flex items-center justify-center gap-2 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-5 py-3 rounded-xl border border-emerald-200 transition shadow-sm text-sm">
-          <i class="ph-bold ph-file-csv text-lg text-emerald-700"></i> Exportar CSV (Excel)
+      <div id="barra-controles-relatorio" class="flex flex-wrap items-center gap-2 shrink-0 w-full md:w-auto">
+        <button type="button" onclick="abrirModalDoadorRelatorio()" class="inline-flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 text-brandBlue font-bold px-3 py-1.5 rounded-xl transition text-xs">
+          <i class="ph-bold ph-user-plus text-sm shrink-0"></i>
+          <span>+ Doador</span>
         </button>
-        <button type="button" onclick="window.print()" class="inline-flex items-center justify-center gap-2 bg-brandBlue hover:bg-blue-900 text-white font-bold px-5 py-3 rounded-xl transition shadow-sm text-sm">
-          <i class="ph-bold ph-printer text-lg"></i> Imprimir / Salvar PDF
+        <button type="button" onclick="abrirModalInstituicaoRelatorio()" class="inline-flex items-center justify-center gap-1 bg-slate-100 hover:bg-slate-200 text-brandBlue font-bold px-3 py-1.5 rounded-xl transition text-xs">
+          <i class="ph-bold ph-buildings text-sm shrink-0"></i>
+          <span>+ Instituição</span>
         </button>
-      </div>
-    </div>
-
-    <!-- Filtros do Relatório -->
-    <section class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-      <div class="md:col-span-5">
-        <label for="tipo-relatorio" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Modelo de Relatório Oficial</label>
-        <select id="tipo-relatorio" onchange="renderizarRelatorioSelecionado()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:border-brandBlue">
-          <option value="INVENTARIO_FEFO">1. Posição Completa de Estoque e Validades FEFO (tb_lotesProdutos)</option>
-          <option value="MOVIMENTACOES">2. Trilha de Auditoria de Movimentações (tb_movimentacoes)</option>
-          <option value="BALANCO_MINIMO">3. Balanço de Segurança: Saldo Atual vs. Estoque Mínimo</option>
-          <option value="RISCO_PERDAS">4. Relatório de Risco de Perdas e Lotes Críticos (&le; 30 dias)</option>
-        </select>
-      </div>
-
-      <div class="md:col-span-4">
-        <label for="relatorio-prateleira" class="block text-xs font-bold text-brandBlue uppercase mb-1.5">Filtrar por Compartimento</label>
-        <select id="relatorio-prateleira" onchange="renderizarRelatorioSelecionado()" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-brandBlue">
-          <option value="TODAS">Todos os Compartimentos da Instituição</option>
-        </select>
-      </div>
-
-      <div class="md:col-span-3">
-        <button type="button" onclick="carregarDadosRelatorioAws()" class="w-full py-2.5 px-4 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-sm inline-flex items-center justify-center gap-2 transition">
-          <i class="ph-bold ph-arrows-clockwise" id="icone-sync-relatorio"></i>
-          <span>Atualizar Dados AWS</span>
+        <button type="button" onclick="abrirModalWhatsAppRelatorio()" class="inline-flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-sm text-xs">
+          <i class="ph-fill ph-whatsapp-logo text-sm shrink-0"></i>
+          <span>WhatsApp</span>
+        </button>
+        <button type="button" onclick="carregarDadosRelatorioAws()" class="inline-flex items-center justify-center gap-1 bg-pastelBlue/70 hover:bg-pastelBlue text-brandBlue font-bold px-3 py-1.5 rounded-xl transition border border-blue-200 text-xs">
+          <i id="icone-sync-relatorio" class="ph-bold ph-arrows-clockwise text-sm shrink-0"></i>
+          <span>Atualizar</span>
+        </button>
+        <button type="button" onclick="exportarRelatorioCsv()" class="inline-flex items-center justify-center gap-1 bg-pastelGreen hover:bg-[#b5ead5] text-emerald-900 font-bold px-3 py-1.5 rounded-xl border border-emerald-200 transition shadow-sm text-xs">
+          <i class="ph-bold ph-file-csv text-sm text-emerald-700 shrink-0"></i>
+          <span>CSV</span>
+        </button>
+        <button type="button" id="btn-baixar-pdf" onclick="exportarRelatorioPdfLocal()" class="inline-flex items-center justify-center gap-1 bg-brandBlue hover:bg-blue-900 text-white font-bold px-3 py-1.5 rounded-xl transition shadow-sm text-xs">
+          <i class="ph-bold ph-file-pdf text-sm shrink-0"></i>
+          <span>Baixar PDF</span>
         </button>
       </div>
-    </section>
+    </header>
 
-    <!-- Resumo Executivo do Relatório Gerado (Padrão Pastel Index) -->
-    <section class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-      <div class="bg-pastelBlue/60 border border-pastelBlue p-6 rounded-3xl shadow-sm">
-        <span class="text-xs font-bold uppercase text-brandBlue block">Registros no Relatório</span>
-        <span id="rel-kpi-1" class="text-2xl font-extrabold text-brandBlue mt-1 block">--</span>
-      </div>
-      <div class="bg-pastelGreen/60 border border-pastelGreen p-6 rounded-3xl shadow-sm">
-        <span class="text-xs font-bold uppercase text-emerald-900 block">Volume Total Auditado</span>
-        <span id="rel-kpi-2" class="text-2xl font-extrabold text-emerald-900 mt-1 block">--</span>
-      </div>
-      <div class="bg-pastelYellow/60 border border-pastelYellow p-6 rounded-3xl shadow-sm">
-        <span class="text-xs font-bold uppercase text-yellow-900 block">Emitido por / Data Hora</span>
-        <span id="rel-kpi-3" class="text-sm font-bold text-yellow-900 mt-2 block">casadacrianca@adm</span>
-      </div>
-    </section>
+    <div id="alerta-erro-relatorios" class="hidden p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-semibold"></div>
 
-    <!-- Tabela Dinâmica do Relatório -->
-    <section class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-      <div class="p-6 border-b border-slate-200 flex items-center justify-between">
-        <div>
-          <h2 id="titulo-tabela-relatorio" class="text-lg font-bold text-brandBlue">Posição Completa de Estoque FEFO</h2>
-          <p class="text-xs text-slate-500 font-medium">Dados extraídos em tempo real do banco de dados AWS DynamoDB.</p>
+    <!-- Barra de Filtros e Seleção de Relatório -->
+    <section id="filtros-relatorio-card" class="bg-white px-4 py-3 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
+        <div class="md:col-span-4">
+          <label for="tipo-relatorio" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Tipo de Relatório</label>
+          <select id="tipo-relatorio" onchange="renderizarRelatorioSelecionado()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:border-brandBlue">
+            <option value="VISAO_GERAL">1. Resumo Executivo Geral</option>
+            <option value="CAMPANHAS_FINALIZADAS">2. Campanhas Finalizadas (Sucesso / Falha)</option>
+            <option value="INVENTARIO_FEFO">3. Estoque Atual e Validades</option>
+            <option value="MOVIMENTACOES">4. Entradas, Saídas e Ajustes</option>
+            <option value="PERDAS_DESCARTES">5. Perdas e Descartes</option>
+            <option value="BALANCO_MINIMO">6. Saldo Atual vs. Estoque Mínimo</option>
+            <option value="RISCO_PERDAS">7. Risco de Vencimento (Até 30 dias)</option>
+            <option value="OCUPACAO_LOCAIS">8. Ocupação por Armário e Geladeira</option>
+            <option value="LOGS_AUDITORIA">9. Histórico de Auditoria</option>
+            <option value="DOADORES">10. Doadores (Consulta e Cadastro)</option>
+            <option value="INSTITUICOES">11. Instituições Parceiras (Consulta e Cadastro)</option>
+          </select>
         </div>
-        <span class="text-xs font-bold text-emerald-900 bg-pastelGreen px-3.5 py-1.5 rounded-xl border border-emerald-200">Documento Auditável</span>
+
+        <div class="md:col-span-2">
+          <label for="relatorio-prateleira" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Local</label>
+          <select id="relatorio-prateleira" onchange="renderizarRelatorioSelecionado()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+            <option value="TODAS">Todos os locais</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="relatorio-categoria" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Categoria</label>
+          <select id="relatorio-categoria" onchange="renderizarRelatorioSelecionado()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+            <option value="TODAS">Todas</option>
+          </select>
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="relatorio-data-inicio" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">De (Data)</label>
+          <input type="date" id="relatorio-data-inicio" onchange="renderizarRelatorioSelecionado()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+        </div>
+
+        <div class="md:col-span-2">
+          <label for="relatorio-data-fim" class="block text-[10px] font-bold text-brandBlue uppercase mb-0.5">Até (Data)</label>
+          <input type="date" id="relatorio-data-fim" onchange="renderizarRelatorioSelecionado()" class="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-brandBlue">
+        </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm border-collapse">
-          <thead id="thead-relatorio" class="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase text-brandBlue"></thead>
-          <tbody id="tbody-relatorio" class="divide-y divide-slate-100 text-xs font-medium text-slate-800">
-            <tr><td class="p-10 text-center text-brandBlue font-semibold">Sincronizando dados com a AWS...</td></tr>
-          </tbody>
-        </table>
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1.5 border-t border-slate-100 text-[11px] text-slate-500">
+        <span id="data-emissao-relatorio">Aguardando dados...</span>
+        <label class="inline-flex items-center gap-1.5 font-semibold text-brandBlue">
+          <span>Formato do Gráfico Principal:</span>
+          <select id="tipo-grafico-preferido" onchange="renderizarRelatorioSelecionado()" class="px-2 py-0.5 bg-slate-50 border border-slate-200 rounded-md text-[11px] font-bold text-brandBlue focus:outline-none">
+            <option value="bar">Colunas</option>
+            <option value="horizontalBar">Barras Horizontais</option>
+            <option value="line">Linhas</option>
+          </select>
+        </label>
       </div>
     </section>
+
+    <!-- Área Exportável em PDF (KPIs + Gráficos + Tabela) -->
+    <div id="area-exportavel-relatorio" class="space-y-3.5">
+
+      <!-- 4 KPIs Dinâmicos -->
+      <section class="grid grid-cols-2 xl:grid-cols-4 gap-2.5 items-stretch">
+        <div class="h-full bg-pastelBlue/60 border border-pastelBlue px-3.5 py-2.5 rounded-xl shadow-sm">
+          <span id="rel-kpi-1-label" class="text-[10px] font-bold uppercase text-brandBlue block truncate">Indicador 1</span>
+          <span id="rel-kpi-1" class="text-lg font-extrabold text-brandBlue leading-tight mt-0.5 block truncate">--</span>
+        </div>
+        <div class="h-full bg-pastelGreen/60 border border-pastelGreen px-3.5 py-2.5 rounded-xl shadow-sm">
+          <span id="rel-kpi-2-label" class="text-[10px] font-bold uppercase text-emerald-900 block truncate">Indicador 2</span>
+          <span id="rel-kpi-2" class="text-lg font-extrabold text-emerald-900 leading-tight mt-0.5 block truncate">--</span>
+        </div>
+        <div class="h-full bg-pastelYellow/70 border border-pastelYellow px-3.5 py-2.5 rounded-xl shadow-sm">
+          <span id="rel-kpi-3-label" class="text-[10px] font-bold uppercase text-yellow-900 block truncate">Indicador 3</span>
+          <span id="rel-kpi-3" class="text-lg font-extrabold text-yellow-900 leading-tight mt-0.5 block truncate">--</span>
+        </div>
+        <div class="h-full bg-white border border-slate-200 px-3.5 py-2.5 rounded-xl shadow-sm">
+          <span id="rel-kpi-4-label" class="text-[10px] font-bold uppercase text-slate-600 block truncate">Indicador 4</span>
+          <span id="rel-kpi-4" class="text-lg font-extrabold text-brandBlue leading-tight mt-0.5 block truncate">--</span>
+        </div>
+      </section>
+
+      <!-- Gráficos Lado a Lado -->
+      <section class="grid grid-cols-1 lg:grid-cols-12 gap-3.5">
+        <div class="lg:col-span-7 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <h3 id="titulo-grafico-1" class="text-xs font-bold text-brandBlue">Gráfico Comparativo</h3>
+          <div class="relative h-56 w-full">
+            <canvas id="grafico-principal"></canvas>
+          </div>
+        </div>
+
+        <div class="lg:col-span-5 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <h3 id="titulo-grafico-2" class="text-xs font-bold text-brandBlue">Distribuição</h3>
+          <div class="relative h-56 w-full">
+            <canvas id="grafico-secundario"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tabela do Relatório -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-200 flex items-center justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <h2 id="titulo-tabela-relatorio" class="text-sm font-bold text-brandBlue truncate">Relatório</h2>
+            <p class="text-[11px] text-slate-500">Dados consolidados em tempo real para prestação de contas.</p>
+          </div>
+          <span class="text-[10px] font-bold text-emerald-900 bg-pastelGreen px-2.5 py-1 rounded-lg border border-emerald-200 shrink-0">Documento Oficial</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead id="thead-relatorio" class="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase text-brandBlue"></thead>
+            <tbody id="tbody-relatorio" class="divide-y divide-slate-100 font-medium text-slate-800">
+              <tr><td class="p-8 text-center text-brandBlue font-semibold">Carregando dados para o relatório...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
 
   </main>
 
-  <script src="../../public/js/admin.js"></script>
-  <script>
-    let dadosAwsRelatorio = null;
-    let linhasExportacaoCsv = [];
+  <!-- MODAL: CADASTRAR / EDITAR DOADOR (IGUAL MOBILE) -->
+  <div id="modal-doador-relatorio" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-doador-relatorio')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+      <div class="mb-4">
+        <h3 id="titulo-modal-doador-rel" class="text-xl font-bold text-brandBlue">Cadastrar Doador</h3>
+        <p class="text-slate-500 text-xs mt-0.5">Sincronizado com o aplicativo mobile.</p>
+      </div>
+      <form onsubmit="salvarDoadorRelatorio(event)" class="space-y-3">
+        <input type="hidden" id="rel-doador-id">
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Nome Completo / Razão Social *</label>
+          <input type="text" id="rel-doador-nome" required placeholder="Ex: Maria Helena Souza" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Tipo *</label>
+            <select id="rel-doador-tipo" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+              <option value="PF">Pessoa Física (PF)</option>
+              <option value="PJ">Pessoa Jurídica (PJ)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">CPF / CNPJ</label>
+            <input type="text" id="rel-doador-doc" placeholder="Opcional" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">WhatsApp (com DDD) *</label>
+          <input type="text" id="rel-doador-tel" required placeholder="Ex: 5519987654321" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Observações / Endereço</label>
+          <input type="text" id="rel-doador-obs" placeholder="Bairro, horários ou observação" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+        </div>
+        <label class="flex items-center gap-2 text-xs font-bold text-emerald-900">
+          <input type="checkbox" id="rel-doador-ativo" checked class="w-4 h-4 accent-emerald-700">
+          <span>Doador ativo</span>
+        </label>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-doador-relatorio')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs">Cancelar</button>
+          <button type="submit" id="btn-salvar-doador-rel" class="px-5 py-2 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-200 font-bold text-xs">Salvar Doador</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
+  <!-- MODAL: CADASTRAR / EDITAR INSTITUIÇÃO (IGUAL MOBILE) -->
+  <div id="modal-instituicao-relatorio" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-lg w-full p-6 relative transform scale-95 transition-transform duration-300 max-h-[92vh] overflow-y-auto">
+      <button type="button" onclick="fecharModal('modal-instituicao-relatorio')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+      <div class="mb-4">
+        <h3 id="titulo-modal-inst-rel" class="text-xl font-bold text-brandBlue">Cadastrar Instituição</h3>
+        <p class="text-slate-500 text-xs mt-0.5">Sincronizado com o aplicativo mobile.</p>
+      </div>
+      <form onsubmit="salvarInstituicaoRelatorio(event)" class="space-y-3">
+        <input type="hidden" id="rel-inst-id">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Nome Fantasia *</label>
+            <input type="text" id="rel-inst-fantasia" required placeholder="Ex: Casa da Criança" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Razão Social</label>
+            <input type="text" id="rel-inst-razao" placeholder="Opcional" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">CNPJ</label>
+            <input type="text" id="rel-inst-cnpj" placeholder="00.000.000/0001-00" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Tipo de Unidade</label>
+            <input type="text" id="rel-inst-tipo" value="Unidade Parceira" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Responsável</label>
+            <input type="text" id="rel-inst-resp" placeholder="Nome do contato" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">WhatsApp (com DDD) *</label>
+            <input type="text" id="rel-inst-tel" required placeholder="Ex: 5519999999999" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+          </div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Endereço Completo</label>
+          <input type="text" id="rel-inst-end" placeholder="Rua, número, bairro e cidade" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+        </div>
+        <label class="flex items-center gap-2 text-xs font-bold text-emerald-900">
+          <input type="checkbox" id="rel-inst-ativo" checked class="w-4 h-4 accent-emerald-700">
+          <span>Instituição ativa</span>
+        </label>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-instituicao-relatorio')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs">Cancelar</button>
+          <button type="submit" id="btn-salvar-inst-rel" class="px-5 py-2 rounded-xl bg-pastelGreen text-emerald-900 border border-emerald-200 font-bold text-xs">Salvar Instituição</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ENVIAR MENSAGEM / RESUMO POR WHATSAPP -->
+  <div id="modal-whatsapp-relatorio" class="hidden fixed inset-0 bg-brandBlue/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl shadow-xl max-w-md w-full p-6 relative transform scale-95 transition-transform duration-300">
+      <button type="button" onclick="fecharModal('modal-whatsapp-relatorio')" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+      <div class="mb-4">
+        <h3 class="text-xl font-bold text-brandBlue flex items-center gap-2">
+          <i class="ph-fill ph-whatsapp-logo text-emerald-600 text-2xl"></i>
+          Enviar por WhatsApp
+        </h3>
+        <p class="text-slate-500 text-xs mt-0.5">Envie o resumo do relatório ou comunicado diretamente pelo WhatsApp.</p>
+      </div>
+      <form onsubmit="enviarMensagemWhatsAppRelatorio(event)" class="space-y-3">
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Contato Cadastrado</label>
+          <select id="wpp-destinatario-select" onchange="selecionarContatoWhatsApp()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue"></select>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Número WhatsApp (com DDD) *</label>
+          <input type="text" id="wpp-numero-destino" required placeholder="Ex: 5519987654321" class="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue">
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Adicionar Itens do Estoque na Mensagem</label>
+          <div class="flex gap-2">
+            <select id="wpp-rel-item-select" class="flex-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue"></select>
+            <button type="button" onclick="adicionarItemWhatsAppRelatorio()" class="px-3 py-1.5 rounded-xl bg-pastelBlue hover:bg-blue-200 text-brandBlue font-bold text-xs shrink-0">+ Item</button>
+          </div>
+          <div id="wpp-rel-itens-chips" class="flex flex-wrap gap-1 mt-1.5"></div>
+        </div>
+        <div>
+          <span class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Incluir Campanhas Ativas</span>
+          <div id="wpp-rel-campanhas-ativas" class="space-y-1 max-h-24 overflow-y-auto pr-1"></div>
+        </div>
+        <div>
+          <label class="block text-[11px] font-bold text-brandBlue uppercase mb-1">Mensagem *</label>
+          <textarea id="wpp-mensagem-texto" required rows="5" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:border-brandBlue"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button type="button" onclick="fecharModal('modal-whatsapp-relatorio')" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-semibold text-xs">Cancelar</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-1.5">
+            <i class="ph-fill ph-whatsapp-logo text-sm"></i> Abrir WhatsApp
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="../../public/js/admin.js?v=10"></script>
+  <script src="../../public/js/admin-relatorios.js?v=10"></script>
+  <script>
     document.addEventListener('DOMContentLoaded', () => {
       renderizarSidebarAdmin('relatorios');
       carregarDadosRelatorioAws();
     });
-
-    async function carregarDadosRelatorioAws() {
-      const icone = document.getElementById('icone-sync-relatorio');
-      if (icone) icone.classList.add('animate-spin');
-
-      try {
-        dadosAwsRelatorio = await carregarDadosEstoqueAws();
-        const selPrateleira = document.getElementById('relatorio-prateleira');
-        const atual = selPrateleira.value || 'TODAS';
-        selPrateleira.innerHTML = `<option value="TODAS">Todos os Compartimentos (${dadosAwsRelatorio.locaisReconciliados.length})</option>` +
-          dadosAwsRelatorio.locaisReconciliados.map((l) => `<option value="${l.nome}">${l.nome}</option>`).join('');
-        selPrateleira.value = atual;
-
-        renderizarRelatorioSelecionado();
-      } catch (e) {
-        console.error('Erro ao gerar relatório AWS:', e);
-      } finally {
-        if (icone) icone.classList.remove('animate-spin');
-      }
-    }
-
-    function renderizarRelatorioSelecionado() {
-      if (!dadosAwsRelatorio) return;
-      const tipo = document.getElementById('tipo-relatorio').value;
-      const prateleiraFiltro = document.getElementById('relatorio-prateleira').value;
-      const agoraStr = new Date().toLocaleString('pt-BR');
-      document.getElementById('rel-kpi-3').textContent = `casadacrianca@adm • ${agoraStr}`;
-
-      const thead = document.getElementById('thead-relatorio');
-      const tbody = document.getElementById('tbody-relatorio');
-      const tituloEl = document.getElementById('titulo-tabela-relatorio');
-
-      if (tipo === 'INVENTARIO_FEFO' || tipo === 'RISCO_PERDAS') {
-        let lotes = dadosAwsRelatorio.lotes.filter((l) => prateleiraFiltro === 'TODAS' || l.localArmazenamento === prateleiraFiltro);
-        if (tipo === 'RISCO_PERDAS') {
-          lotes = lotes.filter((l) => l.diasRestantes <= 30);
-          tituloEl.textContent = 'Relatório de Risco de Perdas e Lotes Críticos (Vencimento <= 30 dias)';
-        } else {
-          tituloEl.textContent = 'Posição Completa de Estoque e Validades FEFO (tb_lotesProdutos)';
-        }
-
-        const somaUnidades = lotes.reduce((acc, l) => acc + l.quantidadeAtual, 0);
-        document.getElementById('rel-kpi-1').textContent = `${lotes.length} lotes listados`;
-        document.getElementById('rel-kpi-2').textContent = `${somaUnidades} pacotes totais`;
-
-        thead.innerHTML = `
-          <tr>
-            <th class="p-4">Código Lote</th>
-            <th class="p-4">Código EAN</th>
-            <th class="p-4">Produto</th>
-            <th class="p-4">Compartimento (AWS)</th>
-            <th class="p-4 text-center">Saldo</th>
-            <th class="p-4">Validade</th>
-            <th class="p-4">Situação FEFO</th>
-          </tr>
-        `;
-
-        linhasExportacaoCsv = [
-          ['Codigo Lote', 'Codigo EAN', 'Produto', 'Marca', 'Categoria', 'Compartimento AWS', 'Saldo Atual', 'Data Validade', 'Dias Restantes', 'Status FEFO'],
-          ...lotes.map((l) => [
-            l.codigoLote, l.codigoBarras, l.nomeProduto, l.marca, l.categoria, l.localArmazenamento,
-            l.quantidadeAtual, l.dataValidadeFormatada, l.diasRestantes, l.statusFefo.rotulo
-          ])
-        ];
-
-        tbody.innerHTML = lotes.length === 0
-          ? `<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhum registro encontrado para este filtro.</td></tr>`
-          : lotes.map((l) => `
-            <tr class="hover:bg-slate-50">
-              <td class="p-4 font-bold text-brandBlue">${l.codigoLote}</td>
-              <td class="p-4 text-slate-600">${l.codigoBarras}</td>
-              <td class="p-4 font-bold text-brandBlue">${l.nomeProduto}</td>
-              <td class="p-4">${l.localArmazenamento}</td>
-              <td class="p-4 text-center font-bold text-brandBlue">${l.quantidadeAtual}</td>
-              <td class="p-4">${l.dataValidadeFormatada}</td>
-              <td class="p-4"><span class="px-2.5 py-1 rounded-lg text-[11px] font-bold border ${l.statusFefo.classeBadge}">${l.statusFefo.rotulo}</span></td>
-            </tr>
-          `).join('');
-      } else if (tipo === 'MOVIMENTACOES') {
-        tituloEl.textContent = 'Trilha de Auditoria de Movimentações (tb_movimentacoes AWS)';
-        const movs = dadosAwsRelatorio.movimentacoes.filter((m) => prateleiraFiltro === 'TODAS' || m.localArmazenamento.includes(prateleiraFiltro));
-        const somaMov = movs.reduce((acc, m) => acc + m.quantidade, 0);
-
-        document.getElementById('rel-kpi-1').textContent = `${movs.length} operações auditadas`;
-        document.getElementById('rel-kpi-2').textContent = `${somaMov} pacotes movimentados`;
-
-        thead.innerHTML = `
-          <tr>
-            <th class="p-4">ID Operação</th>
-            <th class="p-4">Operação</th>
-            <th class="p-4">Produto / Lote</th>
-            <th class="p-4">Compartimento</th>
-            <th class="p-4 text-center">Qtd</th>
-            <th class="p-4">Justificativa / Motivo</th>
-            <th class="p-4">Responsável / Data</th>
-          </tr>
-        `;
-
-        linhasExportacaoCsv = [
-          ['ID Operacao', 'Operacao', 'Produto', 'Lote', 'Compartimento', 'Quantidade', 'Motivo', 'Responsavel', 'Data Hora'],
-          ...movs.map((m) => [m.id, m.tipo, m.nomeProduto, m.codigoLote, m.localArmazenamento, m.quantidade, m.motivo, m.responsavel, m.dataHora])
-        ];
-
-        tbody.innerHTML = movs.length === 0
-          ? `<tr><td colspan="7" class="p-8 text-center text-slate-500">Nenhuma movimentação encontrada para este filtro.</td></tr>`
-          : movs.map((m) => `
-            <tr class="hover:bg-slate-50">
-              <td class="p-4 font-bold text-brandBlue">${m.id}</td>
-              <td class="p-4"><span class="px-2.5 py-1 rounded-lg bg-pastelBlue text-brandBlue font-bold text-[11px]">${m.tipo}</span></td>
-              <td class="p-4 font-bold text-brandBlue">${m.nomeProduto} <span class="text-slate-400 font-normal">(${m.codigoLote})</span></td>
-              <td class="p-4">${m.localArmazenamento}</td>
-              <td class="p-4 text-center font-bold text-brandBlue">${m.quantidade}</td>
-              <td class="p-4 text-slate-600">${m.motivo}</td>
-              <td class="p-4 text-slate-600">${m.responsavel} <br><span class="text-[10px] text-slate-400">${m.dataHoraFormatada}</span></td>
-            </tr>
-          `).join('');
-      } else if (tipo === 'BALANCO_MINIMO') {
-        tituloEl.textContent = 'Balanço de Segurança: Saldo Atual vs. Estoque Mínimo';
-        const prods = dadosAwsRelatorio.produtosAgrupados;
-        const criticos = prods.filter((p) => p.quantidadeTotal < p.estoqueMinimo).length;
-
-        document.getElementById('rel-kpi-1').textContent = `${prods.length} produtos analisados`;
-        document.getElementById('rel-kpi-2').textContent = `${criticos} abaixo do mínimo`;
-
-        thead.innerHTML = `
-          <tr>
-            <th class="p-4">Produto</th>
-            <th class="p-4">Categoria</th>
-            <th class="p-4 text-center">Lotes Ativos</th>
-            <th class="p-4 text-center">Saldo Total (AWS)</th>
-            <th class="p-4 text-center">Meta Mínima</th>
-            <th class="p-4">Situação de Abastecimento</th>
-          </tr>
-        `;
-
-        linhasExportacaoCsv = [
-          ['Produto', 'Categoria', 'Lotes Ativos', 'Saldo Total', 'Meta Minima', 'Situacao'],
-          ...prods.map((p) => [
-            p.nomeProduto, p.categoria, p.lotesCount, p.quantidadeTotal, p.estoqueMinimo,
-            p.quantidadeTotal < p.estoqueMinimo ? 'ABAIXO DO MINIMO (CRITICO)' : 'ABASTECIDO (REGULAR)'
-          ])
-        ];
-
-        tbody.innerHTML = prods.map((p) => {
-          const critico = p.quantidadeTotal < p.estoqueMinimo;
-          return `
-            <tr class="hover:bg-slate-50">
-              <td class="p-4 font-bold text-brandBlue">${p.nomeProduto}</td>
-              <td class="p-4">${p.categoria}</td>
-              <td class="p-4 text-center">${p.lotesCount} lote(s)</td>
-              <td class="p-4 text-center font-bold text-brandBlue">${p.quantidadeTotal}</td>
-              <td class="p-4 text-center">${p.estoqueMinimo}</td>
-              <td class="p-4">
-                <span class="px-3 py-1 rounded-lg text-xs font-bold ${critico ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-pastelGreen text-emerald-900'}">
-                  ${critico ? `Estoque Crítico (Faltam ${p.estoqueMinimo - p.quantidadeTotal})` : 'Abastecido'}
-                </span>
-              </td>
-            </tr>
-          `;
-        }).join('');
-      }
-    }
-
-    function exportarRelatorioCsv() {
-      if (!linhasExportacaoCsv || linhasExportacaoCsv.length === 0) {
-        alert('Aguarde o carregamento dos dados antes de exportar.');
-        return;
-      }
-      const tipo = document.getElementById('tipo-relatorio').value.toLowerCase();
-      const conteudoCsv = '\uFEFF' + linhasExportacaoCsv.map((linha) =>
-        linha.map((celula) => `"${String(celula ?? '').replace(/"/g, '""')}"`).join(';')
-      ).join('\r\n');
-
-      const blob = new Blob([conteudoCsv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `relatorio_${tipo}_casadacrianca_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    }
   </script>
 </body>
 </html>
