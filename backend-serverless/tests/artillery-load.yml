@@ -1,0 +1,67 @@
+# backend-serverless/tests/artillery-load.yml
+# Script pronto para execução externa contra a AWS Lambda em produção:
+# npx artillery run backend-serverless/tests/artillery-load.yml --output report.json
+# npx artillery report report.json --output report.html
+
+config:
+  target: "https://zqc7b27zwivnfyczo5kedb3vta0evazc.lambda-url.us-east-2.on.aws"
+  phases:
+    - duration: 15
+      arrivalRate: 2
+      name: "Aquecimento (Warm-up)"
+    - duration: 30
+      arrivalRate: 5
+      rampTo: 15
+      name: "Carga Progressiva Concorrente"
+  ensure:
+    p95: 800
+    p99: 2000
+    maxErrorRate: 1
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Consultar Estoque Completo"
+    weight: 40
+    flow:
+      - post:
+          url: "/get"
+          json:
+            modulo: "estoque"
+            acao: "consultar_estoque"
+          expect:
+            - statusCode: 200
+
+  - name: "Consultar Movimentações e Relatórios"
+    weight: 25
+    flow:
+      - post:
+          url: "/get"
+          json:
+            modulo: "relatorios"
+            acao: "consultar_movimentacoes"
+          expect:
+            - statusCode: 200
+
+  - name: "Consultar Assistente Dora IA"
+    weight: 20
+    flow:
+      - post:
+          url: "/get"
+          json:
+            modulo: "dora"
+            mensagem: "Quais itens estão próximos do vencimento?"
+          expect:
+            - statusCode: 200
+
+  - name: "Listar Locais e Categorias Homologadas"
+    weight: 15
+    flow:
+      - post:
+          url: "/get"
+          json:
+            modulo: "configuracoes"
+            acao: "listar_locais"
+          expect:
+            - statusCode: 200
